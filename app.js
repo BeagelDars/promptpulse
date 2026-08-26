@@ -1,10 +1,10 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine
- * 60 FPS Canvas Physics, Web Audio Synthesizer, Procedural Obstacles & Skin Shop.
+ * NEON SURGE | Cyber Velocity Arcade Engine (Mobile & Desktop Edition)
+ * Responsive Canvas, Touch Controls, Web Audio Synthesizer & Skin Shop.
  */
 
 // ==========================================
-// 1. Web Audio Synthesizer Engine (Zero-asset audio)
+// 1. Web Audio Synthesizer Engine
 // ==========================================
 class SoundEngine {
   constructor() {
@@ -28,8 +28,8 @@ class SoundEngine {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, this.ctx.currentTime); // D5
-      osc.frequency.exponentialRampToValueAtTime(1174.66, this.ctx.currentTime + 0.12); // D6
+      osc.frequency.setValueAtTime(587.33, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1174.66, this.ctx.currentTime + 0.12);
       gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
       osc.connect(gain);
@@ -75,7 +75,7 @@ class SoundEngine {
       filter.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.3);
 
       const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+      gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
 
       whiteNoise.connect(filter);
@@ -123,7 +123,7 @@ class NeonSurgeGame {
     this.sound = new SoundEngine();
 
     // Game state
-    this.state = 'MENU'; // MENU, PLAYING, GAMEOVER
+    this.state = 'MENU';
     this.score = 0;
     this.highScore = parseInt(localStorage.getItem('neonsurge_highscore') || '0', 10);
     this.totalOrbs = parseInt(localStorage.getItem('neonsurge_orbs') || '0', 10);
@@ -140,7 +140,7 @@ class NeonSurgeGame {
     this.screenShake = 0;
 
     // Power-up state
-    this.activePowerup = null; // 'SHIELD', 'BOOST', 'MAGNET'
+    this.activePowerup = null;
     this.powerupDuration = 0;
     this.powerupMaxDuration = 0;
 
@@ -149,8 +149,6 @@ class NeonSurgeGame {
       x: 0,
       y: 0,
       targetX: 0,
-      width: 44,
-      height: 52,
       tilt: 0,
       trail: []
     };
@@ -164,16 +162,16 @@ class NeonSurgeGame {
     this.floatingTexts = [];
 
     // Inputs
-    this.keys = { left: false, right: false, boost: false };
+    this.keys = { left: false, right: false };
     this.isDragging = false;
 
     this.initCanvasSize();
     this.initEventListeners();
+    this.initMobileButtons();
     this.initStars();
     this.updateHUD();
     this.renderHangar();
 
-    // Start animation loop
     this.lastTime = performance.now();
     requestAnimationFrame((t) => this.gameLoop(t));
   }
@@ -184,12 +182,12 @@ class NeonSurgeGame {
     this.canvas.height = rect.height;
     this.player.x = this.canvas.width / 2;
     this.player.targetX = this.canvas.width / 2;
-    this.player.y = this.canvas.height - 90;
+    this.player.y = this.canvas.height - 85;
   }
 
   initStars() {
     this.stars = [];
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 50; i++) {
       this.stars.push({
         x: Math.random() * this.canvas.width,
         y: Math.random() * this.canvas.height,
@@ -201,8 +199,9 @@ class NeonSurgeGame {
 
   initEventListeners() {
     window.addEventListener('resize', () => this.initCanvasSize());
+    window.addEventListener('orientationchange', () => setTimeout(() => this.initCanvasSize(), 200));
 
-    // Keyboard
+    // Keyboard (Desktop)
     window.addEventListener('keydown', (e) => {
       this.sound.init();
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') this.keys.left = true;
@@ -217,42 +216,29 @@ class NeonSurgeGame {
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') this.keys.right = false;
     });
 
-    // Touch & Mouse Drag
+    // Touch & Pointer Drag on Canvas
     const setTargetFromPointer = (clientX) => {
       const rect = this.canvas.getBoundingClientRect();
       const relativeX = clientX - rect.left;
-      this.player.targetX = Math.max(30, Math.min(this.canvas.width - 30, relativeX));
+      this.player.targetX = Math.max(25, Math.min(this.canvas.width - 25, relativeX));
     };
 
-    this.canvas.addEventListener('mousedown', (e) => {
+    this.canvas.addEventListener('pointerdown', (e) => {
       this.sound.init();
       this.isDragging = true;
       setTargetFromPointer(e.clientX);
     });
 
-    window.addEventListener('mousemove', (e) => {
+    window.addEventListener('pointermove', (e) => {
       if (this.isDragging && this.state === 'PLAYING') {
         setTargetFromPointer(e.clientX);
       }
     });
 
-    window.addEventListener('mouseup', () => { this.isDragging = false; });
+    window.addEventListener('pointerup', () => { this.isDragging = false; });
+    window.addEventListener('pointercancel', () => { this.isDragging = false; });
 
-    this.canvas.addEventListener('touchstart', (e) => {
-      this.sound.init();
-      this.isDragging = true;
-      if (e.touches[0]) setTargetFromPointer(e.touches[0].clientX);
-    }, { passive: true });
-
-    this.canvas.addEventListener('touchmove', (e) => {
-      if (this.isDragging && this.state === 'PLAYING' && e.touches[0]) {
-        setTargetFromPointer(e.touches[0].clientX);
-      }
-    }, { passive: true });
-
-    this.canvas.addEventListener('touchend', () => { this.isDragging = false; });
-
-    // UI Buttons
+    // UI Menu Buttons
     document.getElementById('startBtn').addEventListener('click', () => this.startGame());
     document.getElementById('restartBtn').addEventListener('click', () => this.startGame());
     document.getElementById('openShopBtn').addEventListener('click', () => this.openHangar());
@@ -264,6 +250,33 @@ class NeonSurgeGame {
     soundBtn.addEventListener('click', () => {
       this.sound.enabled = !this.sound.enabled;
       soundBtn.textContent = this.sound.enabled ? '🔊' : '🔇';
+    });
+  }
+
+  initMobileButtons() {
+    const btnLeft = document.getElementById('btnTouchLeft');
+    const btnRight = document.getElementById('btnTouchRight');
+    const btnBoost = document.getElementById('btnTouchBoost');
+
+    // Left Button
+    const startLeft = (e) => { e.preventDefault(); this.sound.init(); this.keys.left = true; };
+    const endLeft = (e) => { e.preventDefault(); this.keys.left = false; };
+    btnLeft.addEventListener('pointerdown', startLeft);
+    btnLeft.addEventListener('pointerup', endLeft);
+    btnLeft.addEventListener('pointerleave', endLeft);
+
+    // Right Button
+    const startRight = (e) => { e.preventDefault(); this.sound.init(); this.keys.right = true; };
+    const endRight = (e) => { e.preventDefault(); this.keys.right = false; };
+    btnRight.addEventListener('pointerdown', startRight);
+    btnRight.addEventListener('pointerup', endRight);
+    btnRight.addEventListener('pointerleave', endRight);
+
+    // Boost Button
+    btnBoost.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      this.sound.init();
+      if (this.state === 'PLAYING') this.triggerHyperBoost();
     });
   }
 
@@ -301,11 +314,10 @@ class NeonSurgeGame {
   gameOver() {
     this.sound.playCrash();
     this.state = 'GAMEOVER';
-    this.screenShake = 20;
+    this.screenShake = 18;
 
-    // Create massive explosion particles
-    this.createExplosion(this.player.x, this.player.y, 40, '#ff0077');
-    this.createExplosion(this.player.x, this.player.y, 30, '#00f0ff');
+    this.createExplosion(this.player.x, this.player.y, 35, '#ff0077');
+    this.createExplosion(this.player.x, this.player.y, 25, '#00f0ff');
 
     this.totalOrbs += this.runOrbs;
     if (this.score > this.highScore) {
@@ -314,7 +326,6 @@ class NeonSurgeGame {
     }
     localStorage.setItem('neonsurge_orbs', this.totalOrbs.toString());
 
-    // Update Game Over Modal
     document.getElementById('finalScore').textContent = this.score.toLocaleString();
     document.getElementById('finalOrbs').textContent = `+${this.runOrbs}`;
     document.getElementById('finalCombo').textContent = `${this.maxCombo}x`;
@@ -345,7 +356,7 @@ class NeonSurgeGame {
       card.className = `ship-item ${isEquipped ? 'active' : ''}`;
       card.innerHTML = `
         <div class="ship-preview-box">
-          <svg width="40" height="46" viewBox="0 0 40 46">
+          <svg width="34" height="40" viewBox="0 0 40 46">
             <polygon points="20,2 38,40 20,32 2,40" fill="${skin.color}" stroke="${skin.accent}" stroke-width="2"/>
           </svg>
         </div>
@@ -386,7 +397,7 @@ class NeonSurgeGame {
     document.getElementById('menuHighScore').textContent = this.highScore.toLocaleString();
     
     const badge = document.getElementById('multiplierBadge');
-    badge.textContent = `${this.combo}x MULTIPLIER`;
+    badge.textContent = `${this.combo}x`;
     if (this.combo > 1) {
       badge.style.color = '#00f0ff';
       badge.style.borderColor = '#00f0ff';
@@ -403,7 +414,7 @@ class NeonSurgeGame {
     this.powerupMaxDuration = 3.5;
     this.speed = this.baseSpeed * 2.2;
     this.sound.playBoost();
-    this.createFloatingText('HYPER BOOST ACTIVATED!', this.player.x, this.player.y - 40, '#00f0ff');
+    this.createFloatingText('HYPER BOOST!', this.player.x, this.player.y - 40, '#00f0ff');
   }
 
   triggerShield() {
@@ -411,19 +422,19 @@ class NeonSurgeGame {
     this.powerupDuration = 6.0;
     this.powerupMaxDuration = 6.0;
     this.sound.playPowerup();
-    this.createFloatingText('ENERGY SHIELD ONLINE!', this.player.x, this.player.y - 40, '#00ff66');
+    this.createFloatingText('SHIELD READY!', this.player.x, this.player.y - 40, '#00ff66');
   }
 
   createExplosion(x, y, count, color) {
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 8 + 2;
+      const speed = Math.random() * 7 + 2;
       this.particles.push({
         x,
         y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        radius: Math.random() * 4 + 1.5,
+        radius: Math.random() * 3.5 + 1.5,
         color,
         alpha: 1,
         decay: Math.random() * 0.03 + 0.02
@@ -446,13 +457,11 @@ class NeonSurgeGame {
   // 4. Update Game Loop
   // ==========================================
   update(dt) {
-    // Screen shake decay
     if (this.screenShake > 0) {
       this.screenShake -= dt * 30;
       if (this.screenShake < 0) this.screenShake = 0;
     }
 
-    // Stars scrolling
     this.stars.forEach(star => {
       star.y += star.speed * (this.speed / 4);
       if (star.y > this.canvas.height) {
@@ -463,12 +472,10 @@ class NeonSurgeGame {
 
     if (this.state !== 'PLAYING') return;
 
-    // Progression & Speed curve
     this.distance += this.speed * dt * 10;
     this.score += Math.round(this.speed * this.combo * 0.5);
     this.baseSpeed = 7 + Math.min(12, this.distance / 2500);
 
-    // Combo Timer Decay
     if (this.combo > 1) {
       this.comboTimer -= dt;
       if (this.comboTimer <= 0) {
@@ -477,7 +484,6 @@ class NeonSurgeGame {
       }
     }
 
-    // Power-up Timer
     if (this.activePowerup) {
       this.powerupDuration -= dt;
       const bar = document.getElementById('activePowerupBar');
@@ -494,29 +500,29 @@ class NeonSurgeGame {
       }
     }
 
-    // Player Movement
-    if (this.keys.left) this.player.targetX -= 12;
-    if (this.keys.right) this.player.targetX += 12;
+    // Left/Right Button Movement
+    if (this.keys.left) this.player.targetX -= 10;
+    if (this.keys.right) this.player.targetX += 10;
 
-    this.player.targetX = Math.max(30, Math.min(this.canvas.width - 30, this.player.targetX));
+    this.player.targetX = Math.max(25, Math.min(this.canvas.width - 25, this.player.targetX));
     const dx = this.player.targetX - this.player.x;
-    this.player.x += dx * 0.18;
-    this.player.tilt = Math.max(-0.4, Math.min(0.4, dx * 0.02));
+    this.player.x += dx * 0.2;
+    this.player.tilt = Math.max(-0.4, Math.min(0.4, dx * 0.025));
 
-    // Player Trail
-    this.player.trail.push({ x: this.player.x, y: this.player.y + 20, alpha: 0.8 });
-    if (this.player.trail.length > 14) this.player.trail.shift();
-    this.player.trail.forEach(t => t.alpha -= 0.05);
+    // Trail
+    this.player.trail.push({ x: this.player.x, y: this.player.y + 18, alpha: 0.8 });
+    if (this.player.trail.length > 12) this.player.trail.shift();
+    this.player.trail.forEach(t => t.alpha -= 0.06);
 
-    // Spawning Spikes & Barriers
-    if (Math.random() < 0.035 + (this.baseSpeed * 0.002)) {
+    // Spawning Obstacles
+    if (Math.random() < 0.032 + (this.baseSpeed * 0.002)) {
       const type = Math.random() > 0.4 ? 'barrier' : 'spike';
-      const width = type === 'barrier' ? Math.random() * 80 + 70 : 40;
+      const width = type === 'barrier' ? Math.random() * 60 + 60 : 36;
       this.obstacles.push({
-        x: Math.random() * (this.canvas.width - width - 40) + 20,
-        y: -60,
+        x: Math.random() * (this.canvas.width - width - 20) + 10,
+        y: -50,
         width,
-        height: type === 'barrier' ? 18 : 40,
+        height: type === 'barrier' ? 16 : 36,
         type,
         rotation: 0
       });
@@ -525,9 +531,9 @@ class NeonSurgeGame {
     // Spawning Orbs
     if (Math.random() < 0.05) {
       this.orbs.push({
-        x: Math.random() * (this.canvas.width - 60) + 30,
-        y: -40,
-        radius: 12,
+        x: Math.random() * (this.canvas.width - 40) + 20,
+        y: -30,
+        radius: 11,
         pulse: 0
       });
     }
@@ -536,21 +542,20 @@ class NeonSurgeGame {
     if (Math.random() < 0.006 && !this.activePowerup) {
       const pType = Math.random() > 0.5 ? 'SHIELD' : 'BOOST';
       this.powerups.push({
-        x: Math.random() * (this.canvas.width - 60) + 30,
-        y: -40,
+        x: Math.random() * (this.canvas.width - 40) + 20,
+        y: -30,
         type: pType,
-        radius: 16
+        radius: 15
       });
     }
 
-    // Move & Collision: Obstacles
+    // Obstacles Collision
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obs = this.obstacles[i];
       obs.y += this.speed;
       obs.rotation += 0.04;
 
-      // Hitbox check
-      const pBox = { x: this.player.x - 16, y: this.player.y - 20, w: 32, h: 40 };
+      const pBox = { x: this.player.x - 14, y: this.player.y - 18, w: 28, h: 36 };
       if (
         pBox.x < obs.x + obs.width &&
         pBox.x + pBox.w > obs.x &&
@@ -558,7 +563,6 @@ class NeonSurgeGame {
         pBox.y + pBox.h > obs.y
       ) {
         if (this.activePowerup === 'SHIELD' || this.activePowerup === 'BOOST') {
-          // Smash through obstacle
           this.createExplosion(obs.x + obs.width / 2, obs.y + obs.height / 2, 16, '#00f0ff');
           this.obstacles.splice(i, 1);
           this.score += 250 * this.combo;
@@ -575,18 +579,18 @@ class NeonSurgeGame {
       }
     }
 
-    // Move & Collision: Orbs
+    // Orbs Collision
     for (let i = this.orbs.length - 1; i >= 0; i--) {
       const orb = this.orbs[i];
       orb.y += this.speed;
       orb.pulse += 0.08;
 
       const dist = Math.hypot(this.player.x - orb.x, this.player.y - orb.y);
-      if (dist < orb.radius + 24) {
+      if (dist < orb.radius + 22) {
         this.sound.playOrb();
         this.runOrbs++;
         this.combo = Math.min(8, this.combo + 1);
-        this.comboTimer = 3.0; // 3s to chain next combo
+        this.comboTimer = 3.0;
         if (this.combo > this.maxCombo) this.maxCombo = this.combo;
 
         const points = 100 * this.combo;
@@ -605,13 +609,13 @@ class NeonSurgeGame {
       }
     }
 
-    // Move & Collision: Power-ups
+    // Power-ups Collision
     for (let i = this.powerups.length - 1; i >= 0; i--) {
       const p = this.powerups[i];
       p.y += this.speed;
 
       const dist = Math.hypot(this.player.x - p.x, this.player.y - p.y);
-      if (dist < p.radius + 24) {
+      if (dist < p.radius + 22) {
         if (p.type === 'SHIELD') this.triggerShield();
         if (p.type === 'BOOST') this.triggerHyperBoost();
         this.createExplosion(p.x, p.y, 20, p.type === 'SHIELD' ? '#00ff66' : '#00f0ff');
@@ -650,21 +654,18 @@ class NeonSurgeGame {
   draw() {
     this.ctx.save();
 
-    // Apply Screen Shake
     if (this.screenShake > 0) {
       const shakeX = (Math.random() - 0.5) * this.screenShake;
       const shakeY = (Math.random() - 0.5) * this.screenShake;
       this.ctx.translate(shakeX, shakeY);
     }
 
-    // Clear background
     this.ctx.fillStyle = '#070913';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Draw Synthwave Horizon Grid
     this.drawGrid();
 
-    // Draw Stars
+    // Stars
     this.ctx.fillStyle = '#ffffff';
     this.stars.forEach(star => {
       this.ctx.beginPath();
@@ -672,18 +673,17 @@ class NeonSurgeGame {
       this.ctx.fill();
     });
 
-    // Draw Orbs
+    // Orbs
     this.orbs.forEach(orb => {
       const glow = Math.sin(orb.pulse) * 4;
       this.ctx.save();
       this.ctx.shadowColor = '#ffe600';
-      this.ctx.shadowBlur = 15 + glow;
+      this.ctx.shadowBlur = 14 + glow;
       this.ctx.fillStyle = '#ffe600';
       this.ctx.beginPath();
       this.ctx.arc(orb.x, orb.y, orb.radius, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Inner Core
       this.ctx.fillStyle = '#ffffff';
       this.ctx.beginPath();
       this.ctx.arc(orb.x, orb.y, orb.radius * 0.4, 0, Math.PI * 2);
@@ -691,12 +691,12 @@ class NeonSurgeGame {
       this.ctx.restore();
     });
 
-    // Draw Power-ups
+    // Power-ups
     this.powerups.forEach(p => {
       const color = p.type === 'SHIELD' ? '#00ff66' : '#00f0ff';
       this.ctx.save();
       this.ctx.shadowColor = color;
-      this.ctx.shadowBlur = 18;
+      this.ctx.shadowBlur = 16;
       this.ctx.strokeStyle = color;
       this.ctx.lineWidth = 3;
       this.ctx.beginPath();
@@ -711,21 +711,19 @@ class NeonSurgeGame {
       this.ctx.restore();
     });
 
-    // Draw Obstacles
+    // Obstacles
     this.obstacles.forEach(obs => {
       this.ctx.save();
       this.ctx.shadowColor = '#ff0055';
       this.ctx.shadowBlur = 14;
 
       if (obs.type === 'barrier') {
-        // Red Laser Wall
-        this.ctx.fillStyle = 'rgba(255, 0, 85, 0.35)';
+        this.ctx.fillStyle = 'rgba(255, 0, 85, 0.4)';
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         this.ctx.strokeStyle = '#ff0055';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 2.5;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
       } else {
-        // Spinning Spike Cube
         this.ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
         this.ctx.rotate(obs.rotation);
         this.ctx.fillStyle = '#ff0055';
@@ -737,22 +735,22 @@ class NeonSurgeGame {
       this.ctx.restore();
     });
 
-    // Draw Player Trail
+    // Player Trail
     this.player.trail.forEach(t => {
       this.ctx.save();
       this.ctx.fillStyle = `rgba(0, 240, 255, ${t.alpha * 0.4})`;
       this.ctx.beginPath();
-      this.ctx.arc(t.x, t.y, 6, 0, Math.PI * 2);
+      this.ctx.arc(t.x, t.y, 5, 0, Math.PI * 2);
       this.ctx.fill();
       this.ctx.restore();
     });
 
-    // Draw Player Ship
+    // Ship
     if (this.state === 'PLAYING' || this.state === 'MENU') {
       this.drawPlayerShip();
     }
 
-    // Draw Particles
+    // Particles
     this.particles.forEach(p => {
       this.ctx.save();
       this.ctx.globalAlpha = Math.max(0, p.alpha);
@@ -763,14 +761,14 @@ class NeonSurgeGame {
       this.ctx.restore();
     });
 
-    // Draw Floating Text
+    // Floating Text
     this.floatingTexts.forEach(ft => {
       this.ctx.save();
       this.ctx.globalAlpha = Math.max(0, ft.alpha);
-      this.ctx.font = 'bold 14px Orbitron';
+      this.ctx.font = 'bold 13px Orbitron';
       this.ctx.fillStyle = ft.color;
       this.ctx.shadowColor = ft.color;
-      this.ctx.shadowBlur = 10;
+      this.ctx.shadowBlur = 8;
       this.ctx.textAlign = 'center';
       this.ctx.fillText(ft.text, ft.x, ft.y);
       this.ctx.restore();
@@ -781,14 +779,13 @@ class NeonSurgeGame {
 
   drawGrid() {
     const horizon = this.canvas.height * 0.45;
-    const gridOffset = (this.distance * 0.8) % 40;
+    const gridOffset = (this.distance * 0.8) % 36;
 
     this.ctx.save();
     this.ctx.strokeStyle = 'rgba(0, 240, 255, 0.12)';
     this.ctx.lineWidth = 1;
 
-    // Horizontal receding lines
-    for (let y = horizon; y < this.canvas.height; y += 24) {
+    for (let y = horizon; y < this.canvas.height; y += 22) {
       const curvedY = y + gridOffset;
       if (curvedY > this.canvas.height) continue;
       this.ctx.beginPath();
@@ -797,9 +794,8 @@ class NeonSurgeGame {
       this.ctx.stroke();
     }
 
-    // Perspective lines
     const centerX = this.canvas.width / 2;
-    for (let x = -this.canvas.width; x < this.canvas.width * 2; x += 60) {
+    for (let x = -this.canvas.width; x < this.canvas.width * 2; x += 55) {
       this.ctx.beginPath();
       this.ctx.moveTo(centerX, horizon);
       this.ctx.lineTo(x, this.canvas.height);
@@ -817,67 +813,58 @@ class NeonSurgeGame {
     this.ctx.translate(px, py);
     this.ctx.rotate(this.player.tilt);
 
-    // Active Shield Bubble
     if (this.activePowerup === 'SHIELD') {
       this.ctx.save();
       this.ctx.strokeStyle = '#00ff66';
       this.ctx.shadowColor = '#00ff66';
-      this.ctx.shadowBlur = 20;
+      this.ctx.shadowBlur = 18;
       this.ctx.lineWidth = 3;
       this.ctx.beginPath();
-      this.ctx.arc(0, 0, 36, 0, Math.PI * 2);
+      this.ctx.arc(0, 0, 32, 0, Math.PI * 2);
       this.ctx.stroke();
       this.ctx.restore();
     }
 
-    // Hyper Boost Flame Aura
     if (this.activePowerup === 'BOOST') {
       this.ctx.save();
       this.ctx.fillStyle = 'rgba(0, 240, 255, 0.3)';
       this.ctx.beginPath();
-      this.ctx.arc(0, 0, 38, 0, Math.PI * 2);
+      this.ctx.arc(0, 0, 34, 0, Math.PI * 2);
       this.ctx.fill();
       this.ctx.restore();
     }
 
-    // Ship Hull
     this.ctx.shadowColor = currentSkin.color;
-    this.ctx.shadowBlur = 16;
+    this.ctx.shadowBlur = 14;
     this.ctx.fillStyle = currentSkin.color;
     this.ctx.beginPath();
-    this.ctx.moveTo(0, -26);
-    this.ctx.lineTo(20, 22);
-    this.ctx.lineTo(0, 14);
-    this.ctx.lineTo(-20, 22);
+    this.ctx.moveTo(0, -24);
+    this.ctx.lineTo(18, 20);
+    this.ctx.lineTo(0, 12);
+    this.ctx.lineTo(-18, 20);
     this.ctx.closePath();
     this.ctx.fill();
 
-    // Wings & Accents
     this.ctx.strokeStyle = currentSkin.accent;
-    this.ctx.lineWidth = 2.5;
+    this.ctx.lineWidth = 2;
     this.ctx.stroke();
 
-    // Cockpit Glow
     this.ctx.fillStyle = '#ffffff';
     this.ctx.beginPath();
-    this.ctx.arc(0, -4, 4, 0, Math.PI * 2);
+    this.ctx.arc(0, -3, 3.5, 0, Math.PI * 2);
     this.ctx.fill();
 
-    // Plasma Thrusters Flame
     this.ctx.fillStyle = '#ff0077';
     this.ctx.beginPath();
-    this.ctx.moveTo(-10, 18);
-    this.ctx.lineTo(0, 32 + Math.random() * 8);
-    this.ctx.lineTo(10, 18);
+    this.ctx.moveTo(-8, 16);
+    this.ctx.lineTo(0, 28 + Math.random() * 6);
+    this.ctx.lineTo(8, 16);
     this.ctx.closePath();
     this.ctx.fill();
 
     this.ctx.restore();
   }
 
-  // ==========================================
-  // 6. Main RAF Loop
-  // ==========================================
   gameLoop(currentTime) {
     const dt = Math.min(0.05, (currentTime - this.lastTime) / 1000);
     this.lastTime = currentTime;
@@ -889,7 +876,6 @@ class NeonSurgeGame {
   }
 }
 
-// Initialize on page ready
 window.addEventListener('DOMContentLoaded', () => {
   window.game = new NeonSurgeGame();
 });

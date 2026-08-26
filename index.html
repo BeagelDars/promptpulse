@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#070913">
   <title>NEON SURGE | Cyber Velocity Arcade</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +17,6 @@
       <div class="hud-left">
         <div class="hud-brand">
           <span class="neon-glow">NEON SURGE</span>
-          <span class="version-tag">CYBER VELOCITY</span>
         </div>
       </div>
       <div class="hud-center">
@@ -24,7 +24,7 @@
           <span class="hud-label">SCORE</span>
           <span class="hud-value" id="currentScore">0</span>
         </div>
-        <div class="multiplier-badge" id="multiplierBadge">1x MULTIPLIER</div>
+        <div class="multiplier-badge" id="multiplierBadge">1x</div>
       </div>
       <div class="hud-right">
         <div class="credits-box">
@@ -47,26 +47,31 @@
         </div>
       </div>
 
+      <!-- On-Screen Mobile Action Controls -->
+      <div class="mobile-controls-overlay" id="mobileControls">
+        <div class="mobile-steer-group">
+          <button class="mobile-btn steer-btn" id="btnTouchLeft" aria-label="Steer Left">◄</button>
+          <button class="mobile-btn steer-btn" id="btnTouchRight" aria-label="Steer Right">►</button>
+        </div>
+        <button class="mobile-btn boost-btn" id="btnTouchBoost" aria-label="Hyper Boost">🚀 BOOST</button>
+      </div>
+
       <!-- Start / Menu Overlay Screen -->
       <div class="overlay-screen active" id="startScreen">
         <div class="menu-card">
           <div class="logo-title">
             <h1 class="glitch-text">NEON SURGE</h1>
-            <p class="tagline">Survive the infinite neon corridor. Dodge spikes, collect orbs, and trigger hyper-speed.</p>
+            <p class="tagline">Survive the infinite neon corridor. Dodge obstacles, collect orbs, and blast through hyper-space.</p>
           </div>
 
           <div class="controls-guide">
             <div class="control-item">
-              <span class="key-badge">A / D</span> or <span class="key-badge">&larr; / &rarr;</span>
-              <span>Steer Left & Right</span>
+              <span class="key-badge">📱 Mobile</span>
+              <span>Tap screen sides or use buttons below</span>
             </div>
             <div class="control-item">
-              <span class="key-badge">Touch / Drag</span>
-              <span>Smooth Mobile Control</span>
-            </div>
-            <div class="control-item">
-              <span class="key-badge">SPACE</span>
-              <span>Activate Hyper Booster</span>
+              <span class="key-badge">💻 Desktop</span>
+              <span>A / D or ← / → &bull; Space for Boost</span>
             </div>
           </div>
 
@@ -84,7 +89,7 @@
       <!-- Game Over Screen -->
       <div class="overlay-screen" id="gameOverScreen">
         <div class="menu-card game-over-card">
-          <h2 class="game-over-title">CRITICAL HULL COLLAPSE</h2>
+          <h2 class="game-over-title">HULL COLLAPSE</h2>
           <p class="game-over-subtitle">Ship destroyed in the grid.</p>
 
           <div class="results-grid">
@@ -93,15 +98,15 @@
               <span class="res-val" id="finalScore">0</span>
             </div>
             <div class="result-box">
-              <span class="res-label">ORBS COLLECTED</span>
+              <span class="res-label">ORBS</span>
               <span class="res-val orbs" id="finalOrbs">+0</span>
             </div>
             <div class="result-box">
-              <span class="res-label">MAX COMBO</span>
+              <span class="res-label">COMBO</span>
               <span class="res-val accent" id="finalCombo">1x</span>
             </div>
             <div class="result-box">
-              <span class="res-label">ALL-TIME BEST</span>
+              <span class="res-label">BEST</span>
               <span class="res-val gold" id="finalBestScore">0</span>
             </div>
           </div>
@@ -118,7 +123,7 @@
         <div class="menu-card hangar-card">
           <div class="hangar-header">
             <h2>SHIP HANGAR & SKINS</h2>
-            <div class="hangar-orbs">Orbs Balance: <strong id="shopOrbsCount">0</strong> 🟡</div>
+            <div class="hangar-orbs">Orbs: <strong id="shopOrbsCount">0</strong> 🟡</div>
           </div>
 
           <div class="ships-grid" id="shipsGrid">
@@ -131,11 +136,6 @@
         </div>
       </div>
     </main>
-
-    <!-- Mobile Touch Area Banner -->
-    <footer class="touch-controls-hint">
-      <span>Drag on screen or use A/D keys &bull; Collect Energy Orbs &bull; Dodge Red Barriers</span>
-    </footer>
   </div>
 
   <script src="app.js"></script>
