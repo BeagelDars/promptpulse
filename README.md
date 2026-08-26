@@ -1,34 +1,30 @@
-# PromptPulse | AI Gateway & Cost Observability Platform
+# NEON SURGE | Cyber Velocity Arcade
 
-A modern, high-performance developer tool and B2B SaaS platform designed to solve runaway LLM API expenses, latency spikes, and provider outages for software teams.
-
----
-
-## 🚀 Features & Architecture
-
-1. **Live Cost & Latency Observability**:
-   - Real-time spend tracking against monthly budget caps.
-   - P50/P95/P99 latency percentiles and token efficiency metrics.
-   - Live inbound request stream showing model, token counts, costs, and cache resolution.
-
-2. **Semantic Caching & Deduplication Gateway**:
-   - Reduces upstream API expenses by caching semantically equivalent queries.
-   - Decreases response latency down to **<5ms** for cached queries with **$0 token cost**.
-
-3. **Interactive Gateway Simulator & Playground**:
-   - Send simulated API prompts across multiple model providers (`GPT-4o`, `Claude 3.5 Sonnet`, `Gemini 1.5 Pro`, `Llama 3 70B`).
-   - Test cache hits, latency drops, and cost calculations live.
-
-4. **Budget Guardrails & Circuit Breakers**:
-   - Hard and soft monthly spend limits.
-   - Automatic rate limiting and circuit breakers preventing runaway agent loops.
-
-5. **2-Line Drop-in SDK Integration**:
-   - Compatible with OpenAI, Anthropic, and LangChain SDKs simply by modifying the API base URL.
+A fast-paced, high-octane 60 FPS neon synthwave arcade runner built for instant play on desktop and mobile browsers.
 
 ---
 
-## 💻 Accessing the Application
+## 🎮 Play Instantly (Free 24/7 Worldwide Link)
+👉 **[https://beageldars.github.io/promptpulse/](https://beageldars.github.io/promptpulse/)**
 
-The development server is running locally. Access it at:
-👉 **[http://localhost:8080](http://localhost:8080)**
+---
+
+## 🕹️ Controls
+* **Desktop:**
+  * `A` / `D` or `←` / `→` — Steer Ship Left & Right
+  * `Spacebar` — Trigger Hyper Boost
+* **Mobile / Touch:**
+  * Touch & Drag anywhere on the screen for smooth steering
+
+---
+
+## ✨ Features
+1. **Juicy 60 FPS Canvas Physics:** High-speed perspective synthwave grid, starfield parallax, screen shake on impact, and dynamic particle explosions.
+2. **Built-in Web Audio Sound FX:** Procedural synthesizers generate retro laser chimes, coin pickups, hyper-boost whooshes, and crash rumbles with 0 external sound files needed.
+3. **Power-Ups & Multipliers:**
+   * 🛡️ **Energy Shield:** Smash right through obstacles unharmed.
+   * ⚡ **Hyper Boost:** Supercharge speed and demolish barriers for bonus points.
+   * 🟡 **Combo Multipliers:** Chain together orb collections for up to 8x score multipliers!
+4. **Ship Hangar & Skin Shop:**
+   * Unlock and equip cyber ship skins (`Apex Dart`, `Void Phantom`, `Solar Flare`, `Matrix Ghost`) using orbs collected during your runs.
+5. **Local High Score Tracking:** Automatically persists your personal best score, max combo, and orbs in browser `localStorage`.

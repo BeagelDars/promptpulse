@@ -2,306 +2,140 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OmniStudio | All-in-One Productivity, AI & Developer Suite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NEON SURGE | Cyber Velocity Arcade</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <div class="app-container">
-    <!-- Sidebar Navigation -->
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-icon">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none">
-            <rect x="3" y="3" width="7" height="7"></rect>
-            <rect x="14" y="3" width="7" height="7"></rect>
-            <rect x="14" y="14" width="7" height="7"></rect>
-            <rect x="3" y="14" width="7" height="7"></rect>
-          </svg>
+  <div class="game-wrapper">
+    <!-- Top HUD Bar -->
+    <header class="hud-top">
+      <div class="hud-left">
+        <div class="hud-brand">
+          <span class="neon-glow">NEON SURGE</span>
+          <span class="version-tag">CYBER VELOCITY</span>
         </div>
-        <div class="brand-text">
-          <h2>OmniStudio</h2>
-          <span>All-in-One Power Suite</span>
+      </div>
+      <div class="hud-center">
+        <div class="score-box">
+          <span class="hud-label">SCORE</span>
+          <span class="hud-value" id="currentScore">0</span>
+        </div>
+        <div class="multiplier-badge" id="multiplierBadge">1x MULTIPLIER</div>
+      </div>
+      <div class="hud-right">
+        <div class="credits-box">
+          <span class="hud-label">ORBS</span>
+          <span class="hud-value orbs" id="totalOrbs">0</span>
+        </div>
+        <button id="soundToggleBtn" class="hud-icon-btn" title="Toggle Sound">🔊</button>
+      </div>
+    </header>
+
+    <!-- Canvas Game Arena -->
+    <main class="canvas-container">
+      <canvas id="gameCanvas"></canvas>
+
+      <!-- Active Powerup Overlay Indicator -->
+      <div class="active-powerup-bar" id="activePowerupBar" style="display: none;">
+        <span id="powerupName">SHIELD ACTIVE</span>
+        <div class="powerup-timer-track">
+          <div class="powerup-timer-fill" id="powerupTimerFill"></div>
         </div>
       </div>
 
-      <nav class="nav-menu">
-        <button class="nav-item active" data-tab="ai-hub">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-          </svg>
-          AI Cost & Prompt Hub
-        </button>
-        <button class="nav-item" data-tab="data-tools">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
-            <polyline points="16 18 22 12 16 6"></polyline>
-            <polyline points="8 6 2 12 8 18"></polyline>
-          </svg>
-          Data & Code Tools
-        </button>
-        <button class="nav-item" data-tab="text-editor">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-          </svg>
-          Markdown & Text Studio
-        </button>
-        <button class="nav-item" data-tab="financial">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
-            <line x1="12" y1="1" x2="12" y2="23"></line>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-          </svg>
-          Business & Rates Calculator
-        </button>
-        <button class="nav-item" data-tab="tasks">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
-            <path d="M9 11l3 3L22 4"></path>
-            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-          </svg>
-          Task & Project Board
-        </button>
-      </nav>
+      <!-- Start / Menu Overlay Screen -->
+      <div class="overlay-screen active" id="startScreen">
+        <div class="menu-card">
+          <div class="logo-title">
+            <h1 class="glitch-text">NEON SURGE</h1>
+            <p class="tagline">Survive the infinite neon corridor. Dodge spikes, collect orbs, and trigger hyper-speed.</p>
+          </div>
 
-      <div class="sidebar-footer">
-        <div class="user-profile">
-          <div class="avatar">OS</div>
-          <div class="user-details">
-            <span class="user-name">OmniStudio Cloud</span>
-            <span class="user-role">100% Free & Open</span>
+          <div class="controls-guide">
+            <div class="control-item">
+              <span class="key-badge">A / D</span> or <span class="key-badge">&larr; / &rarr;</span>
+              <span>Steer Left & Right</span>
+            </div>
+            <div class="control-item">
+              <span class="key-badge">Touch / Drag</span>
+              <span>Smooth Mobile Control</span>
+            </div>
+            <div class="control-item">
+              <span class="key-badge">SPACE</span>
+              <span>Activate Hyper Booster</span>
+            </div>
+          </div>
+
+          <div class="menu-actions">
+            <button class="btn-play" id="startBtn">START MISSION</button>
+            <button class="btn-shop" id="openShopBtn">⚡ SHIP HANGAR</button>
+          </div>
+
+          <div class="best-score-display">
+            HIGH SCORE: <strong id="menuHighScore">0</strong>
           </div>
         </div>
       </div>
-    </aside>
 
-    <!-- Main Workspace -->
-    <main class="main-content">
-      <header class="top-bar">
-        <div class="page-title">
-          <h1 id="pageTitle">AI Cost & Prompt Optimizer</h1>
-          <p class="subtitle">Calculate LLM token costs, optimize prompt lengths, and simulate speed & cache savings.</p>
-        </div>
-      </header>
+      <!-- Game Over Screen -->
+      <div class="overlay-screen" id="gameOverScreen">
+        <div class="menu-card game-over-card">
+          <h2 class="game-over-title">CRITICAL HULL COLLAPSE</h2>
+          <p class="game-over-subtitle">Ship destroyed in the grid.</p>
 
-      <!-- TAB 1: AI HUB -->
-      <section id="tab-ai-hub" class="tab-pane active">
-        <div class="grid-2-col">
-          <div class="card">
-            <div class="card-header">
-              <h3>Prompt Analyzer & Cost Calculator</h3>
+          <div class="results-grid">
+            <div class="result-box">
+              <span class="res-label">FINAL SCORE</span>
+              <span class="res-val" id="finalScore">0</span>
             </div>
-            <div class="card-body">
-              <div class="form-group mb-4">
-                <label for="aiModel">Target Model</label>
-                <select id="aiModel" class="form-control">
-                  <option value="gpt-4o">GPT-4o ($5.00 / 1M input &bull; $15.00 / 1M output)</option>
-                  <option value="gpt-4o-mini">GPT-4o Mini ($0.15 / 1M input &bull; $0.60 / 1M output)</option>
-                  <option value="claude-3-5-sonnet">Claude 3.5 Sonnet ($3.00 / 1M input &bull; $15.00 / 1M output)</option>
-                  <option value="gemini-1.5-pro">Gemini 1.5 Pro ($3.50 / 1M input &bull; $10.50 / 1M output)</option>
-                  <option value="llama-3-70b">Llama 3 70B ($0.80 / 1M tokens)</option>
-                </select>
-              </div>
-
-              <div class="form-group mb-4">
-                <label for="aiPromptInput">Your Prompt / Text</label>
-                <textarea id="aiPromptInput" class="form-control" rows="6" placeholder="Paste your system prompt, document text, or query here...">Analyze customer feedback data and summarize key sentiment patterns in a clean bulleted report.</textarea>
-              </div>
-
-              <div class="form-group mb-4">
-                <label for="aiExpectedQueries">Estimated Monthly Queries</label>
-                <input type="number" id="aiExpectedQueries" class="form-control" value="25000" min="100" step="500">
-              </div>
+            <div class="result-box">
+              <span class="res-label">ORBS COLLECTED</span>
+              <span class="res-val orbs" id="finalOrbs">+0</span>
+            </div>
+            <div class="result-box">
+              <span class="res-label">MAX COMBO</span>
+              <span class="res-val accent" id="finalCombo">1x</span>
+            </div>
+            <div class="result-box">
+              <span class="res-label">ALL-TIME BEST</span>
+              <span class="res-val gold" id="finalBestScore">0</span>
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-header">
-              <h3>Cost Breakdown & Cache Optimization</h3>
-            </div>
-            <div class="card-body">
-              <div class="calculation-summary-box">
-                <div class="sum-item">
-                  <span class="sum-label">Estimated Tokens</span>
-                  <span class="sum-val primary" id="calcTokenCount">0 tokens</span>
-                </div>
-                <div class="sum-item">
-                  <span class="sum-label">Cost Per Single Query</span>
-                  <span class="sum-val success" id="calcSingleCost">$0.0000</span>
-                </div>
-                <div class="sum-item">
-                  <span class="sum-label">Monthly Direct Spend</span>
-                  <span class="sum-val" id="calcMonthlySpend">$0.00</span>
-                </div>
-                <div class="sum-item">
-                  <span class="sum-label">Savings with 35% Cache</span>
-                  <span class="sum-val success" id="calcMonthlySavings">$0.00 / mo</span>
-                </div>
-              </div>
-
-              <div class="mt-4">
-                <h4>Prompt Optimization Recommendations:</h4>
-                <ul class="recommendation-list" id="promptTips">
-                  <li>✨ <strong>Clean Token Density:</strong> Your prompt length is concise and well-structured.</li>
-                  <li>⚡ <strong>Semantic Caching:</strong> Enabling semantic caching for this query pattern saves up to 35% monthly.</li>
-                </ul>
-              </div>
-            </div>
+          <div class="menu-actions mt-6">
+            <button class="btn-play" id="restartBtn">LAUNCH AGAIN</button>
+            <button class="btn-secondary" id="gameOverShopBtn">SHIP HANGAR</button>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- TAB 2: DATA & CODE TOOLS -->
-      <section id="tab-data-tools" class="tab-pane">
-        <div class="grid-2-col">
-          <div class="card">
-            <div class="card-header">
-              <h3>Input Data / Text</h3>
-              <div class="btn-group">
-                <button class="btn-secondary btn-sm" id="btnFormatJson">Format JSON</button>
-                <button class="btn-secondary btn-sm" id="btnBase64Encode">Base64 Encode</button>
-                <button class="btn-secondary btn-sm" id="btnBase64Decode">Base64 Decode</button>
-                <button class="btn-secondary btn-sm" id="btnHashSha256">SHA-256 Hash</button>
-              </div>
-            </div>
-            <div class="card-body">
-              <textarea id="dataToolInput" class="form-control" rows="12" placeholder="Paste JSON, base64, or plain text here...">{"name":"OmniStudio","features":["AI Cost Estimator","JSON Formatter","Base64 Engine","Markdown Editor","Freelance Calculator"],"version":1.0,"status":"active"}</textarea>
-            </div>
+      <!-- Ship Hangar / Customization Modal -->
+      <div class="overlay-screen" id="shopScreen">
+        <div class="menu-card hangar-card">
+          <div class="hangar-header">
+            <h2>SHIP HANGAR & SKINS</h2>
+            <div class="hangar-orbs">Orbs Balance: <strong id="shopOrbsCount">0</strong> 🟡</div>
           </div>
 
-          <div class="card">
-            <div class="card-header">
-              <h3>Output / Result</h3>
-              <button class="btn-primary btn-sm" id="btnCopyOutput">Copy Output</button>
-            </div>
-            <div class="card-body">
-              <textarea id="dataToolOutput" class="form-control" rows="12" readonly placeholder="Output will appear here..."></textarea>
-            </div>
+          <div class="ships-grid" id="shipsGrid">
+            <!-- Dynamically populated -->
+          </div>
+
+          <div class="hangar-footer">
+            <button class="btn-secondary" id="closeShopBtn">BACK TO MENU</button>
           </div>
         </div>
-      </section>
-
-      <!-- TAB 3: MARKDOWN & TEXT STUDIO -->
-      <section id="tab-text-editor" class="tab-pane">
-        <div class="grid-2-col">
-          <div class="card">
-            <div class="card-header">
-              <h3>Markdown Editor</h3>
-              <div class="editor-stats">
-                <span id="mdWordCount">0 words</span> &bull; <span id="mdCharCount">0 characters</span>
-              </div>
-            </div>
-            <div class="card-body">
-              <textarea id="markdownInput" class="form-control" rows="14" placeholder="# Enter Markdown here..."># Welcome to OmniStudio
-
-OmniStudio is a unified productivity, AI cost analysis, and developer workspace.
-
-### Key Highlights:
-- **Instant Calculations:** Measure AI model token prices across OpenAI, Anthropic, and Google.
-- **Data Utilities:** Format JSON, encode Base64, and generate hashes.
-- **Freelance Calculator:** Determine your target hourly rate based on living costs and profit goals.
-
-*Enjoy building great things!*</textarea>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <h3>Live Rendered Preview</h3>
-            </div>
-            <div class="card-body preview-container" id="markdownPreview">
-              <!-- Rendered preview HTML -->
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 4: BUSINESS & FREELANCE CALCULATOR -->
-      <section id="tab-financial" class="tab-pane">
-        <div class="grid-2-col">
-          <div class="card">
-            <div class="card-header">
-              <h3>Freelance & Project Rate Engine</h3>
-            </div>
-            <div class="card-body">
-              <form id="rateCalcForm" class="form-grid">
-                <div class="form-group">
-                  <label for="desiredAnnualIncome">Desired Annual Take-Home ($)</label>
-                  <input type="number" id="desiredAnnualIncome" class="form-control" value="120000" step="5000">
-                </div>
-                <div class="form-group">
-                  <label for="annualExpenses">Annual Business Expenses ($)</label>
-                  <input type="number" id="annualExpenses" class="form-control" value="15000" step="1000">
-                </div>
-                <div class="form-group">
-                  <label for="taxRatePct">Estimated Tax Rate (%)</label>
-                  <input type="number" id="taxRatePct" class="form-control" value="25" min="0" max="60" step="1">
-                </div>
-                <div class="form-group">
-                  <label for="billableHoursPerWeek">Billable Hours / Week</label>
-                  <input type="number" id="billableHoursPerWeek" class="form-control" value="25" min="5" max="60" step="1">
-                </div>
-                <div class="form-group full-width">
-                  <label for="weeksVacation">Vacation / Sick Weeks per Year</label>
-                  <input type="number" id="weeksVacation" class="form-control" value="4" min="0" max="15">
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <h3>Recommended Pricing Targets</h3>
-            </div>
-            <div class="card-body">
-              <div class="calculation-summary-box">
-                <div class="sum-item">
-                  <span class="sum-label">Minimum Hourly Rate</span>
-                  <span class="sum-val primary" id="recHourlyRate">$0 / hr</span>
-                </div>
-                <div class="sum-item">
-                  <span class="sum-label">Recommended Day Rate</span>
-                  <span class="sum-val success" id="recDayRate">$0 / day</span>
-                </div>
-                <div class="sum-item">
-                  <span class="sum-label">Gross Revenue Target</span>
-                  <span class="sum-val" id="recGrossRevenue">$0 / yr</span>
-                </div>
-                <div class="sum-item">
-                  <span class="sum-label">Total Billable Hours / Year</span>
-                  <span class="sum-val muted" id="recTotalHours">0 hrs</span>
-                </div>
-              </div>
-
-              <div class="mt-4">
-                <h4>Pricing Insight:</h4>
-                <p class="text-muted">Charging value-based or fixed project fees benchmarked against this hourly baseline guarantees your income targets while allowing margin for overhead.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 5: TASK & PROJECT BOARD -->
-      <section id="tab-tasks" class="tab-pane">
-        <div class="card">
-          <div class="card-header">
-            <h3>Interactive Task Board</h3>
-            <div class="task-input-bar">
-              <input type="text" id="newTaskInput" class="form-control" placeholder="Add a new task..." style="width:260px;">
-              <button class="btn-primary btn-sm" id="btnAddTask">+ Add Task</button>
-            </div>
-          </div>
-          <div class="card-body">
-            <div class="tasks-list" id="tasksList">
-              <!-- Rendered tasks -->
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
     </main>
+
+    <!-- Mobile Touch Area Banner -->
+    <footer class="touch-controls-hint">
+      <span>Drag on screen or use A/D keys &bull; Collect Energy Orbs &bull; Dodge Red Barriers</span>
+    </footer>
   </div>
 
   <script src="app.js"></script>
