@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromptPulse | Production AI Gateway & Cost Observability</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h2>PromptPulse</h2>
+          <span>AI Gateway & Observability</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="analytics">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+            <path d="M18 20V10M12 20V4M6 20v-6"></path>
+          </svg>
+          Live Observability
+        </button>
+        <button class="nav-item" data-tab="playground">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          Gateway Playground
+        </button>
+        <button class="nav-item" data-tab="keys">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+            <path d="M21 2l-2 2m-2-2l2 2M3 21l9-9m0 0a5 5 0 1 0-7-7 5 5 0 0 0 7 7z"></path>
+          </svg>
+          API Key Manager
+        </button>
+        <button class="nav-item" data-tab="cache">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          Cache Inspector
+        </button>
+        <button class="nav-item" data-tab="guardrails">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Budget & Providers
+        </button>
+        <button class="nav-item" data-tab="integration">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+          </svg>
+          SDK & cURL Setup
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="avatar">PP</div>
+          <div class="user-details">
+            <span class="user-name">Local Gateway</span>
+            <span class="user-role">http://localhost:8080</span>
+          </div>
+        </div>
+        <div class="data-actions">
+          <button id="clearLogsBtn" class="btn-ghost btn-sm" title="Clear request logs">Clear Logs</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Navigation Header -->
+      <header class="top-bar">
+        <div class="page-title">
+          <h1 id="pageTitle">Live Cost & Latency Observability</h1>
+          <p class="subtitle">Real-time gateway telemetry, live semantic caching, and spend guardrails.</p>
+        </div>
+        <div class="quick-stats-bar">
+          <div class="quick-stat-badge">
+            <span class="label">Total Savings</span>
+            <span class="val success" id="statTotalSavings">$0.00</span>
+          </div>
+          <div class="quick-stat-badge primary">
+            <span class="label">Cache Hit Rate</span>
+            <span class="val" id="statCacheHitRate">0.0%</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- TAB 1: LIVE OBSERVABILITY -->
+      <section id="tab-analytics" class="tab-pane active">
+        <!-- Top Metrics Cards -->
+        <div class="grid-cards-3">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Monthly Spend</span>
+              <span class="stat-tag success" id="budgetStatusTag">Healthy</span>
+            </div>
+            <div class="stat-body">
+              <div class="stat-number" id="cardMonthlySpend">$0.00</div>
+              <p class="stat-desc" id="budgetCapText">Monthly Budget Cap: $1,000.00</p>
+              <div class="progress-wrap">
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill fill-needs" id="budgetProgressFill" style="width: 0%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Avg Gateway Latency</span>
+              <span class="stat-tag primary">Real-time</span>
+            </div>
+            <div class="stat-body">
+              <div class="stat-number accent" id="cardAvgLatency">0 ms</div>
+              <p class="stat-desc">Cached queries resolve in <strong>&lt;5 ms</strong></p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Total Requests Processed</span>
+              <span class="stat-tag">Throughput</span>
+            </div>
+            <div class="stat-body">
+              <div class="stat-number highlight" id="cardTotalRequests">0</div>
+              <p class="stat-desc"><span id="cardTotalTokens">0</span> total tokens proxied</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-time Request Stream Table -->
+        <div class="card mt-6">
+          <div class="card-header">
+            <h3>Live Gateway Request Log</h3>
+            <span class="badge"><span class="pulse-dot"></span> Active Proxy</span>
+          </div>
+          <div class="card-body table-responsive">
+            <table class="data-table" id="requestsTable">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Route / Endpoint</th>
+                  <th>Model</th>
+                  <th>Status</th>
+                  <th>Latency</th>
+                  <th>Tokens</th>
+                  <th>Cost ($)</th>
+                  <th>Cache Status</th>
+                </tr>
+              </thead>
+              <tbody id="requestsTableBody">
+                <tr><td colspan="8" style="text-align:center; color:#94a3b8;">No requests proxied yet. Send a query via the Playground or cURL!</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: GATEWAY PLAYGROUND (REAL LIVE EXECUTION) -->
+      <section id="tab-playground" class="tab-pane">
+        <div class="grid-2-col">
+          <div class="card">
+            <div class="card-header">
+              <h3>Live Proxy Playground</h3>
+              <span class="badge">Hits POST /v1/chat/completions</span>
+            </div>
+            <div class="card-body">
+              <form id="simulatorForm">
+                <div class="form-group mb-4">
+                  <label for="simModel">Target Model Provider</label>
+                  <select id="simModel" class="form-control">
+                    <option value="gpt-4o">GPT-4o ($5.00 / 1M tokens)</option>
+                    <option value="gpt-4o-mini">GPT-4o Mini ($0.15 / 1M tokens)</option>
+                    <option value="claude-3-5-sonnet">Claude 3.5 Sonnet ($3.00 / 1M tokens)</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro ($3.50 / 1M tokens)</option>
+                    <option value="llama-3-70b">Llama 3 70B ($0.80 / 1M tokens)</option>
+                  </select>
+                </div>
+
+                <div class="form-group mb-4">
+                  <label for="simPrompt">User Prompt</label>
+                  <textarea id="simPrompt" class="form-control" rows="4" placeholder="Enter a prompt to test semantic caching & circuit breakers...">Explain the difference between TCP and UDP in three bullet points.</textarea>
+                </div>
+
+                <button type="submit" class="btn-primary" id="simSubmitBtn">Send Query via Gateway</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Gateway Telemetry & Response</h3>
+              <span id="simStatusBadge" class="stat-tag primary">Idle</span>
+            </div>
+            <div class="card-body">
+              <div class="calculation-summary-box">
+                <div class="sum-item">
+                  <span class="sum-label">Latency</span>
+                  <span class="sum-val primary" id="simLatency">-- ms</span>
+                </div>
+                <div class="sum-item">
+                  <span class="sum-label">Calculated Cost</span>
+                  <span class="sum-val success" id="simCost">$0.0000</span>
+                </div>
+                <div class="sum-item">
+                  <span class="sum-label">Token Usage</span>
+                  <span class="sum-val" id="simTokens">0 tokens</span>
+                </div>
+                <div class="sum-item">
+                  <span class="sum-label">Cache Resolution</span>
+                  <span class="sum-val muted" id="simCacheState">--</span>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <label>Raw Completion Response Payload</label>
+                <div class="response-box" id="simResponseOutput">Submit a query to test proxy latency, caching, and token metering...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: API KEY MANAGER -->
+      <section id="tab-keys" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>Gateway API Keys</h3>
+            <button class="btn-primary btn-sm" id="createKeyBtn">+ Create New API Key</button>
+          </div>
+          <div class="card-body">
+            <p class="text-muted mb-4">Use these keys to authenticate your client applications with the PromptPulse proxy.</p>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Key Name</th>
+                    <th>Secret Key Token</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="keysTableBody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: CACHE INSPECTOR -->
+      <section id="tab-cache" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>Semantic & Exact Match Cache Store</h3>
+            <button class="btn-ghost btn-sm" id="purgeCacheBtn" style="color: var(--danger);">Purge All Cache</button>
+          </div>
+          <div class="card-body">
+            <p class="text-muted mb-4">Prompt responses stored in local memory and persisted to disk. Subsequent identical/similar prompts resolve in &lt;5ms at $0 cost.</p>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Hash</th>
+                    <th>Prompt Snippet</th>
+                    <th>Model</th>
+                    <th>Tokens</th>
+                    <th>Hit Count</th>
+                    <th>Total Savings ($)</th>
+                  </tr>
+                </thead>
+                <tbody id="cacheTableBody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: BUDGET & PROVIDER SETTINGS -->
+      <section id="tab-guardrails" class="tab-pane">
+        <div class="grid-2-col">
+          <div class="card">
+            <div class="card-header">
+              <h3>Budget Guardrails & Rules</h3>
+            </div>
+            <div class="card-body">
+              <form id="guardrailsForm" class="form-grid">
+                <div class="form-group">
+                  <label for="monthlyBudgetCap">Monthly Hard Budget Cap ($)</label>
+                  <input type="number" id="monthlyBudgetCap" class="form-control" value="1000" min="10" step="50">
+                </div>
+                <div class="form-group">
+                  <label for="dailySoftLimit">Daily Soft Alert Limit ($)</label>
+                  <input type="number" id="dailySoftLimit" class="form-control" value="50" min="5" step="5">
+                </div>
+                <div class="form-group">
+                  <label for="maxTokensPerReq">Max Tokens Per Single Request</label>
+                  <input type="number" id="maxTokensPerReq" class="form-control" value="4096" min="256" step="256">
+                </div>
+                <div class="form-group">
+                  <label for="rateLimitRpm">Rate Limit (Requests / Min)</label>
+                  <input type="number" id="rateLimitRpm" class="form-control" value="120" min="10" step="10">
+                </div>
+                <div class="form-group full-width">
+                  <button type="button" class="btn-primary" id="saveRulesBtn">Save Guardrail Settings</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Upstream Provider Pass-Through (Optional)</h3>
+            </div>
+            <div class="card-body">
+              <p class="text-muted mb-4">Add your real API keys to forward misses directly to upstream production APIs.</p>
+              <div class="form-group mb-4">
+                <label for="upstreamOpenAiKey">OpenAI Secret API Key</label>
+                <input type="password" id="upstreamOpenAiKey" class="form-control" placeholder="sk-proj-...">
+              </div>
+              <button type="button" class="btn-secondary" id="saveUpstreamBtn">Save Provider Keys</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: INTEGRATION & SDK -->
+      <section id="tab-integration" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>Immediate Drop-in Setup (cURL / Python / Node.js)</h3>
+          </div>
+          <div class="card-body">
+            <h4 class="mb-2">1. Test with cURL (Run in your terminal right now!)</h4>
+            <pre class="code-block" id="curlSnippet"><code>curl -X POST http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer pp_live_default" \
+  -d '{
+    "model": "gpt-4o",
+    "messages": [{"role": "user", "content": "Hello PromptPulse!"}]
+  }'</code></pre>
+
+            <h4 class="mt-4 mb-2">2. Python (OpenAI Client)</h4>
+            <pre class="code-block"><code>import openai
+
+# Point OpenAI directly at your PromptPulse gateway
+client = openai.OpenAI(
+    base_url="http://localhost:8080/v1",
+    api_key="pp_live_default"  # Any active PromptPulse key
+)
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Analyze quarterly customer retention."}]
+)
+print(response.choices[0].message.content)</code></pre>
+
+            <h4 class="mt-4 mb-2">3. Node.js / TypeScript</h4>
+            <pre class="code-block"><code>import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  baseURL: 'http://localhost:8080/v1',
+  apiKey: 'pp_live_default',
+});
+
+const completion = await openai.chat.completions.create({
+  model: 'gpt-4o',
+  messages: [{ role: 'user', content: 'Generate high-converting landing page copy.' }],
+});
+console.log(completion.choices[0].message.content);</code></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+{
+  "settings": {
+    "monthlyBudgetCap": 1000,
+    "dailySoftLimit": 50,
+    "maxTokensPerReq": 4096,
+    "rateLimitRpm": 120,
+    "autoFallback": true,
+    "upstreamOpenAiKey": "",
+    "upstreamOpenRouterKey": "",
+    "cacheTtlHours": 72
+  },
+  "apiKeys": [
+    {
+      "id": "key_1",
+      "name": "Production App Key",
+      "key": "pp_live_50cbf3523a56907daf37c0fb",
+      "created": "2026-08-26T17:47:22.120Z"
+    }
+  ],
+  "cache": {
+    "6335a51ed70558cce80b5a6db19d458de6b3b15cdedf4095738e2ea916f468f5": {
+      "prompt": "user:What is PromptPulse?",
+      "model": "gpt-4o",
+      "tokens": 74,
+      "cost": 0.0010500000000000002,
+      "responsePayload": {
+        "id": "chatcmpl-1d010767337ebbfdd1c367f2",
+        "object": "chat.completion",
+        "created": 1787766487,
+        "model": "gpt-4o",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "[PromptPulse Gateway (gpt-4o)]\nProcessed query successfully.\n\nQuery Received: \"What is PromptPulse?\"\n\nGateway Features Applied:\n✓ Content-hash semantic verification\n✓ Budget guardrail checked\n✓ Upstream token compression\n✓ Result cached for sub-5ms subsequent executions."
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 6,
+          "completion_tokens": 68,
+          "total_tokens": 74
+        }
+      },
+      "hits": 2,
+      "created": "2026-08-26T17:48:07.460Z"
+    }
+  },
+  "logs": [
+    {
+      "id": "req_1787766487460",
+      "time": "19:48:07",
+      "endpoint": "/v1/chat/completions",
+      "model": "gpt-4o",
+      "status": 200,
+      "latency": 31,
+      "tokens": 74,
+      "cost": 0.0010500000000000002,
+      "cache": "MISS"
+    },
+    {
+      "id": "req_1787766493411",
+      "time": "19:48:13",
+      "endpoint": "/v1/chat/completions",
+      "model": "gpt-4o",
+      "status": 200,
+      "latency": 3,
+      "tokens": 74,
+      "cost": 0,
+      "cache": "HIT"
+    }
+  ],
+  "metrics": {
+    "totalRequests": 2,
+    "cacheHits": 1,
+    "totalTokens": 148,
+    "totalSpend": 0.0010500000000000002,
+    "totalSavings": 0.0010500000000000002,
+    "totalLatencySum": 34
+  }
+}
