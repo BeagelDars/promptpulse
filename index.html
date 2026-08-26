@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PromptPulse | Production AI Gateway & Cost Observability</title>
+  <title>OmniStudio | All-in-One Productivity, AI & Developer Suite</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -12,320 +12,240 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- Sidebar -->
+    <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-icon">
           <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none">
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
           </svg>
         </div>
         <div class="brand-text">
-          <h2>PromptPulse</h2>
-          <span>AI Gateway & Observability</span>
+          <h2>OmniStudio</h2>
+          <span>All-in-One Power Suite</span>
         </div>
       </div>
 
       <nav class="nav-menu">
-        <button class="nav-item active" data-tab="analytics">
+        <button class="nav-item active" data-tab="ai-hub">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
-            <path d="M18 20V10M12 20V4M6 20v-6"></path>
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
           </svg>
-          Live Observability
+          AI Cost & Prompt Hub
         </button>
-        <button class="nav-item" data-tab="playground">
+        <button class="nav-item" data-tab="data-tools">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
             <polyline points="16 18 22 12 16 6"></polyline>
             <polyline points="8 6 2 12 8 18"></polyline>
           </svg>
-          Gateway Playground
+          Data & Code Tools
         </button>
-        <button class="nav-item" data-tab="keys">
+        <button class="nav-item" data-tab="text-editor">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
-            <path d="M21 2l-2 2m-2-2l2 2M3 21l9-9m0 0a5 5 0 1 0-7-7 5 5 0 0 0 7 7z"></path>
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
           </svg>
-          API Key Manager
+          Markdown & Text Studio
         </button>
-        <button class="nav-item" data-tab="cache">
+        <button class="nav-item" data-tab="financial">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
-            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
           </svg>
-          Cache Inspector
+          Business & Rates Calculator
         </button>
-        <button class="nav-item" data-tab="guardrails">
+        <button class="nav-item" data-tab="tasks">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="M9 11l3 3L22 4"></path>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
           </svg>
-          Budget & Providers
-        </button>
-        <button class="nav-item" data-tab="integration">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
-            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-            <line x1="6" y1="6" x2="6.01" y2="6"></line>
-            <line x1="6" y1="18" x2="6.01" y2="18"></line>
-          </svg>
-          SDK & cURL Setup
+          Task & Project Board
         </button>
       </nav>
 
       <div class="sidebar-footer">
         <div class="user-profile">
-          <div class="avatar">PP</div>
+          <div class="avatar">OS</div>
           <div class="user-details">
-            <span class="user-name">Local Gateway</span>
-            <span class="user-role">http://localhost:8080</span>
+            <span class="user-name">OmniStudio Cloud</span>
+            <span class="user-role">100% Free & Open</span>
           </div>
-        </div>
-        <div class="data-actions">
-          <button id="clearLogsBtn" class="btn-ghost btn-sm" title="Clear request logs">Clear Logs</button>
         </div>
       </div>
     </aside>
 
-    <!-- Main Content -->
+    <!-- Main Workspace -->
     <main class="main-content">
-      <!-- Top Navigation Header -->
       <header class="top-bar">
         <div class="page-title">
-          <h1 id="pageTitle">Live Cost & Latency Observability</h1>
-          <p class="subtitle">Real-time gateway telemetry, live semantic caching, and spend guardrails.</p>
-        </div>
-        <div class="quick-stats-bar">
-          <div class="quick-stat-badge">
-            <span class="label">Total Savings</span>
-            <span class="val success" id="statTotalSavings">$0.00</span>
-          </div>
-          <div class="quick-stat-badge primary">
-            <span class="label">Cache Hit Rate</span>
-            <span class="val" id="statCacheHitRate">0.0%</span>
-          </div>
+          <h1 id="pageTitle">AI Cost & Prompt Optimizer</h1>
+          <p class="subtitle">Calculate LLM token costs, optimize prompt lengths, and simulate speed & cache savings.</p>
         </div>
       </header>
 
-      <!-- TAB 1: LIVE OBSERVABILITY -->
-      <section id="tab-analytics" class="tab-pane active">
-        <!-- Top Metrics Cards -->
-        <div class="grid-cards-3">
-          <div class="stat-card">
-            <div class="stat-header">
-              <span class="stat-title">Monthly Spend</span>
-              <span class="stat-tag success" id="budgetStatusTag">Healthy</span>
+      <!-- TAB 1: AI HUB -->
+      <section id="tab-ai-hub" class="tab-pane active">
+        <div class="grid-2-col">
+          <div class="card">
+            <div class="card-header">
+              <h3>Prompt Analyzer & Cost Calculator</h3>
             </div>
-            <div class="stat-body">
-              <div class="stat-number" id="cardMonthlySpend">$0.00</div>
-              <p class="stat-desc" id="budgetCapText">Monthly Budget Cap: $1,000.00</p>
-              <div class="progress-wrap">
-                <div class="progress-bar-container">
-                  <div class="progress-bar-fill fill-needs" id="budgetProgressFill" style="width: 0%;"></div>
-                </div>
+            <div class="card-body">
+              <div class="form-group mb-4">
+                <label for="aiModel">Target Model</label>
+                <select id="aiModel" class="form-control">
+                  <option value="gpt-4o">GPT-4o ($5.00 / 1M input &bull; $15.00 / 1M output)</option>
+                  <option value="gpt-4o-mini">GPT-4o Mini ($0.15 / 1M input &bull; $0.60 / 1M output)</option>
+                  <option value="claude-3-5-sonnet">Claude 3.5 Sonnet ($3.00 / 1M input &bull; $15.00 / 1M output)</option>
+                  <option value="gemini-1.5-pro">Gemini 1.5 Pro ($3.50 / 1M input &bull; $10.50 / 1M output)</option>
+                  <option value="llama-3-70b">Llama 3 70B ($0.80 / 1M tokens)</option>
+                </select>
+              </div>
+
+              <div class="form-group mb-4">
+                <label for="aiPromptInput">Your Prompt / Text</label>
+                <textarea id="aiPromptInput" class="form-control" rows="6" placeholder="Paste your system prompt, document text, or query here...">Analyze customer feedback data and summarize key sentiment patterns in a clean bulleted report.</textarea>
+              </div>
+
+              <div class="form-group mb-4">
+                <label for="aiExpectedQueries">Estimated Monthly Queries</label>
+                <input type="number" id="aiExpectedQueries" class="form-control" value="25000" min="100" step="500">
               </div>
             </div>
           </div>
 
-          <div class="stat-card">
-            <div class="stat-header">
-              <span class="stat-title">Avg Gateway Latency</span>
-              <span class="stat-tag primary">Real-time</span>
-            </div>
-            <div class="stat-body">
-              <div class="stat-number accent" id="cardAvgLatency">0 ms</div>
-              <p class="stat-desc">Cached queries resolve in <strong>&lt;5 ms</strong></p>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-header">
-              <span class="stat-title">Total Requests Processed</span>
-              <span class="stat-tag">Throughput</span>
-            </div>
-            <div class="stat-body">
-              <div class="stat-number highlight" id="cardTotalRequests">0</div>
-              <p class="stat-desc"><span id="cardTotalTokens">0</span> total tokens proxied</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Real-time Request Stream Table -->
-        <div class="card mt-6">
-          <div class="card-header">
-            <h3>Live Gateway Request Log</h3>
-            <span class="badge"><span class="pulse-dot"></span> Active Proxy</span>
-          </div>
-          <div class="card-body table-responsive">
-            <table class="data-table" id="requestsTable">
-              <thead>
-                <tr>
-                  <th>Timestamp</th>
-                  <th>Route / Endpoint</th>
-                  <th>Model</th>
-                  <th>Status</th>
-                  <th>Latency</th>
-                  <th>Tokens</th>
-                  <th>Cost ($)</th>
-                  <th>Cache Status</th>
-                </tr>
-              </thead>
-              <tbody id="requestsTableBody">
-                <tr><td colspan="8" style="text-align:center; color:#94a3b8;">No requests proxied yet. Send a query via the Playground or cURL!</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 2: GATEWAY PLAYGROUND (REAL LIVE EXECUTION) -->
-      <section id="tab-playground" class="tab-pane">
-        <div class="grid-2-col">
           <div class="card">
             <div class="card-header">
-              <h3>Live Proxy Playground</h3>
-              <span class="badge">Hits POST /v1/chat/completions</span>
-            </div>
-            <div class="card-body">
-              <form id="simulatorForm">
-                <div class="form-group mb-4">
-                  <label for="simModel">Target Model Provider</label>
-                  <select id="simModel" class="form-control">
-                    <option value="gpt-4o">GPT-4o ($5.00 / 1M tokens)</option>
-                    <option value="gpt-4o-mini">GPT-4o Mini ($0.15 / 1M tokens)</option>
-                    <option value="claude-3-5-sonnet">Claude 3.5 Sonnet ($3.00 / 1M tokens)</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro ($3.50 / 1M tokens)</option>
-                    <option value="llama-3-70b">Llama 3 70B ($0.80 / 1M tokens)</option>
-                  </select>
-                </div>
-
-                <div class="form-group mb-4">
-                  <label for="simPrompt">User Prompt</label>
-                  <textarea id="simPrompt" class="form-control" rows="4" placeholder="Enter a prompt to test semantic caching & circuit breakers...">Explain the difference between TCP and UDP in three bullet points.</textarea>
-                </div>
-
-                <button type="submit" class="btn-primary" id="simSubmitBtn">Send Query via Gateway</button>
-              </form>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <h3>Gateway Telemetry & Response</h3>
-              <span id="simStatusBadge" class="stat-tag primary">Idle</span>
+              <h3>Cost Breakdown & Cache Optimization</h3>
             </div>
             <div class="card-body">
               <div class="calculation-summary-box">
                 <div class="sum-item">
-                  <span class="sum-label">Latency</span>
-                  <span class="sum-val primary" id="simLatency">-- ms</span>
+                  <span class="sum-label">Estimated Tokens</span>
+                  <span class="sum-val primary" id="calcTokenCount">0 tokens</span>
                 </div>
                 <div class="sum-item">
-                  <span class="sum-label">Calculated Cost</span>
-                  <span class="sum-val success" id="simCost">$0.0000</span>
+                  <span class="sum-label">Cost Per Single Query</span>
+                  <span class="sum-val success" id="calcSingleCost">$0.0000</span>
                 </div>
                 <div class="sum-item">
-                  <span class="sum-label">Token Usage</span>
-                  <span class="sum-val" id="simTokens">0 tokens</span>
+                  <span class="sum-label">Monthly Direct Spend</span>
+                  <span class="sum-val" id="calcMonthlySpend">$0.00</span>
                 </div>
                 <div class="sum-item">
-                  <span class="sum-label">Cache Resolution</span>
-                  <span class="sum-val muted" id="simCacheState">--</span>
+                  <span class="sum-label">Savings with 35% Cache</span>
+                  <span class="sum-val success" id="calcMonthlySavings">$0.00 / mo</span>
                 </div>
               </div>
 
               <div class="mt-4">
-                <label>Raw Completion Response Payload</label>
-                <div class="response-box" id="simResponseOutput">Submit a query to test proxy latency, caching, and token metering...</div>
+                <h4>Prompt Optimization Recommendations:</h4>
+                <ul class="recommendation-list" id="promptTips">
+                  <li>✨ <strong>Clean Token Density:</strong> Your prompt length is concise and well-structured.</li>
+                  <li>⚡ <strong>Semantic Caching:</strong> Enabling semantic caching for this query pattern saves up to 35% monthly.</li>
+                </ul>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- TAB 3: API KEY MANAGER -->
-      <section id="tab-keys" class="tab-pane">
-        <div class="card">
-          <div class="card-header">
-            <h3>Gateway API Keys</h3>
-            <button class="btn-primary btn-sm" id="createKeyBtn">+ Create New API Key</button>
-          </div>
-          <div class="card-body">
-            <p class="text-muted mb-4">Use these keys to authenticate your client applications with the PromptPulse proxy.</p>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Key Name</th>
-                    <th>Secret Key Token</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="keysTableBody">
-                  <!-- Dynamically populated -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 4: CACHE INSPECTOR -->
-      <section id="tab-cache" class="tab-pane">
-        <div class="card">
-          <div class="card-header">
-            <h3>Semantic & Exact Match Cache Store</h3>
-            <button class="btn-ghost btn-sm" id="purgeCacheBtn" style="color: var(--danger);">Purge All Cache</button>
-          </div>
-          <div class="card-body">
-            <p class="text-muted mb-4">Prompt responses stored in local memory and persisted to disk. Subsequent identical/similar prompts resolve in &lt;5ms at $0 cost.</p>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Hash</th>
-                    <th>Prompt Snippet</th>
-                    <th>Model</th>
-                    <th>Tokens</th>
-                    <th>Hit Count</th>
-                    <th>Total Savings ($)</th>
-                  </tr>
-                </thead>
-                <tbody id="cacheTableBody">
-                  <!-- Dynamically populated -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 5: BUDGET & PROVIDER SETTINGS -->
-      <section id="tab-guardrails" class="tab-pane">
+      <!-- TAB 2: DATA & CODE TOOLS -->
+      <section id="tab-data-tools" class="tab-pane">
         <div class="grid-2-col">
           <div class="card">
             <div class="card-header">
-              <h3>Budget Guardrails & Rules</h3>
+              <h3>Input Data / Text</h3>
+              <div class="btn-group">
+                <button class="btn-secondary btn-sm" id="btnFormatJson">Format JSON</button>
+                <button class="btn-secondary btn-sm" id="btnBase64Encode">Base64 Encode</button>
+                <button class="btn-secondary btn-sm" id="btnBase64Decode">Base64 Decode</button>
+                <button class="btn-secondary btn-sm" id="btnHashSha256">SHA-256 Hash</button>
+              </div>
             </div>
             <div class="card-body">
-              <form id="guardrailsForm" class="form-grid">
+              <textarea id="dataToolInput" class="form-control" rows="12" placeholder="Paste JSON, base64, or plain text here...">{"name":"OmniStudio","features":["AI Cost Estimator","JSON Formatter","Base64 Engine","Markdown Editor","Freelance Calculator"],"version":1.0,"status":"active"}</textarea>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Output / Result</h3>
+              <button class="btn-primary btn-sm" id="btnCopyOutput">Copy Output</button>
+            </div>
+            <div class="card-body">
+              <textarea id="dataToolOutput" class="form-control" rows="12" readonly placeholder="Output will appear here..."></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: MARKDOWN & TEXT STUDIO -->
+      <section id="tab-text-editor" class="tab-pane">
+        <div class="grid-2-col">
+          <div class="card">
+            <div class="card-header">
+              <h3>Markdown Editor</h3>
+              <div class="editor-stats">
+                <span id="mdWordCount">0 words</span> &bull; <span id="mdCharCount">0 characters</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <textarea id="markdownInput" class="form-control" rows="14" placeholder="# Enter Markdown here..."># Welcome to OmniStudio
+
+OmniStudio is a unified productivity, AI cost analysis, and developer workspace.
+
+### Key Highlights:
+- **Instant Calculations:** Measure AI model token prices across OpenAI, Anthropic, and Google.
+- **Data Utilities:** Format JSON, encode Base64, and generate hashes.
+- **Freelance Calculator:** Determine your target hourly rate based on living costs and profit goals.
+
+*Enjoy building great things!*</textarea>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Live Rendered Preview</h3>
+            </div>
+            <div class="card-body preview-container" id="markdownPreview">
+              <!-- Rendered preview HTML -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: BUSINESS & FREELANCE CALCULATOR -->
+      <section id="tab-financial" class="tab-pane">
+        <div class="grid-2-col">
+          <div class="card">
+            <div class="card-header">
+              <h3>Freelance & Project Rate Engine</h3>
+            </div>
+            <div class="card-body">
+              <form id="rateCalcForm" class="form-grid">
                 <div class="form-group">
-                  <label for="monthlyBudgetCap">Monthly Hard Budget Cap ($)</label>
-                  <input type="number" id="monthlyBudgetCap" class="form-control" value="1000" min="10" step="50">
+                  <label for="desiredAnnualIncome">Desired Annual Take-Home ($)</label>
+                  <input type="number" id="desiredAnnualIncome" class="form-control" value="120000" step="5000">
                 </div>
                 <div class="form-group">
-                  <label for="dailySoftLimit">Daily Soft Alert Limit ($)</label>
-                  <input type="number" id="dailySoftLimit" class="form-control" value="50" min="5" step="5">
+                  <label for="annualExpenses">Annual Business Expenses ($)</label>
+                  <input type="number" id="annualExpenses" class="form-control" value="15000" step="1000">
                 </div>
                 <div class="form-group">
-                  <label for="maxTokensPerReq">Max Tokens Per Single Request</label>
-                  <input type="number" id="maxTokensPerReq" class="form-control" value="4096" min="256" step="256">
+                  <label for="taxRatePct">Estimated Tax Rate (%)</label>
+                  <input type="number" id="taxRatePct" class="form-control" value="25" min="0" max="60" step="1">
                 </div>
                 <div class="form-group">
-                  <label for="rateLimitRpm">Rate Limit (Requests / Min)</label>
-                  <input type="number" id="rateLimitRpm" class="form-control" value="120" min="10" step="10">
+                  <label for="billableHoursPerWeek">Billable Hours / Week</label>
+                  <input type="number" id="billableHoursPerWeek" class="form-control" value="25" min="5" max="60" step="1">
                 </div>
                 <div class="form-group full-width">
-                  <button type="button" class="btn-primary" id="saveRulesBtn">Save Guardrail Settings</button>
+                  <label for="weeksVacation">Vacation / Sick Weeks per Year</label>
+                  <input type="number" id="weeksVacation" class="form-control" value="4" min="0" max="15">
                 </div>
               </form>
             </div>
@@ -333,64 +253,51 @@
 
           <div class="card">
             <div class="card-header">
-              <h3>Upstream Provider Pass-Through (Optional)</h3>
+              <h3>Recommended Pricing Targets</h3>
             </div>
             <div class="card-body">
-              <p class="text-muted mb-4">Add your real API keys to forward misses directly to upstream production APIs.</p>
-              <div class="form-group mb-4">
-                <label for="upstreamOpenAiKey">OpenAI Secret API Key</label>
-                <input type="password" id="upstreamOpenAiKey" class="form-control" placeholder="sk-proj-...">
+              <div class="calculation-summary-box">
+                <div class="sum-item">
+                  <span class="sum-label">Minimum Hourly Rate</span>
+                  <span class="sum-val primary" id="recHourlyRate">$0 / hr</span>
+                </div>
+                <div class="sum-item">
+                  <span class="sum-label">Recommended Day Rate</span>
+                  <span class="sum-val success" id="recDayRate">$0 / day</span>
+                </div>
+                <div class="sum-item">
+                  <span class="sum-label">Gross Revenue Target</span>
+                  <span class="sum-val" id="recGrossRevenue">$0 / yr</span>
+                </div>
+                <div class="sum-item">
+                  <span class="sum-label">Total Billable Hours / Year</span>
+                  <span class="sum-val muted" id="recTotalHours">0 hrs</span>
+                </div>
               </div>
-              <button type="button" class="btn-secondary" id="saveUpstreamBtn">Save Provider Keys</button>
+
+              <div class="mt-4">
+                <h4>Pricing Insight:</h4>
+                <p class="text-muted">Charging value-based or fixed project fees benchmarked against this hourly baseline guarantees your income targets while allowing margin for overhead.</p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- TAB 6: INTEGRATION & SDK -->
-      <section id="tab-integration" class="tab-pane">
+      <!-- TAB 5: TASK & PROJECT BOARD -->
+      <section id="tab-tasks" class="tab-pane">
         <div class="card">
           <div class="card-header">
-            <h3>Immediate Drop-in Setup (cURL / Python / Node.js)</h3>
+            <h3>Interactive Task Board</h3>
+            <div class="task-input-bar">
+              <input type="text" id="newTaskInput" class="form-control" placeholder="Add a new task..." style="width:260px;">
+              <button class="btn-primary btn-sm" id="btnAddTask">+ Add Task</button>
+            </div>
           </div>
           <div class="card-body">
-            <h4 class="mb-2">1. Test with cURL (Run in your terminal right now!)</h4>
-            <pre class="code-block" id="curlSnippet"><code>curl -X POST http://localhost:8080/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer pp_live_default" \
-  -d '{
-    "model": "gpt-4o",
-    "messages": [{"role": "user", "content": "Hello PromptPulse!"}]
-  }'</code></pre>
-
-            <h4 class="mt-4 mb-2">2. Python (OpenAI Client)</h4>
-            <pre class="code-block"><code>import openai
-
-# Point OpenAI directly at your PromptPulse gateway
-client = openai.OpenAI(
-    base_url="http://localhost:8080/v1",
-    api_key="pp_live_default"  # Any active PromptPulse key
-)
-
-response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": "Analyze quarterly customer retention."}]
-)
-print(response.choices[0].message.content)</code></pre>
-
-            <h4 class="mt-4 mb-2">3. Node.js / TypeScript</h4>
-            <pre class="code-block"><code>import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  baseURL: 'http://localhost:8080/v1',
-  apiKey: 'pp_live_default',
-});
-
-const completion = await openai.chat.completions.create({
-  model: 'gpt-4o',
-  messages: [{ role: 'user', content: 'Generate high-converting landing page copy.' }],
-});
-console.log(completion.choices[0].message.content);</code></pre>
+            <div class="tasks-list" id="tasksList">
+              <!-- Rendered tasks -->
+            </div>
           </div>
         </div>
       </section>

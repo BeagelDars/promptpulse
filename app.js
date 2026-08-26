@@ -1,21 +1,15 @@
 /**
- * PromptPulse Frontend Controller
- * Connects directly with the local Node.js Gateway REST & Proxy APIs.
+ * OmniStudio All-in-One Power Suite
+ * Unified Productivity, AI Cost Estimator, Data Tools & Freelance Rate Engine
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   initNavigation();
-  initPlayground();
-  initKeyManager();
-  initCacheManager();
-  initGuardrailsManager();
-  initGlobalActions();
-
-  // Initial Data Fetch
-  refreshAllData();
-
-  // Auto poll backend for real-time traffic updates every 2 seconds
-  setInterval(refreshTelemetryAndLogs, 2000);
+  initAiHub();
+  initDataTools();
+  initMarkdownStudio();
+  initRateEngine();
+  initTaskManager();
 });
 
 /* ==========================================================================
@@ -25,20 +19,35 @@ function initNavigation() {
   const navButtons = document.querySelectorAll('.nav-item');
   const panes = document.querySelectorAll('.tab-pane');
   const pageTitle = document.getElementById('pageTitle');
+  const subtitle = document.querySelector('.subtitle');
 
-  const titles = {
-    analytics: 'Live Cost & Latency Observability',
-    playground: 'Gateway Playground & Live Tester',
-    keys: 'API Key Manager',
-    cache: 'Semantic & Exact Cache Inspector',
-    guardrails: 'Budget Guardrails & Upstream Providers',
-    integration: 'SDK Setup & cURL Quickstart'
+  const headers = {
+    'ai-hub': {
+      title: 'AI Cost & Prompt Optimizer',
+      desc: 'Calculate LLM token costs, optimize prompt lengths, and simulate speed & cache savings.'
+    },
+    'data-tools': {
+      title: 'Data & Code Utilities',
+      desc: 'Format JSON, encode/decode Base64, and generate cryptographic hashes instantly.'
+    },
+    'text-editor': {
+      title: 'Markdown & Text Studio',
+      desc: 'Live formatted markdown editing with real-time word and character analytics.'
+    },
+    'financial': {
+      title: 'Business & Freelance Rate Engine',
+      desc: 'Determine target billable hourly rates based on lifestyle expenses, taxes, and vacation time.'
+    },
+    'tasks': {
+      title: 'Task & Project Board',
+      desc: 'Keep track of daily priorities and project milestones with persistent local storage.'
+    }
   };
 
   navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const tabKey = btn.dataset.tab;
-      
+
       navButtons.forEach(b => b.classList.remove('active'));
       panes.forEach(p => p.classList.remove('active'));
 
@@ -46,374 +55,261 @@ function initNavigation() {
       const targetPane = document.getElementById(`tab-${tabKey}`);
       if (targetPane) targetPane.classList.add('active');
 
-      if (pageTitle && titles[tabKey]) {
-        pageTitle.textContent = titles[tabKey];
+      if (headers[tabKey]) {
+        pageTitle.textContent = headers[tabKey].title;
+        subtitle.textContent = headers[tabKey].desc;
       }
-
-      if (tabKey === 'keys') loadApiKeys();
-      if (tabKey === 'cache') loadCacheInspector();
-      if (tabKey === 'guardrails') loadGuardrailSettings();
     });
   });
 }
 
 /* ==========================================================================
-   Data Fetchers
+   1. AI Hub & Cost Estimator
    ========================================================================== */
-async function refreshAllData() {
-  await Promise.all([
-    refreshTelemetryAndLogs(),
-    loadApiKeys(),
-    loadCacheInspector(),
-    loadGuardrailSettings()
-  ]);
-}
-
-async function refreshTelemetryAndLogs() {
-  try {
-    const [statsRes, logsRes] = await Promise.all([
-      fetch('/api/stats'),
-      fetch('/api/logs')
-    ]);
-
-    if (statsRes.ok) {
-      const stats = await statsRes.json();
-      renderStats(stats);
-    }
-
-    if (logsRes.ok) {
-      const logs = await logsRes.json();
-      renderLogs(logs);
-    }
-  } catch (err) {
-    console.warn('Error fetching telemetry:', err);
-  }
-}
-
-function renderStats(stats) {
-  document.getElementById('statTotalSavings').textContent = `$${stats.totalSavings}`;
-  document.getElementById('statCacheHitRate').textContent = stats.hitRate;
-  document.getElementById('cardMonthlySpend').textContent = `$${stats.totalSpend}`;
-  document.getElementById('cardAvgLatency').textContent = `${stats.avgLatencyMs} ms`;
-  document.getElementById('cardTotalRequests').textContent = stats.totalRequests;
-  document.getElementById('cardTotalTokens').textContent = stats.totalTokens.toLocaleString();
-
-  const cap = stats.monthlyBudgetCap || 1000;
-  document.getElementById('budgetCapText').textContent = `Monthly Budget Cap: $${cap.toFixed(2)}`;
-
-  const pct = Math.min(100, (parseFloat(stats.totalSpend) / cap) * 100);
-  document.getElementById('budgetProgressFill').style.width = `${pct}%`;
-
-  const tag = document.getElementById('budgetStatusTag');
-  if (pct > 90) {
-    tag.className = 'stat-tag danger';
-    tag.textContent = 'Critical (90%+)';
-  } else if (pct > 70) {
-    tag.className = 'stat-tag warning';
-    tag.textContent = 'Warning';
-  } else {
-    tag.className = 'stat-tag success';
-    tag.textContent = 'Healthy';
-  }
-}
-
-function renderLogs(logs) {
-  const tbody = document.getElementById('requestsTableBody');
-  if (!tbody) return;
-
-  if (!logs || logs.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#94a3b8;">No requests proxied yet. Send a query via the Playground or cURL!</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = '';
-  logs.forEach(row => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${row.time}</td>
-      <td style="font-family: var(--font-mono); color: var(--primary);">${row.endpoint}</td>
-      <td>${row.model}</td>
-      <td><span style="color: var(--success); font-weight:600;">${row.status}</span></td>
-      <td>${row.latency} ms</td>
-      <td>${row.tokens}</td>
-      <td>$${Number(row.cost).toFixed(4)}</td>
-      <td><span class="status-badge ${row.cache === 'HIT' ? 'hit' : 'miss'}">${row.cache}</span></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-/* ==========================================================================
-   Playground (Real POST /v1/chat/completions)
-   ========================================================================== */
-function initPlayground() {
-  const form = document.getElementById('simulatorForm');
-  const submitBtn = document.getElementById('simSubmitBtn');
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const model = document.getElementById('simModel').value;
-    const prompt = document.getElementById('simPrompt').value.trim();
-
-    if (!prompt) return;
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Proxying Request...';
-
-    const startTime = Date.now();
-
-    try {
-      const res = await fetch('/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer pp_live_default'
-        },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-
-      const latency = Date.now() - startTime;
-      const data = await res.json();
-
-      const cacheHeader = res.headers.get('X-PromptPulse-Cache') || (data.usage?.prompt_tokens ? 'MISS' : 'HIT');
-      const isHit = cacheHeader === 'HIT';
-
-      const tokens = data.usage?.total_tokens || 0;
-      const cost = isHit ? 0.0000 : (tokens / 1000) * 0.005;
-
-      document.getElementById('simLatency').textContent = `${latency} ms`;
-      document.getElementById('simCost').textContent = `$${cost.toFixed(4)}`;
-      document.getElementById('simTokens').textContent = `${tokens} tokens`;
-      document.getElementById('simCacheState').textContent = isHit ? 'HIT (Cached & Free)' : 'MISS (Processed)';
-      
-      const badge = document.getElementById('simStatusBadge');
-      badge.className = `stat-tag ${isHit ? 'success' : 'primary'}`;
-      badge.textContent = isHit ? 'Cache HIT' : 'Upstream 200 OK';
-
-      const completionText = data.choices?.[0]?.message?.content || JSON.stringify(data, null, 2);
-      document.getElementById('simResponseOutput').textContent = completionText;
-
-      refreshTelemetryAndLogs();
-      loadCacheInspector();
-    } catch (err) {
-      document.getElementById('simResponseOutput').textContent = `Error: ${err.message}`;
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Send Query via Gateway';
-    }
-  });
-}
-
-/* ==========================================================================
-   API Key Manager
-   ========================================================================== */
-async function loadApiKeys() {
-  try {
-    const res = await fetch('/api/keys');
-    if (!res.ok) return;
-    const keys = await res.json();
-
-    const tbody = document.getElementById('keysTableBody');
-    if (!tbody) return;
-
-    tbody.innerHTML = '';
-    keys.forEach(k => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${escapeHtml(k.name)}</strong></td>
-        <td><code style="font-family:var(--font-mono); background:#f1f5f9; padding:4px 8px; border-radius:4px;">${k.key}</code></td>
-        <td>${new Date(k.created).toLocaleDateString()}</td>
-        <td>
-          <button class="btn-secondary btn-sm" onclick="copyToClipboard('${k.key}')">Copy</button>
-          <button class="btn-ghost btn-sm" onclick="deleteApiKey('${k.id}')">Revoke</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    // Update code snippets with active key if available
-    if (keys.length > 0) {
-      const activeKey = keys[0].key;
-      const snippet = document.getElementById('curlSnippet');
-      if (snippet) {
-        snippet.querySelector('code').textContent = `curl -X POST http://localhost:8080/v1/chat/completions \\
-  -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer ${activeKey}" \\
-  -d '{
-    "model": "gpt-4o",
-    "messages": [{"role": "user", "content": "Hello PromptPulse!"}]
-  }'`;
-      }
-    }
-  } catch (err) {
-    console.warn('Error loading keys:', err);
-  }
-}
-
-function initKeyManager() {
-  document.getElementById('createKeyBtn').addEventListener('click', async () => {
-    const name = prompt('Enter a name for this API Key:', 'Client App Key');
-    if (!name) return;
-
-    try {
-      const res = await fetch('/api/keys', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-      });
-      if (res.ok) {
-        loadApiKeys();
-      }
-    } catch (err) {
-      alert('Failed to create key: ' + err.message);
-    }
-  });
-}
-
-window.deleteApiKey = async function(id) {
-  if (!confirm('Are you sure you want to revoke this API key?')) return;
-  try {
-    await fetch(`/api/keys/${id}`, { method: 'DELETE' });
-    loadApiKeys();
-  } catch (err) {
-    alert('Error revoking key: ' + err.message);
-  }
+const AI_PRICING = {
+  'gpt-4o': { prompt: 5.00, completion: 15.00 },
+  'gpt-4o-mini': { prompt: 0.15, completion: 0.60 },
+  'claude-3-5-sonnet': { prompt: 3.00, completion: 15.00 },
+  'gemini-1.5-pro': { prompt: 3.50, completion: 10.50 },
+  'llama-3-70b': { prompt: 0.80, completion: 0.80 }
 };
 
-window.copyToClipboard = function(text) {
-  navigator.clipboard.writeText(text);
-  alert('API Key copied to clipboard!');
-};
+function initAiHub() {
+  const modelSelect = document.getElementById('aiModel');
+  const promptInput = document.getElementById('aiPromptInput');
+  const queriesInput = document.getElementById('aiExpectedQueries');
+
+  function calculateAiCosts() {
+    const model = modelSelect.value;
+    const text = promptInput.value;
+    const monthlyQueries = parseInt(queriesInput.value, 10) || 1000;
+
+    // Approximate tokens (~4 chars per token)
+    const promptTokens = Math.max(1, Math.round(text.length / 3.8));
+    const estimatedCompletionTokens = Math.round(promptTokens * 0.8) + 50;
+    const totalTokensPerQuery = promptTokens + estimatedCompletionTokens;
+
+    const rates = AI_PRICING[model] || AI_PRICING['gpt-4o'];
+    const singleCost = ((promptTokens / 1000000) * rates.prompt) + ((estimatedCompletionTokens / 1000000) * rates.completion);
+    const monthlySpend = singleCost * monthlyQueries;
+    const monthlySavings = monthlySpend * 0.35; // 35% cache assumption
+
+    document.getElementById('calcTokenCount').textContent = `${totalTokensPerQuery.toLocaleString()} tokens`;
+    document.getElementById('calcSingleCost').textContent = `$${singleCost.toFixed(4)}`;
+    document.getElementById('calcMonthlySpend').textContent = `$${monthlySpend.toFixed(2)} / mo`;
+    document.getElementById('calcMonthlySavings').textContent = `$${monthlySavings.toFixed(2)} / mo`;
+  }
+
+  modelSelect.addEventListener('change', calculateAiCosts);
+  promptInput.addEventListener('input', calculateAiCosts);
+  queriesInput.addEventListener('input', calculateAiCosts);
+
+  calculateAiCosts();
+}
 
 /* ==========================================================================
-   Cache Inspector
+   2. Data & Code Utilities
    ========================================================================== */
-async function loadCacheInspector() {
-  try {
-    const res = await fetch('/api/cache');
-    if (!res.ok) return;
-    const items = await res.json();
+function initDataTools() {
+  const input = document.getElementById('dataToolInput');
+  const output = document.getElementById('dataToolOutput');
 
-    const tbody = document.getElementById('cacheTableBody');
-    if (!tbody) return;
-
-    if (items.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#94a3b8;">Cache is empty. Queries sent through the gateway will be cached here automatically.</td></tr>';
-      return;
+  // Format JSON
+  document.getElementById('btnFormatJson').addEventListener('click', () => {
+    try {
+      const parsed = JSON.parse(input.value);
+      output.value = JSON.stringify(parsed, null, 2);
+    } catch (e) {
+      output.value = '❌ Invalid JSON: ' + e.message;
     }
+  });
 
-    tbody.innerHTML = '';
-    items.forEach(item => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><code>${item.hash}</code></td>
-        <td>${escapeHtml(item.promptSnippet)}</td>
-        <td><span class="stat-tag">${item.model}</span></td>
-        <td>${item.tokens}</td>
-        <td><strong>${item.hits}</strong></td>
-        <td style="color:var(--success); font-weight:600;">$${item.savedTotal}</td>
+  // Base64 Encode
+  document.getElementById('btnBase64Encode').addEventListener('click', () => {
+    try {
+      output.value = btoa(unescape(encodeURIComponent(input.value)));
+    } catch (e) {
+      output.value = '❌ Encoding error: ' + e.message;
+    }
+  });
+
+  // Base64 Decode
+  document.getElementById('btnBase64Decode').addEventListener('click', () => {
+    try {
+      output.value = decodeURIComponent(escape(atob(input.value.trim())));
+    } catch (e) {
+      output.value = '❌ Decoding error: ' + e.message;
+    }
+  });
+
+  // SHA-256 Hash
+  document.getElementById('btnHashSha256').addEventListener('click', async () => {
+    try {
+      const msgBuffer = new TextEncoder().encode(input.value);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      output.value = hashHex;
+    } catch (e) {
+      output.value = '❌ Hash error: ' + e.message;
+    }
+  });
+
+  // Copy Output
+  document.getElementById('btnCopyOutput').addEventListener('click', () => {
+    if (!output.value) return;
+    navigator.clipboard.writeText(output.value);
+    alert('Copied output to clipboard!');
+  });
+}
+
+/* ==========================================================================
+   3. Markdown & Text Studio
+   ========================================================================== */
+function initMarkdownStudio() {
+  const mdInput = document.getElementById('markdownInput');
+  const mdPreview = document.getElementById('markdownPreview');
+  const wordCount = document.getElementById('mdWordCount');
+  const charCount = document.getElementById('mdCharCount');
+
+  function renderMarkdown() {
+    const raw = mdInput.value;
+
+    // Word & Character count
+    const words = raw.trim() ? raw.trim().split(/\s+/).length : 0;
+    wordCount.textContent = `${words} words`;
+    charCount.textContent = `${raw.length} characters`;
+
+    // Simple Fast Markdown Parser
+    let html = raw
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+      .replace(/\*(.*)\*/gim, '<em>$1</em>')
+      .replace(/^\- (.*$)/gim, '<li>$1</li>')
+      .replace(/<li>(.*)<\/li>/gim, '<ul><li>$1</li></ul>')
+      .replace(/\n\n/gim, '<br><br>');
+
+    mdPreview.innerHTML = html;
+  }
+
+  mdInput.addEventListener('input', renderMarkdown);
+  renderMarkdown();
+}
+
+/* ==========================================================================
+   4. Business & Freelance Rate Engine
+   ========================================================================== */
+function initRateEngine() {
+  const desiredIncomeInput = document.getElementById('desiredAnnualIncome');
+  const expensesInput = document.getElementById('annualExpenses');
+  const taxRateInput = document.getElementById('taxRatePct');
+  const billableHoursInput = document.getElementById('billableHoursPerWeek');
+  const weeksVacationInput = document.getElementById('weeksVacation');
+
+  function calculateRates() {
+    const takeHome = parseFloat(desiredIncomeInput.value) || 0;
+    const expenses = parseFloat(expensesInput.value) || 0;
+    const taxRate = (parseFloat(taxRateInput.value) || 0) / 100;
+    const hoursPerWeek = parseFloat(billableHoursInput.value) || 20;
+    const vacationWeeks = parseFloat(weeksVacationInput.value) || 4;
+
+    const workingWeeks = Math.max(1, 52 - vacationWeeks);
+    const totalBillableHours = workingWeeks * hoursPerWeek;
+
+    // Gross needed before taxes: (takeHome + expenses) / (1 - taxRate)
+    const grossNeeded = (takeHome + expenses) / Math.max(0.01, (1 - taxRate));
+    const hourlyRate = grossNeeded / totalBillableHours;
+    const dayRate = hourlyRate * 8;
+
+    document.getElementById('recHourlyRate').textContent = `$${Math.round(hourlyRate)} / hr`;
+    document.getElementById('recDayRate').textContent = `$${Math.round(dayRate)} / day`;
+    document.getElementById('recGrossRevenue').textContent = `$${Math.round(grossNeeded).toLocaleString()} / yr`;
+    document.getElementById('recTotalHours').textContent = `${Math.round(totalBillableHours)} hrs`;
+  }
+
+  [desiredIncomeInput, expensesInput, taxRateInput, billableHoursInput, weeksVacationInput].forEach(inp => {
+    inp.addEventListener('input', calculateRates);
+  });
+
+  calculateRates();
+}
+
+/* ==========================================================================
+   5. Task & Project Board
+   ========================================================================== */
+function initTaskManager() {
+  const taskInput = document.getElementById('newTaskInput');
+  const addBtn = document.getElementById('btnAddTask');
+  const list = document.getElementById('tasksList');
+
+  let tasks = loadTasks();
+
+  function loadTasks() {
+    try {
+      const saved = localStorage.getItem('omnistudio_tasks');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [
+      { id: '1', text: 'Set up OpenAI / Anthropic API gateway routing', completed: true },
+      { id: '2', text: 'Benchmark client hourly rates for Q3 consulting', completed: false },
+      { id: '3', text: 'Deploy OmniStudio to Vercel and GitHub', completed: true }
+    ];
+  }
+
+  function saveTasks() {
+    localStorage.setItem('omnistudio_tasks', JSON.stringify(tasks));
+  }
+
+  function renderTasks() {
+    list.innerHTML = '';
+    tasks.forEach(t => {
+      const div = document.createElement('div');
+      div.className = `task-item ${t.completed ? 'completed' : ''}`;
+      div.innerHTML = `
+        <div class="task-left">
+          <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask('${t.id}')">
+          <span>${escapeHtml(t.text)}</span>
+        </div>
+        <button class="btn-del-task" onclick="deleteTask('${t.id}')">&times;</button>
       `;
-      tbody.appendChild(tr);
+      list.appendChild(div);
     });
-  } catch (err) {
-    console.warn('Error loading cache:', err);
   }
-}
 
-function initCacheManager() {
-  document.getElementById('purgeCacheBtn').addEventListener('click', async () => {
-    if (!confirm('Are you sure you want to flush all cached responses?')) return;
-    try {
-      await fetch('/api/cache', { method: 'DELETE' });
-      loadCacheInspector();
-      refreshTelemetryAndLogs();
-    } catch (err) {
-      alert('Error purging cache: ' + err.message);
-    }
-  });
-}
-
-/* ==========================================================================
-   Guardrails & Provider Settings
-   ========================================================================== */
-async function loadGuardrailSettings() {
-  try {
-    const res = await fetch('/api/settings');
-    if (!res.ok) return;
-    const settings = await res.json();
-
-    if (document.getElementById('monthlyBudgetCap')) {
-      document.getElementById('monthlyBudgetCap').value = settings.monthlyBudgetCap || 1000;
-      document.getElementById('dailySoftLimit').value = settings.dailySoftLimit || 50;
-      document.getElementById('maxTokensPerReq').value = settings.maxTokensPerReq || 4096;
-      document.getElementById('rateLimitRpm').value = settings.rateLimitRpm || 120;
-    }
-  } catch (err) {
-    console.warn('Error loading settings:', err);
-  }
-}
-
-function initGuardrailsManager() {
-  document.getElementById('saveRulesBtn').addEventListener('click', async () => {
-    const monthlyBudgetCap = parseFloat(document.getElementById('monthlyBudgetCap').value) || 1000;
-    const dailySoftLimit = parseFloat(document.getElementById('dailySoftLimit').value) || 50;
-    const maxTokensPerReq = parseInt(document.getElementById('maxTokensPerReq').value, 10) || 4096;
-    const rateLimitRpm = parseInt(document.getElementById('rateLimitRpm').value, 10) || 120;
-
-    try {
-      const res = await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          monthlyBudgetCap,
-          dailySoftLimit,
-          maxTokensPerReq,
-          rateLimitRpm
-        })
-      });
-
-      if (res.ok) {
-        alert('Guardrail settings saved successfully!');
-        refreshTelemetryAndLogs();
-      }
-    } catch (err) {
-      alert('Error saving guardrails: ' + err.message);
-    }
+  addBtn.addEventListener('click', () => {
+    const text = taskInput.value.trim();
+    if (!text) return;
+    tasks.push({ id: Date.now().toString(), text, completed: false });
+    taskInput.value = '';
+    saveTasks();
+    renderTasks();
   });
 
-  document.getElementById('saveUpstreamBtn').addEventListener('click', async () => {
-    const upstreamOpenAiKey = document.getElementById('upstreamOpenAiKey').value.trim();
-
-    try {
-      const res = await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ upstreamOpenAiKey })
-      });
-
-      if (res.ok) {
-        alert('Upstream provider settings updated!');
-        document.getElementById('upstreamOpenAiKey').value = '';
-      }
-    } catch (err) {
-      alert('Error saving upstream key: ' + err.message);
-    }
+  taskInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addBtn.click();
   });
-}
 
-function initGlobalActions() {
-  document.getElementById('clearLogsBtn').addEventListener('click', async () => {
-    try {
-      await fetch('/api/logs', { method: 'DELETE' });
-      refreshTelemetryAndLogs();
-    } catch (err) {
-      alert('Error clearing logs: ' + err.message);
+  window.toggleTask = function(id) {
+    const t = tasks.find(item => item.id === id);
+    if (t) {
+      t.completed = !t.completed;
+      saveTasks();
+      renderTasks();
     }
-  });
+  };
+
+  window.deleteTask = function(id) {
+    tasks = tasks.filter(item => item.id !== id);
+    saveTasks();
+    renderTasks();
+  };
+
+  renderTasks();
 }
 
 function escapeHtml(str) {
