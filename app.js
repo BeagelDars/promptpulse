@@ -208,21 +208,9 @@ const CLOUD_LEADERBOARD_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181
 class CloudLeaderboardService {
   constructor() {
     this.cachedData = {
-      highscores: [
-        { name: 'ANDREY', score: 215000 },
-        { name: 'BOBIK_FAN', score: 168000 },
-        { name: 'CYBER_PRO', score: 152000 }
-      ],
-      totalOrbs: [
-        { name: 'ANDREY', orbs: 850 },
-        { name: 'BOBIK_FAN', orbs: 620 },
-        { name: 'CYBER_PRO', orbs: 420 }
-      ],
-      longestRuns: [
-        { name: 'ANDREY', distance: 24500 },
-        { name: 'BOBIK_FAN', distance: 19800 },
-        { name: 'CYBER_PRO', distance: 18400 }
-      ]
+      highscores: [],
+      totalOrbs: [],
+      longestRuns: []
     };
   }
 
