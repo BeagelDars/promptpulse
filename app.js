@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v3.5
- * Bigger Thematic Obstacles, High-Density Cluster Formations & Intense Action.
+ * NEON SURGE | Cyber Velocity Arcade Engine v4.0
+ * Guaranteed Safe Passage Algorithm, Dynamic Obstacle Sizing & Progressive Difficulty Scaling.
  */
 
 // ==========================================
@@ -224,12 +224,16 @@ class NeonSurgeGame {
     this.comboTimer = 0;
     this.maxCombo = 1;
     this.distance = 0;
-    this.speed = 6.8;
-    this.baseSpeed = 6.8;
+    this.speed = 6.6;
+    this.baseSpeed = 6.6;
     this.screenShake = 0;
 
     // Biome Zone State
     this.currentZoneIndex = 0;
+
+    // Spawning Cadence & Safe Path System
+    this.spawnTimer = 0;
+    this.spawnInterval = 1.1; // Seconds between obstacle waves
 
     // Power-up state
     this.activePowerup = null;
@@ -378,6 +382,7 @@ class NeonSurgeGame {
     this.screenShake = 0;
     this.activePowerup = null;
     this.currentZoneIndex = 0;
+    this.spawnTimer = 0;
 
     this.player.x = this.canvas.width / 2;
     this.player.targetX = this.canvas.width / 2;
@@ -587,7 +592,7 @@ class NeonSurgeGame {
     title.textContent = zone.name;
     title.style.color = zone.primaryColor;
     title.style.textShadow = `0 0 20px ${zone.primaryColor}`;
-    sub.textContent = `NEW THREAT: ${zone.obstacleName.toUpperCase()} &bull; ${zone.desc.toUpperCase()}`;
+    sub.textContent = `THREAT LEVEL UP: ${zone.obstacleName.toUpperCase()}`;
 
     banner.style.display = 'flex';
     banner.style.borderColor = zone.primaryColor;
@@ -647,10 +652,12 @@ class NeonSurgeGame {
 
     if (this.state !== 'PLAYING') return;
 
-    // Progression
+    // Progression: smooth scaling speed and distance
     this.distance += this.speed * dt * 10;
     this.score += Math.round(this.speed * this.combo * 0.5);
-    this.baseSpeed = 6.8 + Math.min(10, this.distance / 3500);
+    
+    // Smooth, progressive speed curve (Starts gentle at 6.6, scales smoothly up to 15.5)
+    this.baseSpeed = 6.6 + Math.min(9.0, Math.pow(this.distance / 5000, 0.75));
 
     // Check Map/Zone Transitions (50,000 pt milestone checks)
     this.checkZoneTransitions();
@@ -697,74 +704,16 @@ class NeonSurgeGame {
     this.player.trail.forEach(t => t.alpha -= 0.06);
 
     // ==========================================
-    // Spawning Thematic Zone Obstacles & High-Density Clusters
+    // GUARANTEED SAFE-PASSAGE OBSTACLE GENERATOR
     // ==========================================
-    const minGap = 80;
-    const currentZone = ZONES[this.currentZoneIndex];
+    // Dynamic difficulty: Spawn intervals decrease gracefully as score increases
+    const difficultyFactor = Math.min(1, this.score / 120000); // 0.0 at start -> 1.0 at 120k+
+    this.spawnInterval = 1.25 - (difficultyFactor * 0.55); // from 1.25s down to 0.70s
 
-    // Increased spawn frequency for exciting dense action
-    const spawnChance = 0.042 + (this.baseSpeed * 0.002);
-
-    if (Math.random() < spawnChance) {
-      const rand = Math.random();
-
-      // Chunkier sizes for smaller hazards (increased from 36px to 54-64px!)
-      const chunkySize = Math.floor(Math.random() * 12) + 52; 
-
-      if (rand < 0.35) {
-        // FORMATION A: DENSE CLUSTER (2 to 3 hazards in a staggered formation)
-        const clusterCount = Math.random() > 0.4 ? 3 : 2;
-        const startX = Math.random() * (this.canvas.width - (clusterCount * 65) - 30) + 15;
-
-        for (let c = 0; c < clusterCount; c++) {
-          this.obstacles.push({
-            x: startX + (c * 68),
-            y: -70 - (c * 45), // Staggered diagonally so you can weave through
-            width: chunkySize,
-            height: chunkySize,
-            type: currentZone.obstacleType,
-            isBarrier: false,
-            isCluster: true,
-            zoneIndex: this.currentZoneIndex,
-            rotation: Math.random() * Math.PI,
-            animPulse: Math.random() * 5
-          });
-        }
-      } else if (rand < 0.65) {
-        // FORMATION B: WIDE THEMATIC BARRIER with guaranteed side opening
-        const maxWidth = this.canvas.width - minGap - 30;
-        const width = Math.min(maxWidth, Math.random() * (this.canvas.width * 0.5) + 70);
-        const xPos = Math.random() > 0.5 ? 0 : this.canvas.width - width;
-
-        this.obstacles.push({
-          x: xPos,
-          y: -70,
-          width,
-          height: 26,
-          type: currentZone.obstacleType,
-          isBarrier: true,
-          isCluster: false,
-          zoneIndex: this.currentZoneIndex,
-          rotation: 0,
-          animPulse: 0
-        });
-      } else {
-        // FORMATION C: SINGLE LARGE THEMATIC THREAT
-        const xPos = Math.random() * (this.canvas.width - chunkySize - 40) + 20;
-
-        this.obstacles.push({
-          x: xPos,
-          y: -70,
-          width: chunkySize + 6,
-          height: chunkySize + 6,
-          type: currentZone.obstacleType,
-          isBarrier: false,
-          isCluster: false,
-          zoneIndex: this.currentZoneIndex,
-          rotation: 0,
-          animPulse: 0
-        });
-      }
+    this.spawnTimer += dt;
+    if (this.spawnTimer >= this.spawnInterval) {
+      this.spawnTimer = 0;
+      this.spawnBalancedWave(difficultyFactor);
     }
 
     // Spawning Orbs
@@ -788,14 +737,14 @@ class NeonSurgeGame {
       });
     }
 
-    // Obstacles Collision
+    // Obstacles Collision & Movement
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obs = this.obstacles[i];
       obs.y += this.speed;
       obs.rotation += 0.04;
       obs.animPulse += 0.08;
 
-      // Accurate hitbox with generous forgiving margin for fun play
+      // Accurate hitbox with generous forgiving margin
       const hitMargin = obs.isBarrier ? 4 : 8;
       const pBox = { x: this.player.x - 12, y: this.player.y - 16, w: 24, h: 32 };
       const oBox = { x: obs.x + hitMargin, y: obs.y + hitMargin, w: obs.width - (hitMargin * 2), h: obs.height - (hitMargin * 2) };
@@ -857,7 +806,7 @@ class NeonSurgeGame {
       }
     }
 
-    // Power-up Pickups (Instant Activation!)
+    // Power-up Pickups
     for (let i = this.powerups.length - 1; i >= 0; i--) {
       const p = this.powerups[i];
       p.y += this.speed;
@@ -894,6 +843,108 @@ class NeonSurgeGame {
     }
 
     this.updateHUD();
+  }
+
+  // ==========================================
+  // Guaranteed Fair Obstacle Wave Generator
+  // ==========================================
+  spawnBalancedWave(difficultyFactor) {
+    const currentZone = ZONES[this.currentZoneIndex];
+    const canvasW = this.canvas.width;
+
+    // Guaranteed wide passage opening: 85px to 105px width
+    const minSafeWidth = 92;
+    const safeX = Math.random() * (canvasW - minSafeWidth - 40) + 20;
+    const safeEnd = safeX + minSafeWidth;
+
+    // Cluster chance scales with difficulty (from 20% at start up to 65% at late game!)
+    const clusterChance = 0.20 + (difficultyFactor * 0.45);
+    const isCluster = Math.random() < clusterChance;
+
+    // Varied random sizing (small nimble hazards vs large chunky obstacles)
+    const getRandomHazardSize = () => {
+      const r = Math.random();
+      if (r < 0.4) return Math.floor(Math.random() * 8) + 32; // Small & agile (32-40px)
+      if (r < 0.75) return Math.floor(Math.random() * 12) + 48; // Medium (48-60px)
+      return Math.floor(Math.random() * 14) + 66; // Giant imposing (66-80px)
+    };
+
+    if (isCluster) {
+      // CLUSTER WAVE (Progressive: 2 items early, up to 4 items in late-game zones)
+      const maxItems = difficultyFactor > 0.6 ? 4 : (difficultyFactor > 0.25 ? 3 : 2);
+      const clusterCount = Math.floor(Math.random() * (maxItems - 1)) + 2;
+
+      for (let c = 0; c < clusterCount; c++) {
+        const size = getRandomHazardSize();
+        // Position hazard outside the guaranteed safe corridor
+        let posX;
+        if (Math.random() > 0.5 && safeX > size + 10) {
+          // Spawn to the left of safe corridor
+          posX = Math.random() * (safeX - size);
+        } else if (canvasW - safeEnd > size + 10) {
+          // Spawn to the right of safe corridor
+          posX = safeEnd + Math.random() * (canvasW - safeEnd - size);
+        } else {
+          posX = Math.random() * (canvasW - size);
+        }
+
+        // Staggered Y offsets so player can weave between them
+        this.obstacles.push({
+          x: Math.max(0, Math.min(canvasW - size, posX)),
+          y: -70 - (c * 55),
+          width: size,
+          height: size,
+          type: currentZone.obstacleType,
+          isBarrier: false,
+          zoneIndex: this.currentZoneIndex,
+          rotation: Math.random() * Math.PI,
+          animPulse: Math.random() * 5
+        });
+      }
+    } else {
+      // SINGLE HAZARD OR CLEAN BARRIER
+      const isBarrier = Math.random() < 0.45;
+      if (isBarrier) {
+        // Barrier leaving the guaranteed safe passage open
+        const spawnOnLeft = Math.random() > 0.5;
+        let bWidth, bX;
+        if (spawnOnLeft) {
+          bX = 0;
+          bWidth = Math.max(50, safeX);
+        } else {
+          bX = safeEnd;
+          bWidth = Math.max(50, canvasW - safeEnd);
+        }
+
+        this.obstacles.push({
+          x: bX,
+          y: -70,
+          width: bWidth,
+          height: 24,
+          type: currentZone.obstacleType,
+          isBarrier: true,
+          zoneIndex: this.currentZoneIndex,
+          rotation: 0,
+          animPulse: 0
+        });
+      } else {
+        // Single Random-Sized Hazard
+        const size = getRandomHazardSize();
+        const posX = Math.random() > 0.5 ? Math.random() * (safeX - size) : safeEnd + Math.random() * (canvasW - safeEnd - size);
+
+        this.obstacles.push({
+          x: Math.max(0, Math.min(canvasW - size, posX || (canvasW - size) / 2)),
+          y: -70,
+          width: size,
+          height: size,
+          type: currentZone.obstacleType,
+          isBarrier: false,
+          zoneIndex: this.currentZoneIndex,
+          rotation: 0,
+          animPulse: 0
+        });
+      }
+    }
   }
 
   // ==========================================
@@ -1019,7 +1070,7 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // Custom Zone Thematic Obstacle Graphics (Chunkier & Imposing)
+  // Custom Zone Thematic Obstacle Graphics
   // ==========================================
   drawThematicObstacle(obs, zone) {
     const cx = obs.x + obs.width / 2;
@@ -1028,7 +1079,7 @@ class NeonSurgeGame {
     this.ctx.save();
 
     // ----------------------------------------------------
-    // Zone 1: CYBER_LASER (Neon Laser Barrier & Chunky Cyber Prisms)
+    // Zone 1: CYBER_LASER (Neon Laser Barrier & Cyber Prisms)
     // ----------------------------------------------------
     if (obs.type === 'CYBER_LASER') {
       this.ctx.shadowColor = '#ff0077';
@@ -1041,7 +1092,6 @@ class NeonSurgeGame {
         this.ctx.lineWidth = 3.5;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
 
-        // Core laser beam line
         this.ctx.strokeStyle = '#ffffff';
         this.ctx.lineWidth = 2.5;
         this.ctx.beginPath();
@@ -1049,7 +1099,6 @@ class NeonSurgeGame {
         this.ctx.lineTo(obs.x + obs.width, cy);
         this.ctx.stroke();
       } else {
-        // Chunky Cyber Prism Block
         this.ctx.translate(cx, cy);
         this.ctx.rotate(obs.rotation);
         this.ctx.fillStyle = '#ff0077';
@@ -1058,10 +1107,9 @@ class NeonSurgeGame {
         this.ctx.lineWidth = 3;
         this.ctx.strokeRect(-obs.width / 2, -obs.height / 2, obs.width, obs.height);
 
-        // Inner Diamond
         this.ctx.fillStyle = '#ffffff';
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        this.ctx.arc(0, 0, 5, 0, Math.PI * 2);
         this.ctx.fill();
       }
       this.ctx.restore();
@@ -1069,11 +1117,11 @@ class NeonSurgeGame {
     }
 
     // ----------------------------------------------------
-    // Zone 2: METEORITE (Giant Molten Asteroids with Lava Trails)
+    // Zone 2: METEORITE (Molten Asteroids with Lava Trails)
     // ----------------------------------------------------
     if (obs.type === 'METEORITE') {
       this.ctx.shadowColor = '#ff3300';
-      this.ctx.shadowBlur = 22;
+      this.ctx.shadowBlur = 20;
 
       if (obs.isBarrier) {
         this.ctx.fillStyle = 'rgba(255, 51, 0, 0.55)';
@@ -1089,30 +1137,25 @@ class NeonSurgeGame {
           this.ctx.fill();
         }
       } else {
-        // Massive Molten Asteroid
         this.ctx.translate(cx, cy);
         this.ctx.rotate(obs.rotation);
 
         const rad = obs.width / 2;
 
-        // Outer Fiery Glow Aura
         this.ctx.fillStyle = '#ff9900';
         this.ctx.beginPath();
         this.ctx.arc(0, -rad * 0.8, rad * 0.5, 0, Math.PI * 2);
         this.ctx.fill();
 
-        // Molten Asteroid Body
         this.ctx.fillStyle = '#ff2200';
         this.ctx.beginPath();
         this.ctx.arc(0, 0, rad, 0, Math.PI * 2);
         this.ctx.fill();
 
-        // Lava Veins
         this.ctx.strokeStyle = '#ffe600';
         this.ctx.lineWidth = 3;
         this.ctx.stroke();
 
-        // Crater details
         this.ctx.fillStyle = '#660000';
         this.ctx.beginPath();
         this.ctx.arc(-rad * 0.3, -rad * 0.2, rad * 0.25, 0, Math.PI * 2);
@@ -1124,7 +1167,7 @@ class NeonSurgeGame {
     }
 
     // ----------------------------------------------------
-    // Zone 3: CYBER_CLAW (Huge Predator Talons & Toxic Nodes)
+    // Zone 3: CYBER_CLAW (Predator Talons & Toxic Nodes)
     // ----------------------------------------------------
     if (obs.type === 'CYBER_CLAW') {
       this.ctx.shadowColor = '#00ff66';
@@ -1147,7 +1190,6 @@ class NeonSurgeGame {
           this.ctx.fill();
         }
       } else {
-        // Large Heavy Predator Claw
         this.ctx.translate(cx, cy);
         this.ctx.rotate(obs.rotation * 0.4);
 
@@ -1157,13 +1199,11 @@ class NeonSurgeGame {
         this.ctx.strokeStyle = '#00ff66';
         this.ctx.lineWidth = 3.5;
 
-        // Claw Knuckle
         this.ctx.beginPath();
         this.ctx.ellipse(0, 6, rad * 0.8, rad * 0.6, 0, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.stroke();
 
-        // 3 Big Curved Sharp Talons
         this.ctx.fillStyle = '#aaff00';
         [-rad * 0.5, 0, rad * 0.5].forEach(offset => {
           this.ctx.beginPath();
@@ -1179,11 +1219,11 @@ class NeonSurgeGame {
     }
 
     // ----------------------------------------------------
-    // Zone 4: VOID_VORTEX (Huge Swirling Singularity & Blade Fields)
+    // Zone 4: VOID_VORTEX (Swirling Singularity & Blade Fields)
     // ----------------------------------------------------
     if (obs.type === 'VOID_VORTEX') {
       this.ctx.shadowColor = '#9d00ff';
-      this.ctx.shadowBlur = 24;
+      this.ctx.shadowBlur = 22;
 
       if (obs.isBarrier) {
         this.ctx.fillStyle = 'rgba(157, 0, 255, 0.5)';
@@ -1197,7 +1237,6 @@ class NeonSurgeGame {
         this.ctx.arc(cx, cy, 8 + Math.sin(obs.animPulse) * 2, 0, Math.PI * 2);
         this.ctx.fill();
       } else {
-        // Massive Swirling Dark Matter Vortex
         this.ctx.translate(cx, cy);
         this.ctx.rotate(obs.rotation * 1.6);
 
@@ -1211,7 +1250,6 @@ class NeonSurgeGame {
         this.ctx.fill();
         this.ctx.stroke();
 
-        // Triple Swirling Energy Arms
         this.ctx.strokeStyle = '#00f0ff';
         this.ctx.lineWidth = 3;
         this.ctx.beginPath();
@@ -1221,7 +1259,6 @@ class NeonSurgeGame {
         this.ctx.arc(0, 0, rad * 0.4, Math.PI, Math.PI * 2.3);
         this.ctx.stroke();
 
-        // Core Singularity Point
         this.ctx.fillStyle = '#ffffff';
         this.ctx.beginPath();
         this.ctx.arc(0, 0, 5, 0, Math.PI * 2);
@@ -1232,11 +1269,11 @@ class NeonSurgeGame {
     }
 
     // ----------------------------------------------------
-    // Zone 5: RAINBOW_CRYSTAL (Large Prismatic Diamonds & Warp Rifts)
+    // Zone 5: RAINBOW_CRYSTAL (Prismatic Diamonds & Warp Rifts)
     // ----------------------------------------------------
     if (obs.type === 'RAINBOW_CRYSTAL') {
       this.ctx.shadowColor = '#ffffff';
-      this.ctx.shadowBlur = 24;
+      this.ctx.shadowBlur = 22;
 
       if (obs.isBarrier) {
         const grad = this.ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y);
@@ -1250,7 +1287,6 @@ class NeonSurgeGame {
         this.ctx.lineWidth = 3.5;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
       } else {
-        // Large Multi-Faceted Crystal Shard
         this.ctx.translate(cx, cy);
         this.ctx.rotate(obs.rotation);
 
@@ -1269,7 +1305,6 @@ class NeonSurgeGame {
         this.ctx.fill();
         this.ctx.stroke();
 
-        // Crystal Facet Lines
         this.ctx.strokeStyle = '#ff0077';
         this.ctx.lineWidth = 2;
         this.ctx.beginPath();
@@ -1344,9 +1379,7 @@ class NeonSurgeGame {
       this.ctx.restore();
     }
 
-    // ==========================================
     // 1. AMONG US SHIP
-    // ==========================================
     if (currentSkin.id === 'amongus') {
       this.ctx.shadowColor = '#ff2255';
       this.ctx.shadowBlur = 14;
@@ -1393,9 +1426,7 @@ class NeonSurgeGame {
       return;
     }
 
-    // ==========================================
     // 2. BENJAMIN SHIP
-    // ==========================================
     if (currentSkin.id === 'benjamin') {
       this.ctx.shadowColor = '#ffd700';
       this.ctx.shadowBlur = 15;
@@ -1455,9 +1486,7 @@ class NeonSurgeGame {
       return;
     }
 
-    // ==========================================
-    // 3. OTRITZANIE 68 SHIP (Photo Cockpit)
-    // ==========================================
+    // 3. OTRITZANIE 68 SHIP
     if (currentSkin.id === 'otritzanie68') {
       this.ctx.fillStyle = currentSkin.color;
       this.ctx.shadowColor = currentSkin.color;
@@ -1505,9 +1534,7 @@ class NeonSurgeGame {
       return;
     }
 
-    // ==========================================
     // 4. BOBIK THE DOG SHIP
-    // ==========================================
     if (currentSkin.id === 'bobik_dog') {
       this.ctx.shadowColor = '#ffe600';
       this.ctx.shadowBlur = 15;
@@ -1556,9 +1583,7 @@ class NeonSurgeGame {
       return;
     }
 
-    // ==========================================
-    // 5. STANDARD SHIPS (Apex Dart, Void, Solar, Matrix)
-    // ==========================================
+    // 5. STANDARD SHIPS
     this.ctx.shadowColor = currentSkin.color;
     this.ctx.shadowBlur = 14;
     this.ctx.fillStyle = currentSkin.color;
