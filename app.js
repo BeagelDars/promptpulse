@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v8.0
- * Stacking Coin Magnet, Ultra High-Speed Scaling, Intense Devil Slaughterhouse Flashes & Multi-Route Balance.
+ * NEON SURGE | Cyber Velocity Arcade Engine v9.0
+ * High-Density Obstacle Formations, Multi-Sized Barriers, Devil Speed Surge & Thrilling Arcade Flow.
  */
 
 // ==========================================
@@ -224,8 +224,8 @@ class NeonSurgeGame {
     this.distance = 0;
 
     // Fast-paced baseline velocity
-    this.speed = 7.8;
-    this.baseSpeed = 7.8;
+    this.speed = 8.0;
+    this.baseSpeed = 8.0;
     this.screenShake = 0;
 
     // Continuous Smooth Color State
@@ -239,9 +239,9 @@ class NeonSurgeGame {
     this.currentZoneName = ZONES[0].name;
     this.devilModeFactor = 0;
 
-    // Wave cadence
+    // Tight, high-density wave cadence
     this.spawnTimer = 0;
-    this.spawnInterval = 0.88;
+    this.spawnInterval = 0.58;
 
     // Stackable Power-up States
     this.powerupsState = {
@@ -587,7 +587,7 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // Stackable Powerup Triggers (All stack simultaneously!)
+  // Stackable Powerup Triggers
   // ==========================================
   triggerHyperBoost() {
     this.powerupsState.BOOST.active = true;
@@ -713,12 +713,13 @@ class NeonSurgeGame {
     this.distance += this.speed * dt * 10;
     this.score += Math.round(this.speed * this.combo * 0.5);
     
-    // Aggressive speed scaling for high-adrenaline runs (scales smoothly from 7.8 up to 21.0+)
-    this.baseSpeed = 7.8 + Math.min(14.0, Math.pow(this.distance / 2700, 0.85));
+    // Dynamic progressive velocity scaling + Devil mode speed surge!
+    const devilSpeedBoost = 1 + (this.devilModeFactor * 0.45); // Up to +45% hyper speed in Slaughterhouse!
+    this.baseSpeed = (8.0 + Math.min(13.0, Math.pow(this.distance / 2400, 0.82))) * devilSpeedBoost;
 
     // Handle Boost Speed Multiplier
     if (this.powerupsState.BOOST.active && this.powerupsState.BOOST.timer > 0) {
-      this.speed = this.baseSpeed * 2.0;
+      this.speed = this.baseSpeed * 1.85;
     } else {
       this.speed = this.baseSpeed;
     }
@@ -746,14 +747,14 @@ class NeonSurgeGame {
       }
     });
 
-    // Left/Right Movement
-    if (this.keys.left) this.player.targetX -= 12;
-    if (this.keys.right) this.player.targetX += 12;
+    // Left/Right Movement (Highly responsive agile steering)
+    if (this.keys.left) this.player.targetX -= 13;
+    if (this.keys.right) this.player.targetX += 13;
 
     const wallMargin = 16;
     this.player.targetX = Math.max(wallMargin, Math.min(this.canvas.width - wallMargin, this.player.targetX));
     const dx = this.player.targetX - this.player.x;
-    this.player.x += dx * 0.24;
+    this.player.x += dx * 0.26;
     this.player.tilt = Math.max(-0.45, Math.min(0.45, dx * 0.03));
 
     // Player Trail
@@ -761,9 +762,9 @@ class NeonSurgeGame {
     if (this.player.trail.length > 12) this.player.trail.shift();
     this.player.trail.forEach(t => t.alpha -= 0.06);
 
-    // Wave Spawner Cadence
-    const difficultyFactor = Math.min(1, this.score / 100000);
-    this.spawnInterval = 0.88 - (difficultyFactor * 0.35);
+    // Tight, High-Action Wave Spawner Cadence (0.58s down to 0.38s in late game!)
+    const difficultyFactor = Math.min(1, this.score / 90000);
+    this.spawnInterval = 0.58 - (difficultyFactor * 0.20);
 
     this.spawnTimer += dt;
     if (this.spawnTimer >= this.spawnInterval) {
@@ -772,7 +773,7 @@ class NeonSurgeGame {
     }
 
     // Spawning Orbs
-    if (Math.random() < 0.060) {
+    if (Math.random() < 0.075) {
       this.orbs.push({
         x: Math.random() * (this.canvas.width - 60) + 30,
         y: -30,
@@ -782,11 +783,11 @@ class NeonSurgeGame {
     }
 
     // Spawning Power-up Pickups (BOOST, SHIELD, or MAGNET)
-    if (Math.random() < 0.012) {
+    if (Math.random() < 0.015) {
       const randP = Math.random();
       let pType = 'MAGNET';
-      if (randP < 0.36) pType = 'BOOST';
-      else if (randP < 0.72) pType = 'SHIELD';
+      if (randP < 0.35) pType = 'BOOST';
+      else if (randP < 0.70) pType = 'SHIELD';
 
       this.powerups.push({
         x: Math.random() * (this.canvas.width - 60) + 30,
@@ -797,7 +798,7 @@ class NeonSurgeGame {
     }
 
     // Devil Zone High-Frequency Lightning Arcs
-    if (this.devilModeFactor > 0 && Math.random() < 0.24 * this.devilModeFactor) {
+    if (this.devilModeFactor > 0 && Math.random() < 0.28 * this.devilModeFactor) {
       const lx = Math.random() * this.canvas.width;
       this.devilLightnings.push({
         x1: lx,
@@ -877,7 +878,6 @@ class NeonSurgeGame {
           orb.x += (mdx / mdist) * pullForce;
           orb.y += (mdy / mdist) * pullForce;
 
-          // Magnet particle trail
           if (Math.random() < 0.3) {
             this.particles.push({
               x: orb.x,
@@ -959,9 +959,8 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // ANTI-WALL-HUG MULTI-ROUTE ARCHITECTURE
-  // Alternates between blocking Left Wall, Right Wall, Both Walls, and Center.
-  // AFK wall-hugging is impossible; player must actively steer across all lanes!
+  // HIGH-DENSITY BALANCED OBSTACLE FORMATIONS
+  // Diverse obstacle sizes (30px to 85px), dynamic multi-lane challenges, guaranteed fair threading.
   // ==========================================
   spawnBalancedWave(difficultyFactor) {
     const canvasW = this.canvas.width;
@@ -971,55 +970,17 @@ class NeonSurgeGame {
     const randPattern = Math.random();
 
     // ----------------------------------------------------
-    // FORMATION 1: DUAL WALL CLAMP (Blocks BOTH Left & Right Walls!)
-    // Center lane (140px-180px) is wide open. Wall-huggers crash instantly!
+    // FORMATION 1: DUAL WALL PINCERS + CENTER SCOUT
+    // Blocks Left & Right walls, plus a mini obstacle in center with 2 open thread lanes!
     // ----------------------------------------------------
-    if (randPattern < 0.28) {
-      const wallBlockW = Math.max(65, Math.min(canvasW * 0.28, 95));
-
-      // Left Wall Block (Flush with left border)
-      this.obstacles.push({
-        x: 0,
-        y: -70,
-        width: wallBlockW,
-        height: 24,
-        type,
-        isBarrier: true,
-        zoneIndex: currentZoneIdx,
-        rotation: 0,
-        animPulse: 0
-      });
-
-      // Right Wall Block (Flush with right border)
-      this.obstacles.push({
-        x: canvasW - wallBlockW,
-        y: -70,
-        width: wallBlockW,
-        height: 24,
-        type,
-        isBarrier: true,
-        zoneIndex: currentZoneIdx,
-        rotation: 0,
-        animPulse: 0
-      });
-
-      // Orbs in the safe center corridor
-      this.orbs.push({ x: canvasW / 2, y: -70, radius: 12, pulse: 0 });
-      return;
-    }
-
-    // ----------------------------------------------------
-    // FORMATION 2: LEFT WALL SWEEP (Blocks Left Wall + Mid-Right Hazard)
-    // Forces player to move off the left wall to the right lanes!
-    // ----------------------------------------------------
-    if (randPattern < 0.50) {
-      const leftW = Math.max(75, Math.min(canvasW * 0.32, 105));
+    if (randPattern < 0.24) {
+      const pincerW = Math.max(70, Math.min(canvasW * 0.26, 95));
 
       // Left Wall Barrier
       this.obstacles.push({
         x: 0,
         y: -70,
-        width: leftW,
+        width: pincerW,
         height: 24,
         type,
         isBarrier: true,
@@ -1028,35 +989,82 @@ class NeonSurgeGame {
         animPulse: 0
       });
 
-      // Staggered mid-right hazard
-      const midSize = 42;
+      // Right Wall Barrier
       this.obstacles.push({
-        x: canvasW * 0.60 - midSize / 2,
-        y: -130,
-        width: midSize,
-        height: midSize,
+        x: canvasW - pincerW,
+        y: -70,
+        width: pincerW,
+        height: 24,
+        type,
+        isBarrier: true,
+        zoneIndex: currentZoneIdx,
+        rotation: 0,
+        animPulse: 0
+      });
+
+      // Center Staggered Mini-Hazard (Creates Left-Center & Right-Center Weave!)
+      const miniSize = 34;
+      this.obstacles.push({
+        x: canvasW / 2 - miniSize / 2,
+        y: -135,
+        width: miniSize,
+        height: miniSize,
         type,
         isBarrier: false,
         zoneIndex: currentZoneIdx,
-        rotation: 0.5,
+        rotation: 0.6,
+        animPulse: 0
+      });
+
+      this.orbs.push({ x: canvasW * 0.38, y: -70, radius: 12, pulse: 0 });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // FORMATION 2: LEFT WALL FORTRESS + RIGHT STAGGER
+    // ----------------------------------------------------
+    if (randPattern < 0.46) {
+      const leftW = Math.max(80, Math.min(canvasW * 0.34, 110));
+
+      this.obstacles.push({
+        x: 0,
+        y: -70,
+        width: leftW,
+        height: 26,
+        type,
+        isBarrier: true,
+        zoneIndex: currentZoneIdx,
+        rotation: 0,
+        animPulse: 0
+      });
+
+      // Medium Right Hazard (offset vertically)
+      const rSize = Math.floor(Math.random() * 16) + 40; // 40-56px
+      this.obstacles.push({
+        x: canvasW * 0.72 - rSize / 2,
+        y: -125,
+        width: rSize,
+        height: rSize,
+        type,
+        isBarrier: false,
+        zoneIndex: currentZoneIdx,
+        rotation: 0.8,
         animPulse: 0
       });
       return;
     }
 
     // ----------------------------------------------------
-    // FORMATION 3: RIGHT WALL SWEEP (Blocks Right Wall + Mid-Left Hazard)
-    // Forces player to move off the right wall to the left lanes!
+    // FORMATION 3: RIGHT WALL FORTRESS + LEFT STAGGER
     // ----------------------------------------------------
-    if (randPattern < 0.72) {
-      const rightW = Math.max(75, Math.min(canvasW * 0.32, 105));
+    if (randPattern < 0.68) {
+      const rightW = Math.max(80, Math.min(canvasW * 0.34, 110));
 
-      // Right Wall Barrier (Flush with right edge)
       this.obstacles.push({
         x: canvasW - rightW,
         y: -70,
         width: rightW,
-        height: 24,
+        height: 26,
         type,
         isBarrier: true,
         zoneIndex: currentZoneIdx,
@@ -1064,85 +1072,94 @@ class NeonSurgeGame {
         animPulse: 0
       });
 
-      // Staggered mid-left hazard
-      const midSize = 42;
+      // Medium Left Hazard (offset vertically)
+      const lSize = Math.floor(Math.random() * 16) + 40;
       this.obstacles.push({
-        x: canvasW * 0.40 - midSize / 2,
-        y: -130,
-        width: midSize,
-        height: midSize,
+        x: canvasW * 0.28 - lSize / 2,
+        y: -125,
+        width: lSize,
+        height: lSize,
         type,
         isBarrier: false,
         zoneIndex: currentZoneIdx,
-        rotation: -0.5,
+        rotation: -0.8,
         animPulse: 0
       });
       return;
     }
 
     // ----------------------------------------------------
-    // FORMATION 4: CENTER PILLAR (Blocks Center, Left & Right Walls Open)
+    // FORMATION 4: MULTI-SIZE TRIPLE GAUNTLET (Small, Medium, Large hazards)
     // ----------------------------------------------------
-    if (randPattern < 0.86) {
-      const pillarW = Math.min(canvasW * 0.32, 120);
-      const pillarX = (canvasW - pillarW) / 2;
+    if (randPattern < 0.85) {
+      const laneChoices = [
+        0,                                   // Left wall flush
+        Math.floor(canvasW * 0.32),
+        Math.floor(canvasW * 0.64),
+        Math.floor(canvasW - 48)             // Right wall flush
+      ];
 
-      this.obstacles.push({
-        x: pillarX,
-        y: -70,
-        width: pillarW,
-        height: 24,
-        type,
-        isBarrier: true,
-        zoneIndex: currentZoneIdx,
-        rotation: 0,
-        animPulse: 0
+      // Pick 2 or 3 distinct lanes
+      const count = difficultyFactor > 0.3 ? 3 : 2;
+      const shuffledLanes = laneChoices.sort(() => Math.random() - 0.5).slice(0, count);
+
+      shuffledLanes.forEach((posX, idx) => {
+        // Vary sizes: 32px (small agile), 46px (medium), 64px (large chunky)
+        const sizes = [32, 48, 64];
+        const s = sizes[idx % sizes.length];
+
+        this.obstacles.push({
+          x: Math.max(0, Math.min(canvasW - s, posX)),
+          y: -70 - (idx * 50),
+          width: s,
+          height: s,
+          type,
+          isBarrier: false,
+          zoneIndex: currentZoneIdx,
+          rotation: Math.random() * Math.PI,
+          animPulse: Math.random() * 5
+        });
       });
-
-      const sideX = Math.random() > 0.5 ? 20 : canvasW - 20;
-      this.orbs.push({ x: sideX, y: -70, radius: 12, pulse: 0 });
       return;
     }
 
     // ----------------------------------------------------
-    // FORMATION 5: 3-LANE STAGGERED HAZARDS (Directly targets Wall Lanes)
+    // FORMATION 5: CHUNKY CENTER PILLAR + ORBITING HAZARDS
     // ----------------------------------------------------
-    const size = 42;
-    const allLanes = [
-      0,                                // Flush Left Wall!
-      Math.floor(canvasW * 0.30),
-      Math.floor(canvasW * 0.50),
-      Math.floor(canvasW * 0.70),
-      Math.floor(canvasW - size)        // Flush Right Wall!
-    ];
+    const centerW = Math.min(canvasW * 0.34, 130);
+    const centerX = (canvasW - centerW) / 2;
 
-    // Pick 2 or 3 distinct lanes with at least one wall lane included
-    const wallChoice = Math.random() > 0.5 ? 0 : 4;
-    const midChoice = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
-
-    const selectedLanes = [allLanes[wallChoice], allLanes[midChoice]];
-    if (difficultyFactor > 0.35) {
-      const otherMid = midChoice === 2 ? (Math.random() > 0.5 ? 1 : 3) : 2;
-      selectedLanes.push(allLanes[otherMid]);
-    }
-
-    selectedLanes.forEach((posX, idx) => {
-      this.obstacles.push({
-        x: Math.max(0, Math.min(canvasW - size, posX)),
-        y: -70 - (idx * 55),
-        width: size,
-        height: size,
-        type,
-        isBarrier: false,
-        zoneIndex: currentZoneIdx,
-        rotation: Math.random() * Math.PI,
-        animPulse: Math.random() * 5
-      });
+    this.obstacles.push({
+      x: centerX,
+      y: -70,
+      width: centerW,
+      height: 26,
+      type,
+      isBarrier: true,
+      zoneIndex: currentZoneIdx,
+      rotation: 0,
+      animPulse: 0
     });
+
+    // Staggered outer scout on left or right wall
+    const scoutSideX = Math.random() > 0.5 ? 0 : canvasW - 36;
+    this.obstacles.push({
+      x: scoutSideX,
+      y: -130,
+      width: 36,
+      height: 36,
+      type,
+      isBarrier: false,
+      zoneIndex: currentZoneIdx,
+      rotation: 0.5,
+      animPulse: 0
+    });
+
+    this.orbs.push({ x: scoutSideX === 0 ? canvasW - 25 : 25, y: -70, radius: 12, pulse: 0 });
   }
 
   // ==========================================
-  // 6. Render Scene (Slaughterhouse Strobe Pulse & Magnet FX)
+  // 6. Render Scene
   // ==========================================
   draw() {
     this.ctx.save();
@@ -1169,7 +1186,6 @@ class NeonSurgeGame {
     // Slaughterhouse Devil Atmosphere & High-Frequency Strobe Flashes
     if (this.devilModeFactor > 0) {
       this.ctx.save();
-      // Intense blood red & white strobe flashes
       if (Math.random() < 0.28 * this.devilModeFactor) {
         const isWhiteFlash = Math.random() < 0.3;
         this.ctx.fillStyle = isWhiteFlash
@@ -1800,6 +1816,7 @@ class NeonSurgeGame {
       this.ctx.fillStyle = '#000000';
       this.ctx.beginPath();
       this.ctx.arc(-7, -4, 3, 0, Math.PI * 2);
+      this.ctx.arc(7, -4, 3, 0, Math.PI * 2);
       this.ctx.fill();
 
       this.ctx.fillStyle = '#ffffff';
