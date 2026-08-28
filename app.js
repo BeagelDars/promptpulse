@@ -636,7 +636,7 @@ class NeonSurgeGame {
     localStorage.setItem('neonsurge_orbs', this.totalOrbs.toString());
 
     // Submit to Global Cloud Leaderboard
-    this.cloudLB.submitRun(this.pilotName, this.highScore, this.lifetimeScore, this.totalOrbs);
+    this.cloudLB.submitRun(this.pilotName, this.score, this.lifetimeScore, this.totalOrbs);
 
     document.getElementById('finalScore').textContent = this.score.toLocaleString();
     document.getElementById('finalOrbs').textContent = `+${this.runOrbs}`;
