@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v4.5
- * Seamless Continuous Zone Morphing (Smooth Gradient & Grid Lerping, Zero Distractions).
+ * NEON SURGE | Cyber Velocity Arcade Engine v5.0
+ * Generous 120px Safe Gaps, Center Pillar Barriers (Rewarding Wall Play) & Balanced Flow.
  */
 
 // ==========================================
@@ -125,10 +125,10 @@ const ZONES = [
     id: 1,
     name: 'CYBER HORIZON',
     threshold: 0,
-    rPrimary: 0, gPrimary: 240, bPrimary: 255,      // #00f0ff
-    rSecondary: 255, gSecondary: 0, bSecondary: 119, // #ff0077
-    rBgTop: 21, gBgTop: 26, bBgTop: 48,             // #151a30
-    rBgBottom: 6, gBgBottom: 8, bBgBottom: 16,      // #060810
+    rPrimary: 0, gPrimary: 240, bPrimary: 255,
+    rSecondary: 255, gSecondary: 0, bSecondary: 119,
+    rBgTop: 21, gBgTop: 26, bBgTop: 48,
+    rBgBottom: 6, gBgBottom: 8, bBgBottom: 16,
     rGrid: 0, gGrid: 240, bGrid: 255, gridAlpha: 0.14,
     obstacleType: 'CYBER_LASER'
   },
@@ -136,10 +136,10 @@ const ZONES = [
     id: 2,
     name: 'SOLAR INFERNO',
     threshold: 50000,
-    rPrimary: 255, gPrimary: 230, bPrimary: 0,       // #ffe600
-    rSecondary: 255, gSecondary: 51, bSecondary: 0,  // #ff3300
-    rBgTop: 48, gBgTop: 21, bBgTop: 10,             // #30150a
-    rBgBottom: 13, gBgBottom: 4, bBgBottom: 2,      // #0d0402
+    rPrimary: 255, gPrimary: 230, bPrimary: 0,
+    rSecondary: 255, gSecondary: 51, bSecondary: 0,
+    rBgTop: 48, gBgTop: 21, bBgTop: 10,
+    rBgBottom: 13, gBgBottom: 4, bBgBottom: 2,
     rGrid: 255, gGrid: 120, bGrid: 0, gridAlpha: 0.20,
     obstacleType: 'METEORITE'
   },
@@ -147,10 +147,10 @@ const ZONES = [
     id: 3,
     name: 'TOXIC MATRIX',
     threshold: 100000,
-    rPrimary: 0, gPrimary: 255, bPrimary: 102,      // #00ff66
-    rSecondary: 170, gSecondary: 255, bSecondary: 0, // #aaff00
-    rBgTop: 8, gBgTop: 36, bBgTop: 20,              // #082414
-    rBgBottom: 2, gBgBottom: 13, bBgBottom: 6,      // #020d06
+    rPrimary: 0, gPrimary: 255, bPrimary: 102,
+    rSecondary: 170, gSecondary: 255, bSecondary: 0,
+    rBgTop: 8, gBgTop: 36, bBgTop: 20,
+    rBgBottom: 2, gBgBottom: 13, bBgBottom: 6,
     rGrid: 0, gGrid: 255, bGrid: 102, gridAlpha: 0.18,
     obstacleType: 'CYBER_CLAW'
   },
@@ -158,10 +158,10 @@ const ZONES = [
     id: 4,
     name: 'VOID ABYSS',
     threshold: 150000,
-    rPrimary: 157, gPrimary: 0, bPrimary: 255,      // #9d00ff
-    rSecondary: 0, gSecondary: 240, bSecondary: 255, // #00f0ff
-    rBgTop: 30, gBgTop: 10, bBgTop: 48,             // #1e0a30
-    rBgBottom: 8, gBgBottom: 2, bBgBottom: 13,      // #08020d
+    rPrimary: 157, gPrimary: 0, bPrimary: 255,
+    rSecondary: 0, gSecondary: 240, bSecondary: 255,
+    rBgTop: 30, gBgTop: 10, bBgTop: 48,
+    rBgBottom: 8, gBgBottom: 2, bBgBottom: 13,
     rGrid: 157, gGrid: 0, bGrid: 255, gridAlpha: 0.20,
     obstacleType: 'VOID_VORTEX'
   },
@@ -169,16 +169,15 @@ const ZONES = [
     id: 5,
     name: 'QUANTUM OVERDRIVE',
     threshold: 200000,
-    rPrimary: 255, gPrimary: 255, bPrimary: 255,    // #ffffff
-    rSecondary: 0, gSecondary: 240, bSecondary: 255, // #00f0ff
-    rBgTop: 32, gBgTop: 37, bBgTop: 56,             // #202538
-    rBgBottom: 5, gBgBottom: 7, bBgBottom: 13,      // #05070d
+    rPrimary: 255, gPrimary: 255, bPrimary: 255,
+    rSecondary: 0, gSecondary: 240, bSecondary: 255,
+    rBgTop: 32, gBgTop: 37, bBgTop: 56,
+    rBgBottom: 5, gBgBottom: 7, bBgBottom: 13,
     rGrid: 255, gGrid: 255, bGrid: 255, gridAlpha: 0.22,
     obstacleType: 'RAINBOW_CRYSTAL'
   }
 ];
 
-// Helper: Linear Interpolation
 function lerp(a, b, t) {
   return a + (b - a) * t;
 }
@@ -221,7 +220,7 @@ class NeonSurgeGame {
 
     // Spawning Cadence & Safe Path System
     this.spawnTimer = 0;
-    this.spawnInterval = 1.2;
+    this.spawnInterval = 1.25;
 
     // Power-up state
     this.activePowerup = null;
@@ -303,11 +302,11 @@ class NeonSurgeGame {
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') this.keys.right = false;
     });
 
-    // Touch & Pointer Drag on Canvas
+    // Touch & Pointer Drag on Canvas (Permits touching right up to walls!)
     const setTargetFromPointer = (clientX) => {
       const rect = this.canvas.getBoundingClientRect();
       const relativeX = clientX - rect.left;
-      this.player.targetX = Math.max(28, Math.min(this.canvas.width - 28, relativeX));
+      this.player.targetX = Math.max(16, Math.min(this.canvas.width - 16, relativeX));
     };
 
     this.canvas.addEventListener('pointerdown', (e) => {
@@ -555,50 +554,43 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // Smooth Seamless Zone Interpolation (No Distractions)
+  // Continuous Real-Time Color Morphing
   // ==========================================
   updateZoneSmoothColors() {
-    // Exact continuous floating progress across the 5 zones (each zone = 50,000 points)
     const exactZonePos = Math.max(0, Math.min(ZONES.length - 1, this.score / 50000));
     const baseIdx = Math.floor(exactZonePos);
     const nextIdx = Math.min(ZONES.length - 1, baseIdx + 1);
-    const t = exactZonePos - baseIdx; // 0.0 to 1.0 transition factor
+    const t = exactZonePos - baseIdx;
 
     const z1 = ZONES[baseIdx];
     const z2 = ZONES[nextIdx];
 
-    // Smoothly blend primary neon highlight
     const rP = Math.round(lerp(z1.rPrimary, z2.rPrimary, t));
     const gP = Math.round(lerp(z1.gPrimary, z2.gPrimary, t));
     const bP = Math.round(lerp(z1.bPrimary, z2.bPrimary, t));
     this.activeColors.primary = `rgb(${rP}, ${gP}, ${bP})`;
 
-    // Smoothly blend secondary hazard color
     const rS = Math.round(lerp(z1.rSecondary, z2.rSecondary, t));
     const gS = Math.round(lerp(z1.gSecondary, z2.gSecondary, t));
     const bS = Math.round(lerp(z1.bSecondary, z2.bSecondary, t));
     this.activeColors.secondary = `rgb(${rS}, ${gS}, ${bS})`;
 
-    // Smoothly blend top background radial color
     const rBT = Math.round(lerp(z1.rBgTop, z2.rBgTop, t));
     const gBT = Math.round(lerp(z1.gBgTop, z2.gBgTop, t));
     const bBT = Math.round(lerp(z1.bBgTop, z2.bBgTop, t));
     this.activeColors.bgTop = `rgb(${rBT}, ${gBT}, ${bBT})`;
 
-    // Smoothly blend bottom background color
     const rBB = Math.round(lerp(z1.rBgBottom, z2.rBgBottom, t));
     const gBB = Math.round(lerp(z1.gBgBottom, z2.gBgBottom, t));
     const bBB = Math.round(lerp(z1.bBgBottom, z2.bBgBottom, t));
     this.activeColors.bgBottom = `rgb(${rBB}, ${gBB}, ${bBB})`;
 
-    // Smoothly blend grid floor lines
     const rG = Math.round(lerp(z1.rGrid, z2.rGrid, t));
     const gG = Math.round(lerp(z1.gGrid, z2.gGrid, t));
     const bG = Math.round(lerp(z1.bGrid, z2.bGrid, t));
     const alphaG = lerp(z1.gridAlpha, z2.gridAlpha, t).toFixed(3);
     this.activeColors.grid = `rgba(${rG}, ${gG}, ${bG}, ${alphaG})`;
 
-    // HUD badge name update without popups
     const currentZoneObj = t >= 0.5 ? z2 : z1;
     this.currentZoneName = `ZONE ${currentZoneObj.id} • ${currentZoneObj.name}`;
     this.activeObstacleType = currentZoneObj.obstacleType;
@@ -688,12 +680,12 @@ class NeonSurgeGame {
       }
     }
 
-    // Left/Right Movement (Strict Wall Clamping)
-    if (this.keys.left) this.player.targetX -= 10;
-    if (this.keys.right) this.player.targetX += 10;
+    // Left/Right Movement (Player can comfortably touch/glide right against the walls!)
+    if (this.keys.left) this.player.targetX -= 11;
+    if (this.keys.right) this.player.targetX += 11;
 
-    const safeMargin = 28;
-    this.player.targetX = Math.max(safeMargin, Math.min(this.canvas.width - safeMargin, this.player.targetX));
+    const wallMargin = 16;
+    this.player.targetX = Math.max(wallMargin, Math.min(this.canvas.width - wallMargin, this.player.targetX));
     const dx = this.player.targetX - this.player.x;
     this.player.x += dx * 0.22;
     this.player.tilt = Math.max(-0.45, Math.min(0.45, dx * 0.03));
@@ -705,7 +697,7 @@ class NeonSurgeGame {
 
     // Obstacle Generator
     const difficultyFactor = Math.min(1, this.score / 120000);
-    this.spawnInterval = 1.25 - (difficultyFactor * 0.55);
+    this.spawnInterval = 1.30 - (difficultyFactor * 0.55);
 
     this.spawnTimer += dt;
     if (this.spawnTimer >= this.spawnInterval) {
@@ -842,99 +834,106 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // Guaranteed Fair Obstacle Wave Generator
+  // Guaranteed Fair Obstacle Wave Generator (Generous 120px+ Gaps & Center Wall-Pillars)
   // ==========================================
   spawnBalancedWave(difficultyFactor) {
     const canvasW = this.canvas.width;
-    const minSafeWidth = 92;
-    const safeX = Math.random() * (canvasW - minSafeWidth - 40) + 20;
-    const safeEnd = safeX + minSafeWidth;
-
-    const clusterChance = 0.20 + (difficultyFactor * 0.45);
-    const isCluster = Math.random() < clusterChance;
-
-    const getRandomHazardSize = () => {
-      const r = Math.random();
-      if (r < 0.4) return Math.floor(Math.random() * 8) + 32;
-      if (r < 0.75) return Math.floor(Math.random() * 12) + 48;
-      return Math.floor(Math.random() * 14) + 66;
-    };
-
     const type = this.activeObstacleType || 'CYBER_LASER';
     const currentZoneIdx = this.currentZoneIdx || 0;
 
-    if (isCluster) {
-      const maxItems = difficultyFactor > 0.6 ? 4 : (difficultyFactor > 0.25 ? 3 : 2);
-      const clusterCount = Math.floor(Math.random() * (maxItems - 1)) + 2;
+    const randPattern = Math.random();
 
-      for (let c = 0; c < clusterCount; c++) {
-        const size = getRandomHazardSize();
-        let posX;
-        if (Math.random() > 0.5 && safeX > size + 10) {
-          posX = Math.random() * (safeX - size);
-        } else if (canvasW - safeEnd > size + 10) {
-          posX = safeEnd + Math.random() * (canvasW - safeEnd - size);
-        } else {
-          posX = Math.random() * (canvasW - size);
-        }
+    // ----------------------------------------------------
+    // PATTERN 1: CENTER PILLAR / ISLAND (Makes wall hugging strategically fun!)
+    // Blocks the middle ~40% of the screen, leaving BOTH the Left & Right walls wide open!
+    // ----------------------------------------------------
+    if (randPattern < 0.28) {
+      const pillarWidth = Math.min(canvasW * 0.40, 160);
+      const pillarX = (canvasW - pillarWidth) / 2;
 
-        this.obstacles.push({
-          x: Math.max(0, Math.min(canvasW - size, posX)),
-          y: -70 - (c * 55),
-          width: size,
-          height: size,
-          type,
-          isBarrier: false,
-          zoneIndex: currentZoneIdx,
-          rotation: Math.random() * Math.PI,
-          animPulse: Math.random() * 5
-        });
+      this.obstacles.push({
+        x: pillarX,
+        y: -70,
+        width: pillarWidth,
+        height: 26,
+        type,
+        isBarrier: true,
+        zoneIndex: currentZoneIdx,
+        rotation: 0,
+        animPulse: 0
+      });
+
+      // Spawn bonus Orbs right along the left and right walls to reward wall hugs!
+      if (Math.random() < 0.7) {
+        const sideX = Math.random() > 0.5 ? 20 : canvasW - 20;
+        this.orbs.push({ x: sideX, y: -70, radius: 12, pulse: 0 });
       }
-    } else {
-      const isBarrier = Math.random() < 0.45;
-      if (isBarrier) {
-        const spawnOnLeft = Math.random() > 0.5;
-        let bWidth, bX;
-        if (spawnOnLeft) {
-          bX = 0;
-          bWidth = Math.max(50, safeX);
-        } else {
-          bX = safeEnd;
-          bWidth = Math.max(50, canvasW - safeEnd);
-        }
+      return;
+    }
 
-        this.obstacles.push({
-          x: bX,
-          y: -70,
-          width: bWidth,
-          height: 24,
-          type,
-          isBarrier: true,
-          zoneIndex: currentZoneIdx,
-          rotation: 0,
-          animPulse: 0
-        });
+    // ----------------------------------------------------
+    // PATTERN 2: GENEROUS SIDE BARRIER (Leaves at least 115px to 135px wide opening!)
+    // ----------------------------------------------------
+    if (randPattern < 0.58) {
+      const generousPassageWidth = Math.max(115, Math.min(135, canvasW * 0.38));
+      const spawnOnLeft = Math.random() > 0.5;
+
+      const barrierWidth = canvasW - generousPassageWidth;
+      const barrierX = spawnOnLeft ? 0 : generousPassageWidth;
+
+      this.obstacles.push({
+        x: barrierX,
+        y: -70,
+        width: barrierWidth,
+        height: 24,
+        type,
+        isBarrier: true,
+        zoneIndex: currentZoneIdx,
+        rotation: 0,
+        animPulse: 0
+      });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // PATTERN 3: STAGGERED CLUSTERS WITH 120px GUARANTEED WEAVE CORRIDOR
+    // ----------------------------------------------------
+    const minSafeCorridor = 115;
+    const safeX = Math.random() * (canvasW - minSafeCorridor - 30) + 15;
+    const safeEnd = safeX + minSafeCorridor;
+
+    const clusterCount = Math.random() > 0.5 ? 3 : 2;
+
+    for (let c = 0; c < clusterCount; c++) {
+      const size = Math.floor(Math.random() * 22) + 38; // 38px to 60px
+      let posX;
+
+      if (Math.random() > 0.5 && safeX > size + 10) {
+        // Spawn to the left of the safe corridor
+        posX = Math.random() * (safeX - size);
+      } else if (canvasW - safeEnd > size + 10) {
+        // Spawn to the right of the safe corridor
+        posX = safeEnd + Math.random() * (canvasW - safeEnd - size);
       } else {
-        const size = getRandomHazardSize();
-        const posX = Math.random() > 0.5 ? Math.random() * (safeX - size) : safeEnd + Math.random() * (canvasW - safeEnd - size);
-
-        this.obstacles.push({
-          x: Math.max(0, Math.min(canvasW - size, posX || (canvasW - size) / 2)),
-          y: -70,
-          width: size,
-          height: size,
-          type,
-          isBarrier: false,
-          zoneIndex: currentZoneIdx,
-          rotation: 0,
-          animPulse: 0
-        });
+        posX = Math.random() > 0.5 ? 5 : canvasW - size - 5;
       }
+
+      this.obstacles.push({
+        x: Math.max(0, Math.min(canvasW - size, posX)),
+        y: -70 - (c * 60), // Staggered vertically for easy weaving
+        width: size,
+        height: size,
+        type,
+        isBarrier: false,
+        zoneIndex: currentZoneIdx,
+        rotation: Math.random() * Math.PI,
+        animPulse: Math.random() * 5
+      });
     }
   }
 
   // ==========================================
-  // 6. Render Scene (Seamless Continuous Gradients)
+  // 6. Render Scene
   // ==========================================
   draw() {
     this.ctx.save();
