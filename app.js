@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v3.0
- * Zone-Thematic Custom Obstacles (Meteorites, Cyber Claws, Void Vortexes & Rainbow Crystals).
+ * NEON SURGE | Cyber Velocity Arcade Engine v3.5
+ * Bigger Thematic Obstacles, High-Density Cluster Formations & Intense Action.
  */
 
 // ==========================================
@@ -149,8 +149,8 @@ const ZONES = [
     gridColor: 'rgba(0, 240, 255, 0.14)',
     bgGradient: ['#151a30', '#060810'],
     obstacleType: 'CYBER_LASER',
-    obstacleName: 'Laser Barrier',
-    desc: 'Neon grid & rotating cyber prisms'
+    obstacleName: 'Laser Barrier & Cyber Prisms',
+    desc: 'Neon grid & high-voltage hazard prisms'
   },
   {
     id: 2,
@@ -161,8 +161,8 @@ const ZONES = [
     gridColor: 'rgba(255, 120, 0, 0.22)',
     bgGradient: ['#30150a', '#0d0402'],
     obstacleType: 'METEORITE',
-    obstacleName: 'Burning Meteorite',
-    desc: 'Flaming lava asteroids & solar flares'
+    obstacleName: 'Molten Meteorite Shower',
+    desc: 'Heavy burning asteroids & solar flares'
   },
   {
     id: 3,
@@ -173,8 +173,8 @@ const ZONES = [
     gridColor: 'rgba(0, 255, 102, 0.2)',
     bgGradient: ['#082414', '#020d06'],
     obstacleType: 'CYBER_CLAW',
-    obstacleName: 'Razor Cyber Claws',
-    desc: 'Acid claws & radioactive bio-nodes'
+    obstacleName: 'Razor Cyber Claws & Pods',
+    desc: 'Bio-mechanical claws & acid hazard gates'
   },
   {
     id: 4,
@@ -185,8 +185,8 @@ const ZONES = [
     gridColor: 'rgba(157, 0, 255, 0.22)',
     bgGradient: ['#1e0a30', '#08020d'],
     obstacleType: 'VOID_VORTEX',
-    obstacleName: 'Dark Matter Vortex',
-    desc: 'Singularity rifts & spinning void blades'
+    obstacleName: 'Dark Matter Singularity Field',
+    desc: 'Swirling void vortexes & event horizon rifts'
   },
   {
     id: 5,
@@ -197,8 +197,8 @@ const ZONES = [
     gridColor: 'rgba(255, 255, 255, 0.25)',
     bgGradient: ['#202538', '#05070d'],
     obstacleType: 'RAINBOW_CRYSTAL',
-    obstacleName: 'Prismatic Crystal',
-    desc: 'Chromatic shards & warp rifts'
+    obstacleName: 'Prismatic Diamond Cluster',
+    desc: 'Giant diamond crystal shards & warp rifts'
   }
 ];
 
@@ -224,8 +224,8 @@ class NeonSurgeGame {
     this.comboTimer = 0;
     this.maxCombo = 1;
     this.distance = 0;
-    this.speed = 6.5;
-    this.baseSpeed = 6.5;
+    this.speed = 6.8;
+    this.baseSpeed = 6.8;
     this.screenShake = 0;
 
     // Biome Zone State
@@ -650,7 +650,7 @@ class NeonSurgeGame {
     // Progression
     this.distance += this.speed * dt * 10;
     this.score += Math.round(this.speed * this.combo * 0.5);
-    this.baseSpeed = 6.5 + Math.min(10, this.distance / 3500);
+    this.baseSpeed = 6.8 + Math.min(10, this.distance / 3500);
 
     // Check Map/Zone Transitions (50,000 pt milestone checks)
     this.checkZoneTransitions();
@@ -697,58 +697,94 @@ class NeonSurgeGame {
     this.player.trail.forEach(t => t.alpha -= 0.06);
 
     // ==========================================
-    // Spawning Thematic Zone Obstacles
+    // Spawning Thematic Zone Obstacles & High-Density Clusters
     // ==========================================
-    const minGap = 85;
-    const spawnRate = 0.028 + (this.baseSpeed * 0.0015);
+    const minGap = 80;
     const currentZone = ZONES[this.currentZoneIndex];
 
-    if (Math.random() < spawnRate) {
+    // Increased spawn frequency for exciting dense action
+    const spawnChance = 0.042 + (this.baseSpeed * 0.002);
+
+    if (Math.random() < spawnChance) {
       const rand = Math.random();
-      let type = currentZone.obstacleType; // 'CYBER_LASER', 'METEORITE', 'CYBER_CLAW', 'VOID_VORTEX', 'RAINBOW_CRYSTAL'
-      let isBarrier = rand < 0.55;
-      let width = isBarrier ? Math.min(this.canvas.width - minGap - 20, Math.random() * (this.canvas.width * 0.45) + 60) : 40;
-      let xPos = 0;
 
-      if (isBarrier) {
-        // Spawns on left or right with guaranteed gap
-        xPos = Math.random() > 0.5 ? 0 : this.canvas.width - width;
+      // Chunkier sizes for smaller hazards (increased from 36px to 54-64px!)
+      const chunkySize = Math.floor(Math.random() * 12) + 52; 
+
+      if (rand < 0.35) {
+        // FORMATION A: DENSE CLUSTER (2 to 3 hazards in a staggered formation)
+        const clusterCount = Math.random() > 0.4 ? 3 : 2;
+        const startX = Math.random() * (this.canvas.width - (clusterCount * 65) - 30) + 15;
+
+        for (let c = 0; c < clusterCount; c++) {
+          this.obstacles.push({
+            x: startX + (c * 68),
+            y: -70 - (c * 45), // Staggered diagonally so you can weave through
+            width: chunkySize,
+            height: chunkySize,
+            type: currentZone.obstacleType,
+            isBarrier: false,
+            isCluster: true,
+            zoneIndex: this.currentZoneIndex,
+            rotation: Math.random() * Math.PI,
+            animPulse: Math.random() * 5
+          });
+        }
+      } else if (rand < 0.65) {
+        // FORMATION B: WIDE THEMATIC BARRIER with guaranteed side opening
+        const maxWidth = this.canvas.width - minGap - 30;
+        const width = Math.min(maxWidth, Math.random() * (this.canvas.width * 0.5) + 70);
+        const xPos = Math.random() > 0.5 ? 0 : this.canvas.width - width;
+
+        this.obstacles.push({
+          x: xPos,
+          y: -70,
+          width,
+          height: 26,
+          type: currentZone.obstacleType,
+          isBarrier: true,
+          isCluster: false,
+          zoneIndex: this.currentZoneIndex,
+          rotation: 0,
+          animPulse: 0
+        });
       } else {
-        // Spawns in lane
-        xPos = Math.random() * (this.canvas.width - width - 40) + 20;
-      }
+        // FORMATION C: SINGLE LARGE THEMATIC THREAT
+        const xPos = Math.random() * (this.canvas.width - chunkySize - 40) + 20;
 
-      this.obstacles.push({
-        x: xPos,
-        y: -60,
-        width,
-        height: isBarrier ? 22 : 40,
-        type,
-        isBarrier,
-        zoneIndex: this.currentZoneIndex,
-        rotation: 0,
-        animPulse: 0
-      });
+        this.obstacles.push({
+          x: xPos,
+          y: -70,
+          width: chunkySize + 6,
+          height: chunkySize + 6,
+          type: currentZone.obstacleType,
+          isBarrier: false,
+          isCluster: false,
+          zoneIndex: this.currentZoneIndex,
+          rotation: 0,
+          animPulse: 0
+        });
+      }
     }
 
     // Spawning Orbs
-    if (Math.random() < 0.045) {
+    if (Math.random() < 0.048) {
       this.orbs.push({
         x: Math.random() * (this.canvas.width - 60) + 30,
         y: -30,
-        radius: 11,
+        radius: 12,
         pulse: 0
       });
     }
 
     // Spawning Power-up Pickups
-    if (Math.random() < 0.008 && !this.activePowerup) {
+    if (Math.random() < 0.009 && !this.activePowerup) {
       const pType = Math.random() > 0.5 ? 'BOOST' : 'SHIELD';
       this.powerups.push({
         x: Math.random() * (this.canvas.width - 60) + 30,
         y: -30,
         type: pType,
-        radius: 15
+        radius: 16
       });
     }
 
@@ -759,16 +795,20 @@ class NeonSurgeGame {
       obs.rotation += 0.04;
       obs.animPulse += 0.08;
 
-      const pBox = { x: this.player.x - 14, y: this.player.y - 18, w: 28, h: 36 };
+      // Accurate hitbox with generous forgiving margin for fun play
+      const hitMargin = obs.isBarrier ? 4 : 8;
+      const pBox = { x: this.player.x - 12, y: this.player.y - 16, w: 24, h: 32 };
+      const oBox = { x: obs.x + hitMargin, y: obs.y + hitMargin, w: obs.width - (hitMargin * 2), h: obs.height - (hitMargin * 2) };
+
       if (
-        pBox.x < obs.x + obs.width &&
-        pBox.x + pBox.w > obs.x &&
-        pBox.y < obs.y + obs.height &&
-        pBox.y + pBox.h > obs.y
+        pBox.x < oBox.x + oBox.w &&
+        pBox.x + pBox.w > oBox.x &&
+        pBox.y < oBox.y + oBox.h &&
+        pBox.y + pBox.h > oBox.y
       ) {
         if (this.activePowerup === 'SHIELD' || this.activePowerup === 'BOOST') {
           const zoneColor = ZONES[obs.zoneIndex]?.secondaryColor || '#00f0ff';
-          this.createExplosion(obs.x + obs.width / 2, obs.y + obs.height / 2, 20, zoneColor);
+          this.createExplosion(obs.x + obs.width / 2, obs.y + obs.height / 2, 22, zoneColor);
           this.obstacles.splice(i, 1);
           this.score += 250 * this.combo;
 
@@ -979,7 +1019,7 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // Custom Zone Thematic Obstacle Graphics
+  // Custom Zone Thematic Obstacle Graphics (Chunkier & Imposing)
   // ==========================================
   drawThematicObstacle(obs, zone) {
     const cx = obs.x + obs.width / 2;
@@ -988,81 +1028,95 @@ class NeonSurgeGame {
     this.ctx.save();
 
     // ----------------------------------------------------
-    // Zone 1: CYBER_LASER (Neon Laser Barrier & Cyber Prisms)
+    // Zone 1: CYBER_LASER (Neon Laser Barrier & Chunky Cyber Prisms)
     // ----------------------------------------------------
     if (obs.type === 'CYBER_LASER') {
       this.ctx.shadowColor = '#ff0077';
-      this.ctx.shadowBlur = 14;
+      this.ctx.shadowBlur = 16;
 
       if (obs.isBarrier) {
-        this.ctx.fillStyle = 'rgba(255, 0, 119, 0.4)';
+        this.ctx.fillStyle = 'rgba(255, 0, 119, 0.45)';
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         this.ctx.strokeStyle = '#ff0077';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 3.5;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
 
         // Core laser beam line
         this.ctx.strokeStyle = '#ffffff';
-        this.ctx.lineWidth = 2;
+        this.ctx.lineWidth = 2.5;
         this.ctx.beginPath();
         this.ctx.moveTo(obs.x, cy);
         this.ctx.lineTo(obs.x + obs.width, cy);
         this.ctx.stroke();
       } else {
+        // Chunky Cyber Prism Block
         this.ctx.translate(cx, cy);
         this.ctx.rotate(obs.rotation);
         this.ctx.fillStyle = '#ff0077';
         this.ctx.fillRect(-obs.width / 2, -obs.height / 2, obs.width, obs.height);
         this.ctx.strokeStyle = '#00f0ff';
-        this.ctx.lineWidth = 2.5;
+        this.ctx.lineWidth = 3;
         this.ctx.strokeRect(-obs.width / 2, -obs.height / 2, obs.width, obs.height);
+
+        // Inner Diamond
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        this.ctx.fill();
       }
       this.ctx.restore();
       return;
     }
 
     // ----------------------------------------------------
-    // Zone 2: METEORITE (Molten Lava Asteroids & Solar Flames)
+    // Zone 2: METEORITE (Giant Molten Asteroids with Lava Trails)
     // ----------------------------------------------------
     if (obs.type === 'METEORITE') {
       this.ctx.shadowColor = '#ff3300';
-      this.ctx.shadowBlur = 18;
+      this.ctx.shadowBlur = 22;
 
       if (obs.isBarrier) {
-        // Magma Wall with lava veins
-        this.ctx.fillStyle = 'rgba(255, 51, 0, 0.5)';
+        this.ctx.fillStyle = 'rgba(255, 51, 0, 0.55)';
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         this.ctx.strokeStyle = '#ffe600';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 3.5;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
 
-        // Lava glow points
         this.ctx.fillStyle = '#ffe600';
         for (let lx = obs.x + 10; lx < obs.x + obs.width; lx += 20) {
           this.ctx.beginPath();
-          this.ctx.arc(lx, cy + Math.sin(obs.animPulse + lx) * 3, 3, 0, Math.PI * 2);
+          this.ctx.arc(lx, cy + Math.sin(obs.animPulse + lx) * 4, 3.5, 0, Math.PI * 2);
           this.ctx.fill();
         }
       } else {
-        // Jagged Burning Asteroid
+        // Massive Molten Asteroid
         this.ctx.translate(cx, cy);
         this.ctx.rotate(obs.rotation);
 
-        // Burning Core
-        this.ctx.fillStyle = '#ff3300';
-        this.ctx.beginPath();
-        this.ctx.arc(0, 0, 18, 0, Math.PI * 2);
-        this.ctx.fill();
+        const rad = obs.width / 2;
 
-        // Molten Surface Veins
-        this.ctx.strokeStyle = '#ffe600';
-        this.ctx.lineWidth = 2.5;
-        this.ctx.stroke();
-
-        // Fire tail sparks
+        // Outer Fiery Glow Aura
         this.ctx.fillStyle = '#ff9900';
         this.ctx.beginPath();
-        this.ctx.arc(0, -18, 5 + Math.sin(obs.animPulse) * 2, 0, Math.PI * 2);
+        this.ctx.arc(0, -rad * 0.8, rad * 0.5, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        // Molten Asteroid Body
+        this.ctx.fillStyle = '#ff2200';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, rad, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        // Lava Veins
+        this.ctx.strokeStyle = '#ffe600';
+        this.ctx.lineWidth = 3;
+        this.ctx.stroke();
+
+        // Crater details
+        this.ctx.fillStyle = '#660000';
+        this.ctx.beginPath();
+        this.ctx.arc(-rad * 0.3, -rad * 0.2, rad * 0.25, 0, Math.PI * 2);
+        this.ctx.arc(rad * 0.3, rad * 0.2, rad * 0.2, 0, Math.PI * 2);
         this.ctx.fill();
       }
       this.ctx.restore();
@@ -1070,52 +1124,52 @@ class NeonSurgeGame {
     }
 
     // ----------------------------------------------------
-    // Zone 3: CYBER_CLAW (Razor Toxic Claws & Bio-Matrix Pods)
+    // Zone 3: CYBER_CLAW (Huge Predator Talons & Toxic Nodes)
     // ----------------------------------------------------
     if (obs.type === 'CYBER_CLAW') {
       this.ctx.shadowColor = '#00ff66';
-      this.ctx.shadowBlur = 16;
+      this.ctx.shadowBlur = 18;
 
       if (obs.isBarrier) {
-        // Toxic Acid Gate
-        this.ctx.fillStyle = 'rgba(0, 255, 102, 0.4)';
+        this.ctx.fillStyle = 'rgba(0, 255, 102, 0.45)';
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         this.ctx.strokeStyle = '#aaff00';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 3.5;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
 
-        // Bio-hazard spikes along the gate
         this.ctx.fillStyle = '#aaff00';
         for (let bx = obs.x + 8; bx < obs.x + obs.width; bx += 18) {
           this.ctx.beginPath();
-          this.ctx.moveTo(bx - 5, obs.y);
-          this.ctx.lineTo(bx, obs.y - 8);
-          this.ctx.lineTo(bx + 5, obs.y);
+          this.ctx.moveTo(bx - 6, obs.y);
+          this.ctx.lineTo(bx, obs.y - 10);
+          this.ctx.lineTo(bx + 6, obs.y);
           this.ctx.closePath();
           this.ctx.fill();
         }
       } else {
-        // Sharp Cyber Predator Claw
+        // Large Heavy Predator Claw
         this.ctx.translate(cx, cy);
-        this.ctx.rotate(obs.rotation * 0.5);
+        this.ctx.rotate(obs.rotation * 0.4);
 
-        this.ctx.fillStyle = '#082414';
+        const rad = obs.width / 2;
+
+        this.ctx.fillStyle = '#051f0f';
         this.ctx.strokeStyle = '#00ff66';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 3.5;
 
-        // Claw Palm
+        // Claw Knuckle
         this.ctx.beginPath();
-        this.ctx.ellipse(0, 4, 12, 10, 0, 0, Math.PI * 2);
+        this.ctx.ellipse(0, 6, rad * 0.8, rad * 0.6, 0, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.stroke();
 
-        // 3 Razor Sharp Talons
-        this.ctx.fillStyle = '#00ff66';
-        [-8, 0, 8].forEach(offset => {
+        // 3 Big Curved Sharp Talons
+        this.ctx.fillStyle = '#aaff00';
+        [-rad * 0.5, 0, rad * 0.5].forEach(offset => {
           this.ctx.beginPath();
-          this.ctx.moveTo(offset - 3, 0);
-          this.ctx.lineTo(offset, -18);
-          this.ctx.lineTo(offset + 3, 0);
+          this.ctx.moveTo(offset - 5, 0);
+          this.ctx.lineTo(offset, -rad * 1.1);
+          this.ctx.lineTo(offset + 5, 0);
           this.ctx.closePath();
           this.ctx.fill();
         });
@@ -1125,61 +1179,66 @@ class NeonSurgeGame {
     }
 
     // ----------------------------------------------------
-    // Zone 4: VOID_VORTEX (Dark Matter Singularity & Void Blades)
+    // Zone 4: VOID_VORTEX (Huge Swirling Singularity & Blade Fields)
     // ----------------------------------------------------
     if (obs.type === 'VOID_VORTEX') {
       this.ctx.shadowColor = '#9d00ff';
-      this.ctx.shadowBlur = 20;
+      this.ctx.shadowBlur = 24;
 
       if (obs.isBarrier) {
-        // Void Space Distortion Rift
-        this.ctx.fillStyle = 'rgba(157, 0, 255, 0.45)';
+        this.ctx.fillStyle = 'rgba(157, 0, 255, 0.5)';
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         this.ctx.strokeStyle = '#00f0ff';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 3.5;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
 
-        // Pulsing Event Horizon
         this.ctx.fillStyle = '#ffffff';
         this.ctx.beginPath();
-        this.ctx.arc(cx, cy, 6 + Math.sin(obs.animPulse) * 2, 0, Math.PI * 2);
+        this.ctx.arc(cx, cy, 8 + Math.sin(obs.animPulse) * 2, 0, Math.PI * 2);
         this.ctx.fill();
       } else {
-        // Swirling Dark Matter Vortex
+        // Massive Swirling Dark Matter Vortex
         this.ctx.translate(cx, cy);
-        this.ctx.rotate(obs.rotation * 1.5);
+        this.ctx.rotate(obs.rotation * 1.6);
 
-        this.ctx.fillStyle = '#08020d';
+        const rad = obs.width / 2;
+
+        this.ctx.fillStyle = '#06010a';
         this.ctx.strokeStyle = '#9d00ff';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 4;
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        this.ctx.arc(0, 0, rad, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.stroke();
 
-        // Swirling Spiral Blades
+        // Triple Swirling Energy Arms
         this.ctx.strokeStyle = '#00f0ff';
-        this.ctx.lineWidth = 2.5;
+        this.ctx.lineWidth = 3;
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, 12, 0, Math.PI * 1.2);
+        this.ctx.arc(0, 0, rad * 0.7, 0, Math.PI * 1.3);
         this.ctx.stroke();
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, 6, Math.PI, Math.PI * 2.2);
+        this.ctx.arc(0, 0, rad * 0.4, Math.PI, Math.PI * 2.3);
         this.ctx.stroke();
+
+        // Core Singularity Point
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 5, 0, Math.PI * 2);
+        this.ctx.fill();
       }
       this.ctx.restore();
       return;
     }
 
     // ----------------------------------------------------
-    // Zone 5: RAINBOW_CRYSTAL (Prismatic Diamond Shards & Quantum Rifts)
+    // Zone 5: RAINBOW_CRYSTAL (Large Prismatic Diamonds & Warp Rifts)
     // ----------------------------------------------------
     if (obs.type === 'RAINBOW_CRYSTAL') {
       this.ctx.shadowColor = '#ffffff';
-      this.ctx.shadowBlur = 22;
+      this.ctx.shadowBlur = 24;
 
       if (obs.isBarrier) {
-        // Quantum Prism Barrier
         const grad = this.ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y);
         grad.addColorStop(0, '#ff0055');
         grad.addColorStop(0.33, '#ffe600');
@@ -1188,33 +1247,36 @@ class NeonSurgeGame {
         this.ctx.fillStyle = grad;
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         this.ctx.strokeStyle = '#ffffff';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 3.5;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
       } else {
-        // Multi-Faceted Rainbow Diamond Crystal
+        // Large Multi-Faceted Crystal Shard
         this.ctx.translate(cx, cy);
         this.ctx.rotate(obs.rotation);
 
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        const rad = obs.width / 2;
+
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         this.ctx.strokeStyle = '#00f0ff';
-        this.ctx.lineWidth = 2.5;
+        this.ctx.lineWidth = 3;
 
         this.ctx.beginPath();
-        this.ctx.moveTo(0, -18);
-        this.ctx.lineTo(14, 0);
-        this.ctx.lineTo(0, 18);
-        this.ctx.lineTo(-14, 0);
+        this.ctx.moveTo(0, -rad * 1.1);
+        this.ctx.lineTo(rad * 0.9, 0);
+        this.ctx.lineTo(0, rad * 1.1);
+        this.ctx.lineTo(-rad * 0.9, 0);
         this.ctx.closePath();
         this.ctx.fill();
         this.ctx.stroke();
 
-        // Crystal Facet Line
+        // Crystal Facet Lines
         this.ctx.strokeStyle = '#ff0077';
+        this.ctx.lineWidth = 2;
         this.ctx.beginPath();
-        this.ctx.moveTo(-14, 0);
-        this.ctx.lineTo(14, 0);
-        this.ctx.moveTo(0, -18);
-        this.ctx.lineTo(0, 18);
+        this.ctx.moveTo(-rad * 0.9, 0);
+        this.ctx.lineTo(rad * 0.9, 0);
+        this.ctx.moveTo(0, -rad * 1.1);
+        this.ctx.lineTo(0, rad * 1.1);
         this.ctx.stroke();
       }
       this.ctx.restore();
@@ -1289,13 +1351,11 @@ class NeonSurgeGame {
       this.ctx.shadowColor = '#ff2255';
       this.ctx.shadowBlur = 14;
 
-      // Backpack
       this.ctx.fillStyle = '#cc1144';
       this.ctx.beginPath();
       this.ctx.roundRect(-22, -10, 8, 20, [4]);
       this.ctx.fill();
 
-      // Main Crewmate Body
       this.ctx.fillStyle = '#ff2255';
       this.ctx.strokeStyle = '#990022';
       this.ctx.lineWidth = 2.5;
@@ -1304,7 +1364,6 @@ class NeonSurgeGame {
       this.ctx.fill();
       this.ctx.stroke();
 
-      // Cyan Visor
       this.ctx.fillStyle = '#00f0ff';
       this.ctx.strokeStyle = '#ffffff';
       this.ctx.lineWidth = 1.5;
@@ -1313,18 +1372,15 @@ class NeonSurgeGame {
       this.ctx.fill();
       this.ctx.stroke();
 
-      // Visor Glare
       this.ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
       this.ctx.beginPath();
       this.ctx.ellipse(4, -15, 4, 2, 0, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Legs
       this.ctx.fillStyle = '#ff2255';
       this.ctx.fillRect(-12, 14, 9, 10);
       this.ctx.fillRect(3, 14, 9, 10);
 
-      // Mini Jet Flame
       this.ctx.fillStyle = '#00f0ff';
       this.ctx.beginPath();
       this.ctx.moveTo(-6, 22);
@@ -1344,7 +1400,6 @@ class NeonSurgeGame {
       this.ctx.shadowColor = '#ffd700';
       this.ctx.shadowBlur = 15;
 
-      // Ears
       this.ctx.fillStyle = '#7a4f1a';
       this.ctx.beginPath();
       this.ctx.ellipse(-14, -10, 5, 12, -0.3, 0, Math.PI * 2);
@@ -1353,7 +1408,6 @@ class NeonSurgeGame {
       this.ctx.ellipse(14, -10, 5, 12, 0.3, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Head
       this.ctx.fillStyle = '#c48b4b';
       this.ctx.strokeStyle = '#7a4f1a';
       this.ctx.lineWidth = 2;
@@ -1362,7 +1416,6 @@ class NeonSurgeGame {
       this.ctx.fill();
       this.ctx.stroke();
 
-      // Golden Glasses / Monocle
       this.ctx.strokeStyle = '#ffd700';
       this.ctx.lineWidth = 2.5;
       this.ctx.beginPath();
@@ -1374,14 +1427,12 @@ class NeonSurgeGame {
       this.ctx.lineTo(2, -4);
       this.ctx.stroke();
 
-      // Eyes
       this.ctx.fillStyle = '#000000';
       this.ctx.beginPath();
       this.ctx.arc(-7, -4, 2.5, 0, Math.PI * 2);
       this.ctx.arc(7, -4, 2.5, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Snout & Mouth
       this.ctx.fillStyle = '#eed6b3';
       this.ctx.beginPath();
       this.ctx.ellipse(0, 6, 8, 6, 0, 0, Math.PI * 2);
@@ -1392,7 +1443,6 @@ class NeonSurgeGame {
       this.ctx.arc(0, 3, 3, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Plasma Thruster
       this.ctx.fillStyle = '#ffd700';
       this.ctx.beginPath();
       this.ctx.moveTo(-6, 18);
@@ -1424,7 +1474,6 @@ class NeonSurgeGame {
       this.ctx.lineWidth = 2.5;
       this.ctx.stroke();
 
-      // Circular Cockpit with Real Photo
       this.ctx.save();
       this.ctx.beginPath();
       this.ctx.arc(0, -2, 16, 0, Math.PI * 2);
@@ -1438,14 +1487,12 @@ class NeonSurgeGame {
       }
       this.ctx.restore();
 
-      // Glowing Cockpit Ring
       this.ctx.strokeStyle = '#ffe600';
       this.ctx.lineWidth = 2.5;
       this.ctx.beginPath();
       this.ctx.arc(0, -2, 16, 0, Math.PI * 2);
       this.ctx.stroke();
 
-      // Thrusters
       this.ctx.fillStyle = '#00f0ff';
       this.ctx.beginPath();
       this.ctx.moveTo(-10, 16);
@@ -1465,7 +1512,6 @@ class NeonSurgeGame {
       this.ctx.shadowColor = '#ffe600';
       this.ctx.shadowBlur = 15;
 
-      // Ears
       this.ctx.fillStyle = '#ff8800';
       this.ctx.beginPath();
       this.ctx.ellipse(-14, -10, 6, 12, -0.4, 0, Math.PI * 2);
@@ -1474,7 +1520,6 @@ class NeonSurgeGame {
       this.ctx.ellipse(14, -10, 6, 12, 0.4, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Head
       this.ctx.fillStyle = '#ffe600';
       this.ctx.strokeStyle = '#ff8800';
       this.ctx.lineWidth = 2.5;
@@ -1483,14 +1528,12 @@ class NeonSurgeGame {
       this.ctx.fill();
       this.ctx.stroke();
 
-      // Eyes
       this.ctx.fillStyle = '#000000';
       this.ctx.beginPath();
       this.ctx.arc(-7, -4, 3, 0, Math.PI * 2);
       this.ctx.arc(7, -4, 3, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Snout
       this.ctx.fillStyle = '#ffffff';
       this.ctx.beginPath();
       this.ctx.ellipse(0, 5, 8, 6, 0, 0, Math.PI * 2);
@@ -1501,7 +1544,6 @@ class NeonSurgeGame {
       this.ctx.arc(0, 2, 3, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Wagging Tail
       this.ctx.fillStyle = '#ff5500';
       this.ctx.beginPath();
       this.ctx.moveTo(-6, 18);
