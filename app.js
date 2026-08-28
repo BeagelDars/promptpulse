@@ -959,8 +959,9 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // PURE MULTI-WAY ARCHITECTURE (NO SINGLE-EXIT LONG WALLS!)
-  // Every wave guarantees 2 to 3 open passages across the screen.
+  // ANTI-WALL-HUG MULTI-ROUTE ARCHITECTURE
+  // Alternates between blocking Left Wall, Right Wall, Both Walls, and Center.
+  // AFK wall-hugging is impossible; player must actively steer across all lanes!
   // ==========================================
   spawnBalancedWave(difficultyFactor) {
     const canvasW = this.canvas.width;
@@ -969,9 +970,121 @@ class NeonSurgeGame {
 
     const randPattern = Math.random();
 
-    // 1. CENTER ISLAND PILLAR (Dual Open Routes: Left & Right)
-    if (randPattern < 0.35) {
-      const pillarW = Math.min(canvasW * 0.30, 130);
+    // ----------------------------------------------------
+    // FORMATION 1: DUAL WALL CLAMP (Blocks BOTH Left & Right Walls!)
+    // Center lane (140px-180px) is wide open. Wall-huggers crash instantly!
+    // ----------------------------------------------------
+    if (randPattern < 0.28) {
+      const wallBlockW = Math.max(65, Math.min(canvasW * 0.28, 95));
+
+      // Left Wall Block (Flush with left border)
+      this.obstacles.push({
+        x: 0,
+        y: -70,
+        width: wallBlockW,
+        height: 24,
+        type,
+        isBarrier: true,
+        zoneIndex: currentZoneIdx,
+        rotation: 0,
+        animPulse: 0
+      });
+
+      // Right Wall Block (Flush with right border)
+      this.obstacles.push({
+        x: canvasW - wallBlockW,
+        y: -70,
+        width: wallBlockW,
+        height: 24,
+        type,
+        isBarrier: true,
+        zoneIndex: currentZoneIdx,
+        rotation: 0,
+        animPulse: 0
+      });
+
+      // Orbs in the safe center corridor
+      this.orbs.push({ x: canvasW / 2, y: -70, radius: 12, pulse: 0 });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // FORMATION 2: LEFT WALL SWEEP (Blocks Left Wall + Mid-Right Hazard)
+    // Forces player to move off the left wall to the right lanes!
+    // ----------------------------------------------------
+    if (randPattern < 0.50) {
+      const leftW = Math.max(75, Math.min(canvasW * 0.32, 105));
+
+      // Left Wall Barrier
+      this.obstacles.push({
+        x: 0,
+        y: -70,
+        width: leftW,
+        height: 24,
+        type,
+        isBarrier: true,
+        zoneIndex: currentZoneIdx,
+        rotation: 0,
+        animPulse: 0
+      });
+
+      // Staggered mid-right hazard
+      const midSize = 42;
+      this.obstacles.push({
+        x: canvasW * 0.60 - midSize / 2,
+        y: -130,
+        width: midSize,
+        height: midSize,
+        type,
+        isBarrier: false,
+        zoneIndex: currentZoneIdx,
+        rotation: 0.5,
+        animPulse: 0
+      });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // FORMATION 3: RIGHT WALL SWEEP (Blocks Right Wall + Mid-Left Hazard)
+    // Forces player to move off the right wall to the left lanes!
+    // ----------------------------------------------------
+    if (randPattern < 0.72) {
+      const rightW = Math.max(75, Math.min(canvasW * 0.32, 105));
+
+      // Right Wall Barrier (Flush with right edge)
+      this.obstacles.push({
+        x: canvasW - rightW,
+        y: -70,
+        width: rightW,
+        height: 24,
+        type,
+        isBarrier: true,
+        zoneIndex: currentZoneIdx,
+        rotation: 0,
+        animPulse: 0
+      });
+
+      // Staggered mid-left hazard
+      const midSize = 42;
+      this.obstacles.push({
+        x: canvasW * 0.40 - midSize / 2,
+        y: -130,
+        width: midSize,
+        height: midSize,
+        type,
+        isBarrier: false,
+        zoneIndex: currentZoneIdx,
+        rotation: -0.5,
+        animPulse: 0
+      });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // FORMATION 4: CENTER PILLAR (Blocks Center, Left & Right Walls Open)
+    // ----------------------------------------------------
+    if (randPattern < 0.86) {
+      const pillarW = Math.min(canvasW * 0.32, 120);
       const pillarX = (canvasW - pillarW) / 2;
 
       this.obstacles.push({
@@ -991,54 +1104,32 @@ class NeonSurgeGame {
       return;
     }
 
-    // 2. TWIN SPLIT PILLARS (Triple Open Routes: Left, Center & Right)
-    if (randPattern < 0.65) {
-      const pWidth = Math.min(canvasW * 0.18, 70);
-      const p1X = canvasW * 0.25 - pWidth / 2;
-      const p2X = canvasW * 0.75 - pWidth / 2;
-
-      this.obstacles.push({
-        x: p1X,
-        y: -70,
-        width: pWidth,
-        height: 24,
-        type,
-        isBarrier: true,
-        zoneIndex: currentZoneIdx,
-        rotation: 0,
-        animPulse: 0
-      });
-
-      this.obstacles.push({
-        x: p2X,
-        y: -70,
-        width: pWidth,
-        height: 24,
-        type,
-        isBarrier: true,
-        zoneIndex: currentZoneIdx,
-        rotation: 0,
-        animPulse: 0
-      });
-      return;
-    }
-
-    // 3. MULTI-LANE STAGGERED HAZARD FORMATION
-    const clusterCount = difficultyFactor > 0.4 ? (Math.random() > 0.5 ? 3 : 2) : 2;
-    const lanePositions = [
-      canvasW * 0.15,
-      canvasW * 0.45,
-      canvasW * 0.80
+    // ----------------------------------------------------
+    // FORMATION 5: 3-LANE STAGGERED HAZARDS (Directly targets Wall Lanes)
+    // ----------------------------------------------------
+    const size = 42;
+    const allLanes = [
+      0,                                // Flush Left Wall!
+      Math.floor(canvasW * 0.30),
+      Math.floor(canvasW * 0.50),
+      Math.floor(canvasW * 0.70),
+      Math.floor(canvasW - size)        // Flush Right Wall!
     ];
 
-    for (let c = 0; c < clusterCount; c++) {
-      const size = Math.floor(Math.random() * 20) + 38;
-      const targetLaneX = lanePositions[c % lanePositions.length] + (Math.random() * 20 - 10);
-      const posX = Math.max(10, Math.min(canvasW - size - 10, targetLaneX - size / 2));
+    // Pick 2 or 3 distinct lanes with at least one wall lane included
+    const wallChoice = Math.random() > 0.5 ? 0 : 4;
+    const midChoice = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
 
+    const selectedLanes = [allLanes[wallChoice], allLanes[midChoice]];
+    if (difficultyFactor > 0.35) {
+      const otherMid = midChoice === 2 ? (Math.random() > 0.5 ? 1 : 3) : 2;
+      selectedLanes.push(allLanes[otherMid]);
+    }
+
+    selectedLanes.forEach((posX, idx) => {
       this.obstacles.push({
-        x: posX,
-        y: -70 - (c * 60),
+        x: Math.max(0, Math.min(canvasW - size, posX)),
+        y: -70 - (idx * 55),
         width: size,
         height: size,
         type,
@@ -1047,7 +1138,7 @@ class NeonSurgeGame {
         rotation: Math.random() * Math.PI,
         animPulse: Math.random() * 5
       });
-    }
+    });
   }
 
   // ==========================================
