@@ -28,9 +28,9 @@ A fast-paced, high-octane 60 FPS neon synthwave arcade runner with shifting them
    * **Theme:** Electric violet & deep space singularity clouds.
 
 ## 🏆 Global Cloud Leaderboards (Live 24/7):
-* **👑 High Score Leaderboard**: Tracks the #1 single highest run score worldwide.
-* **🪙 Total Coins / Orbs Leaderboard**: Cumulative lifetime coins sum collected across all missions.
-* **⏳ Longest Run Leaderboard**: Maximum survival distance reached in a single run (in meters).
+* **👑 Best Single Run**: The #1 highest score achieved in a single mission run.
+* **🌐 Lifetime Total Points**: Cumulative points sum earned across your entire pilot career.
+* **🪙 Total Coins Collected**: Cumulative lifetime coins/orbs sum collected across all missions.
 * **Custom Pilot Callsign**: Enter your personal pilot name in the main menu to immortalize your score on the global leaderboard!
 
 ## ⚡ Stackable Power-Up Pickups:

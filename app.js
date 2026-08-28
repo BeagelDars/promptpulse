@@ -208,9 +208,9 @@ const CLOUD_LEADERBOARD_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181
 class CloudLeaderboardService {
   constructor() {
     this.cachedData = {
-      highscores: [],
-      totalOrbs: [],
-      longestRuns: []
+      bestRunScores: [],
+      lifetimePoints: [],
+      totalCoins: []
     };
   }
 
@@ -229,58 +229,58 @@ class CloudLeaderboardService {
     return this.cachedData;
   }
 
-  async submitRun(pilotName, score, totalCoins, distance) {
+  async submitRun(pilotName, singleRunScore, lifetimePoints, totalCoins) {
     if (!pilotName) pilotName = 'PILOT';
     pilotName = pilotName.toUpperCase().slice(0, 14);
 
     try {
       const current = await this.fetchLeaderboard();
-      const highscores = current.highscores || [];
-      const totalOrbs = current.totalOrbs || [];
-      const longestRuns = current.longestRuns || [];
+      const bestRunScores = current.bestRunScores || [];
+      const lifetimePts = current.lifetimePoints || [];
+      const totalCoinsArr = current.totalCoins || [];
 
-      // 1. High Score Update
-      const existingScoreIdx = highscores.findIndex(e => e.name === pilotName);
+      // 1. Single Run Best Score (The most points in ONE run)
+      const existingScoreIdx = bestRunScores.findIndex(e => e.name === pilotName);
       if (existingScoreIdx >= 0) {
-        if (score > highscores[existingScoreIdx].score) {
-          highscores[existingScoreIdx].score = score;
+        if (singleRunScore > bestRunScores[existingScoreIdx].score) {
+          bestRunScores[existingScoreIdx].score = singleRunScore;
         }
-      } else {
-        highscores.push({ name: pilotName, score });
+      } else if (singleRunScore > 0) {
+        bestRunScores.push({ name: pilotName, score: singleRunScore });
       }
-      highscores.sort((a, b) => b.score - a.score);
-      const topHighscores = highscores.slice(0, 10);
+      bestRunScores.sort((a, b) => b.score - a.score);
+      const topBestRuns = bestRunScores.slice(0, 10);
 
-      // 2. Total Orbs Update
-      const existingOrbIdx = totalOrbs.findIndex(e => e.name === pilotName);
-      if (existingOrbIdx >= 0) {
-        if (totalCoins > totalOrbs[existingOrbIdx].orbs) {
-          totalOrbs[existingOrbIdx].orbs = totalCoins;
+      // 2. Lifetime Total Points (Cumulative points across whole account existence)
+      const existingLifeIdx = lifetimePts.findIndex(e => e.name === pilotName);
+      if (existingLifeIdx >= 0) {
+        if (lifetimePoints > lifetimePts[existingLifeIdx].points) {
+          lifetimePts[existingLifeIdx].points = lifetimePoints;
         }
-      } else {
-        totalOrbs.push({ name: pilotName, orbs: totalCoins });
+      } else if (lifetimePoints > 0) {
+        lifetimePts.push({ name: pilotName, points: lifetimePoints });
       }
-      totalOrbs.sort((a, b) => b.orbs - a.orbs);
-      const topTotalOrbs = totalOrbs.slice(0, 10);
+      lifetimePts.sort((a, b) => b.points - a.points);
+      const topLifetimePts = lifetimePts.slice(0, 10);
 
-      // 3. Longest Run Distance Update
-      const existingDistIdx = longestRuns.findIndex(e => e.name === pilotName);
-      if (existingDistIdx >= 0) {
-        if (distance > longestRuns[existingDistIdx].distance) {
-          longestRuns[existingDistIdx].distance = distance;
+      // 3. Total Lifetime Coins / Orbs Count
+      const existingCoinIdx = totalCoinsArr.findIndex(e => e.name === pilotName);
+      if (existingCoinIdx >= 0) {
+        if (totalCoins > totalCoinsArr[existingCoinIdx].coins) {
+          totalCoinsArr[existingCoinIdx].coins = totalCoins;
         }
-      } else {
-        longestRuns.push({ name: pilotName, distance });
+      } else if (totalCoins > 0) {
+        totalCoinsArr.push({ name: pilotName, coins: totalCoins });
       }
-      longestRuns.sort((a, b) => b.distance - a.distance);
-      const topLongestRuns = longestRuns.slice(0, 10);
+      totalCoinsArr.sort((a, b) => b.coins - a.coins);
+      const topTotalCoins = totalCoinsArr.slice(0, 10);
 
       const payload = {
         name: 'NeonSurge_Leaderboards_v1',
         data: {
-          highscores: topHighscores,
-          totalOrbs: topTotalOrbs,
-          longestRuns: topLongestRuns
+          bestRunScores: topBestRuns,
+          lifetimePoints: topLifetimePts,
+          totalCoins: topTotalCoins
         }
       };
 
@@ -311,8 +311,8 @@ class NeonSurgeGame {
     this.state = 'MENU';
     this.score = 0;
     this.highScore = parseInt(localStorage.getItem('neonsurge_highscore') || '0', 10);
+    this.lifetimeScore = parseInt(localStorage.getItem('neonsurge_lifetime_score') || '0', 10);
     this.totalOrbs = parseInt(localStorage.getItem('neonsurge_orbs') || '0', 10);
-    this.longestDistance = parseInt(localStorage.getItem('neonsurge_max_distance') || '0', 10);
     this.unlockedShips = JSON.parse(localStorage.getItem('neonsurge_unlocked_ships') || '["apex_dart"]');
     this.currentShipId = localStorage.getItem('neonsurge_active_ship') || 'apex_dart';
 
@@ -342,7 +342,7 @@ class NeonSurgeGame {
     this.devilModeFactor = 0;
 
     // Active Leaderboard Tab
-    this.activeLeaderboardTab = 'highscores';
+    this.activeLeaderboardTab = 'bestRunScores';
 
     // Tight wave cadence
     this.spawnTimer = 0;
@@ -463,12 +463,12 @@ class NeonSurgeGame {
       const isYou = item.name === this.pilotName;
       
       let valFormatted = '0';
-      if (this.activeLeaderboardTab === 'highscores') {
+      if (this.activeLeaderboardTab === 'bestRunScores') {
         valFormatted = `${(item.score || 0).toLocaleString()} PTS`;
-      } else if (this.activeLeaderboardTab === 'totalOrbs') {
-        valFormatted = `${(item.orbs || 0).toLocaleString()} 🪙`;
-      } else if (this.activeLeaderboardTab === 'longestRuns') {
-        valFormatted = `${(item.distance || 0).toLocaleString()} M`;
+      } else if (this.activeLeaderboardTab === 'lifetimePoints') {
+        valFormatted = `${(item.points || 0).toLocaleString()} PTS`;
+      } else if (this.activeLeaderboardTab === 'totalCoins') {
+        valFormatted = `${(item.coins || 0).toLocaleString()} 🪙`;
       }
 
       html += `
@@ -626,19 +626,17 @@ class NeonSurgeGame {
     this.createExplosion(this.player.x, this.player.y, 30, currentSkin.color);
 
     this.totalOrbs += this.runOrbs;
+    this.lifetimeScore += this.score;
+
     if (this.score > this.highScore) {
       this.highScore = this.score;
       localStorage.setItem('neonsurge_highscore', this.highScore.toString());
     }
-    const currentDist = Math.round(this.distance);
-    if (currentDist > this.longestDistance) {
-      this.longestDistance = currentDist;
-      localStorage.setItem('neonsurge_max_distance', this.longestDistance.toString());
-    }
+    localStorage.setItem('neonsurge_lifetime_score', this.lifetimeScore.toString());
     localStorage.setItem('neonsurge_orbs', this.totalOrbs.toString());
 
     // Submit to Global Cloud Leaderboard
-    this.cloudLB.submitRun(this.pilotName, this.score, this.totalOrbs, currentDist);
+    this.cloudLB.submitRun(this.pilotName, this.highScore, this.lifetimeScore, this.totalOrbs);
 
     document.getElementById('finalScore').textContent = this.score.toLocaleString();
     document.getElementById('finalOrbs').textContent = `+${this.runOrbs}`;
