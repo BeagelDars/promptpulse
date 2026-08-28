@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v6.0
- * 200k+ DEVIL SLAUGHTERHOUSE Mode (Geometry Dash Blood & Crimson Theme, Strobe Pulses & Spinning Sawblades).
+ * NEON SURGE | Cyber Velocity Arcade Engine v6.5
+ * Multi-Gap Barrier Architecture, Strict Vertical Anti-Overlap Safety & Guaranteed Fair Slaloms.
  */
 
 // ==========================================
@@ -169,10 +169,10 @@ const ZONES = [
     id: 5,
     name: 'SLAUGHTERHOUSE',
     threshold: 200000,
-    rPrimary: 255, gPrimary: 0, bPrimary: 34,       // Intense blood red
+    rPrimary: 255, gPrimary: 0, bPrimary: 34,
     rSecondary: 255, gSecondary: 30, bSecondary: 30,
-    rBgTop: 40, gBgTop: 0, bBgTop: 6,              // Pure dark crimson hell
-    rBgBottom: 0, gBgBottom: 0, bBgBottom: 0,      // Pitch black abyss
+    rBgTop: 40, gBgTop: 0, bBgTop: 6,
+    rBgBottom: 0, gBgBottom: 0, bBgBottom: 0,
     rGrid: 255, gGrid: 0, bGrid: 34, gridAlpha: 0.32,
     obstacleType: 'DEVIL_SLAUGHTER',
     isDevilMode: true
@@ -206,7 +206,7 @@ class NeonSurgeGame {
     this.maxCombo = 1;
     this.distance = 0;
 
-    // Fast-paced initial speed & dynamic scaling
+    // Fast-paced velocity
     this.speed = 7.6;
     this.baseSpeed = 7.6;
     this.screenShake = 0;
@@ -220,11 +220,12 @@ class NeonSurgeGame {
       grid: 'rgba(0, 240, 255, 0.14)'
     };
     this.currentZoneName = ZONES[0].name;
-    this.devilModeFactor = 0; // 0 to 1 intensity in Slaughterhouse mode
+    this.devilModeFactor = 0;
 
-    // Wave cadence
+    // Wave cadence & Anti-Overlap safety timer
     this.spawnTimer = 0;
-    this.spawnInterval = 0.85;
+    this.spawnInterval = 0.88;
+    this.lastBarrierSpawnDist = -9999; // Ensures minimum distance between big barriers
 
     // Power-up state
     this.activePowerup = null;
@@ -373,6 +374,7 @@ class NeonSurgeGame {
     this.screenShake = 0;
     this.activePowerup = null;
     this.spawnTimer = 0;
+    this.lastBarrierSpawnDist = -9999;
     this.devilModeFactor = 0;
 
     this.player.x = this.canvas.width / 2;
@@ -570,13 +572,11 @@ class NeonSurgeGame {
     const z1 = ZONES[baseIdx];
     const z2 = ZONES[nextIdx];
 
-    // Slaughterhouse devil intensity factor (kicks in at 180k, full power at 200k+)
     this.devilModeFactor = Math.max(0, Math.min(1, (this.score - 170000) / 30000));
 
-    // Calculate rhythmic strobe pulse for Slaughterhouse Mode
     let strobe = 1;
     if (this.devilModeFactor > 0) {
-      strobe = 0.75 + Math.sin(Date.now() * 0.016) * 0.25; // High-BPM blood strobe
+      strobe = 0.75 + Math.sin(Date.now() * 0.016) * 0.25;
     }
 
     const rP = Math.round(lerp(z1.rPrimary, z2.rPrimary, t) * strobe);
@@ -589,7 +589,6 @@ class NeonSurgeGame {
     const bS = Math.round(lerp(z1.bSecondary, z2.bSecondary, t));
     this.activeColors.secondary = `rgb(${rS}, ${gS}, ${bS})`;
 
-    // Background Blood Red Pulsing
     const rBT = Math.round(lerp(z1.rBgTop, z2.rBgTop, t) * (1 + (this.devilModeFactor * (strobe - 0.75))));
     const gBT = Math.round(lerp(z1.gBgTop, z2.gBgTop, t));
     const bBT = Math.round(lerp(z1.bBgTop, z2.bBgTop, t));
@@ -600,7 +599,6 @@ class NeonSurgeGame {
     const bBB = Math.round(lerp(z1.bBgBottom, z2.bBgBottom, t));
     this.activeColors.bgBottom = `rgb(${rBB}, ${gBB}, ${bBB})`;
 
-    // Grid Floor Strobe
     const rG = Math.round(lerp(z1.rGrid, z2.rGrid, t));
     const gG = Math.round(lerp(z1.gGrid, z2.gGrid, t));
     const bG = Math.round(lerp(z1.bGrid, z2.bGrid, t));
@@ -711,9 +709,9 @@ class NeonSurgeGame {
     if (this.player.trail.length > 12) this.player.trail.shift();
     this.player.trail.forEach(t => t.alpha -= 0.06);
 
-    // Dynamic wave cadence
+    // Wave Spawner Cadence
     const difficultyFactor = Math.min(1, this.score / 100000);
-    this.spawnInterval = 0.88 - (difficultyFactor * 0.40);
+    this.spawnInterval = 0.88 - (difficultyFactor * 0.35);
 
     this.spawnTimer += dt;
     if (this.spawnTimer >= this.spawnInterval) {
@@ -850,18 +848,86 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // High-Octane Balanced Wave Generator
+  // Guaranteed Fair Wave Generator (Multi-Gaps & Anti-Overlap Safety)
   // ==========================================
   spawnBalancedWave(difficultyFactor) {
     const canvasW = this.canvas.width;
     const type = this.activeObstacleType || 'CYBER_LASER';
     const currentZoneIdx = this.currentZoneIdx || 0;
 
+    const canSpawnBigBarrier = (this.distance - this.lastBarrierSpawnDist) > 280;
     const randPattern = Math.random();
 
-    // 1. CENTER PILLAR
-    if (randPattern < 0.26) {
-      const pillarWidth = Math.min(canvasW * 0.44, 170);
+    // ----------------------------------------------------
+    // PATTERN 1: MULTI-GAP TWIN-GATE BARRIER (Never Traps You Across Full Screen!)
+    // Spans across the track with TWO wide openings (e.g. left opening & right opening)
+    // ----------------------------------------------------
+    if (canSpawnBigBarrier && randPattern < 0.32) {
+      this.lastBarrierSpawnDist = this.distance;
+
+      // 3 Pillars leaving 2 generous 95px openings
+      const gapWidth = 95;
+      const leftGapX = Math.floor(canvasW * 0.22);
+      const rightGapX = Math.floor(canvasW * 0.65);
+
+      // Pillar 1: Leftmost
+      if (leftGapX > 20) {
+        this.obstacles.push({
+          x: 0,
+          y: -70,
+          width: leftGapX,
+          height: 24,
+          type,
+          isBarrier: true,
+          zoneIndex: currentZoneIdx,
+          rotation: 0,
+          animPulse: 0
+        });
+      }
+
+      // Pillar 2: Center (Between the two gates)
+      const centerPillarX = leftGapX + gapWidth;
+      const centerPillarW = rightGapX - centerPillarX;
+      if (centerPillarW > 20) {
+        this.obstacles.push({
+          x: centerPillarX,
+          y: -70,
+          width: centerPillarW,
+          height: 24,
+          type,
+          isBarrier: true,
+          zoneIndex: currentZoneIdx,
+          rotation: 0,
+          animPulse: 0
+        });
+      }
+
+      // Pillar 3: Rightmost
+      const rightPillarX = rightGapX + gapWidth;
+      const rightPillarW = canvasW - rightPillarX;
+      if (rightPillarW > 20) {
+        this.obstacles.push({
+          x: rightPillarX,
+          y: -70,
+          width: rightPillarW,
+          height: 24,
+          type,
+          isBarrier: true,
+          zoneIndex: currentZoneIdx,
+          rotation: 0,
+          animPulse: 0
+        });
+      }
+      return;
+    }
+
+    // ----------------------------------------------------
+    // PATTERN 2: CENTER PILLAR / ISLAND (Leaves both left & right wall paths wide open!)
+    // ----------------------------------------------------
+    if (canSpawnBigBarrier && randPattern < 0.58) {
+      this.lastBarrierSpawnDist = this.distance;
+
+      const pillarWidth = Math.min(canvasW * 0.38, 150);
       const pillarX = (canvasW - pillarWidth) / 2;
 
       this.obstacles.push({
@@ -881,48 +947,17 @@ class NeonSurgeGame {
       return;
     }
 
-    // 2. ZIG-ZAG SLALOM
-    if (randPattern < 0.52) {
-      const openGap = Math.max(105, Math.min(125, canvasW * 0.35));
-      const firstOnLeft = Math.random() > 0.5;
-
-      this.obstacles.push({
-        x: firstOnLeft ? 0 : openGap,
-        y: -70,
-        width: canvasW - openGap,
-        height: 24,
-        type,
-        isBarrier: true,
-        zoneIndex: currentZoneIdx,
-        rotation: 0,
-        animPulse: 0
-      });
-
-      if (difficultyFactor > 0.2) {
-        this.obstacles.push({
-          x: firstOnLeft ? openGap : 0,
-          y: -155,
-          width: canvasW - openGap,
-          height: 24,
-          type,
-          isBarrier: true,
-          zoneIndex: currentZoneIdx,
-          rotation: 0,
-          animPulse: 0
-        });
-      }
-      return;
-    }
-
-    // 3. DENSE HAZARD CLUSTERS
-    const safeWidth = 105;
+    // ----------------------------------------------------
+    // PATTERN 3: DIVERSE HAZARD CLUSTER WITH GUARANTEED OPEN CORRIDOR
+    // ----------------------------------------------------
+    const safeWidth = 110;
     const safeX = Math.random() * (canvasW - safeWidth - 30) + 15;
     const safeEnd = safeX + safeWidth;
 
     const clusterCount = difficultyFactor > 0.4 ? (Math.random() > 0.5 ? 3 : 4) : (Math.random() > 0.4 ? 2 : 3);
 
     for (let c = 0; c < clusterCount; c++) {
-      const size = Math.floor(Math.random() * 24) + 40;
+      const size = Math.floor(Math.random() * 22) + 38;
       let posX;
 
       if (Math.random() > 0.5 && safeX > size + 10) {
@@ -935,7 +970,7 @@ class NeonSurgeGame {
 
       this.obstacles.push({
         x: Math.max(0, Math.min(canvasW - size, posX)),
-        y: -70 - (c * 50),
+        y: -70 - (c * 55),
         width: size,
         height: size,
         type,
@@ -948,7 +983,7 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // 6. Render Scene (Slaughterhouse Strobe Pulse)
+  // 6. Render Scene
   // ==========================================
   draw() {
     this.ctx.save();
@@ -975,7 +1010,6 @@ class NeonSurgeGame {
     // Slaughterhouse Devil Atmosphere Embers & Strobes
     if (this.devilModeFactor > 0) {
       this.ctx.save();
-      // Occasional high-speed hell strobe flash
       if (Math.random() < 0.12 * this.devilModeFactor) {
         this.ctx.fillStyle = `rgba(255, 0, 30, ${0.15 * this.devilModeFactor})`;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1269,22 +1303,18 @@ class NeonSurgeGame {
       return;
     }
 
-    // ----------------------------------------------------
-    // 5. DEVIL_SLAUGHTER (Geometry Dash Slaughterhouse Spinning Sawblades & Blood Gates)
-    // ----------------------------------------------------
+    // 5. DEVIL_SLAUGHTER
     if (obs.type === 'DEVIL_SLAUGHTER') {
       this.ctx.shadowColor = '#ff0022';
       this.ctx.shadowBlur = 24;
 
       if (obs.isBarrier) {
-        // Demonic Slaughter Wall with blood core
         this.ctx.fillStyle = 'rgba(255, 0, 34, 0.65)';
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         this.ctx.strokeStyle = '#ff3344';
         this.ctx.lineWidth = 3.5;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
 
-        // Devil Skull teeth on barrier
         this.ctx.fillStyle = '#ffffff';
         for (let sx = obs.x + 8; sx < obs.x + obs.width; sx += 16) {
           this.ctx.beginPath();
@@ -1295,13 +1325,11 @@ class NeonSurgeGame {
           this.ctx.fill();
         }
       } else {
-        // High-Speed Slaughterhouse Spinning Sawblade
         this.ctx.translate(cx, cy);
         this.ctx.rotate(obs.rotation * 2.2);
 
         const rad = obs.width / 2;
 
-        // Outer Teeth / Blades
         this.ctx.fillStyle = '#ff0022';
         this.ctx.strokeStyle = '#ffffff';
         this.ctx.lineWidth = 2.5;
@@ -1320,7 +1348,6 @@ class NeonSurgeGame {
         this.ctx.fill();
         this.ctx.stroke();
 
-        // Inner Blood Core Disc
         this.ctx.fillStyle = '#330005';
         this.ctx.beginPath();
         this.ctx.arc(0, 0, rad * 0.45, 0, Math.PI * 2);
@@ -1329,7 +1356,6 @@ class NeonSurgeGame {
         this.ctx.lineWidth = 3;
         this.ctx.stroke();
 
-        // Glowing Demon Eye
         this.ctx.fillStyle = '#ffffff';
         this.ctx.beginPath();
         this.ctx.arc(0, 0, 4, 0, Math.PI * 2);
