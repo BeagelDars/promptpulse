@@ -959,8 +959,8 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // HIGH-DENSITY BALANCED OBSTACLE FORMATIONS
-  // Diverse obstacle sizes (30px to 85px), dynamic multi-lane challenges, guaranteed fair threading.
+  // HIGH-OCTANE MULTI-HAZARD CLUSTER ARCHITECTURE
+  // Dense 3-to-5 hazard swarms, dynamic multi-size clusters, and tight slalom gauntlets.
   // ==========================================
   spawnBalancedWave(difficultyFactor) {
     const canvasW = this.canvas.width;
@@ -970,13 +970,82 @@ class NeonSurgeGame {
     const randPattern = Math.random();
 
     // ----------------------------------------------------
-    // FORMATION 1: DUAL WALL PINCERS + CENTER SCOUT
-    // Blocks Left & Right walls, plus a mini obstacle in center with 2 open thread lanes!
+    // FORMATION 1: ARROWHEAD SWARM CLUSTER (4 to 5 Hazards)
+    // Dense pack forming an arrowhead wedge with guaranteed 90px side corridors!
     // ----------------------------------------------------
-    if (randPattern < 0.24) {
-      const pincerW = Math.max(70, Math.min(canvasW * 0.26, 95));
+    if (randPattern < 0.28) {
+      const clusterCount = difficultyFactor > 0.35 ? 5 : 4;
+      const safeOnLeft = Math.random() > 0.5;
+      const startX = safeOnLeft ? canvasW * 0.35 : 0;
+      const clusterWidth = canvasW * 0.65;
 
-      // Left Wall Barrier
+      for (let c = 0; c < clusterCount; c++) {
+        const s = Math.floor(Math.random() * 18) + 36; // 36px to 54px
+        const offsetX = (c / (clusterCount - 1)) * (clusterWidth - s);
+        const posX = Math.max(0, Math.min(canvasW - s, startX + offsetX));
+        const posY = -70 - (Math.abs(c - (clusterCount - 1) / 2) * 45); // Arrowhead V-shape
+
+        this.obstacles.push({
+          x: posX,
+          y: posY,
+          width: s,
+          height: s,
+          type,
+          isBarrier: false,
+          zoneIndex: currentZoneIdx,
+          rotation: Math.random() * Math.PI,
+          animPulse: Math.random() * 5
+        });
+      }
+
+      // Safe lane orb reward
+      const orbX = safeOnLeft ? 25 : canvasW - 25;
+      this.orbs.push({ x: orbX, y: -70, radius: 12, pulse: 0 });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // FORMATION 2: DENSE SLALOM WEAVE CLUSTER (4 to 5 Staggered Hazards)
+    // Staggered across lanes for rapid, thrilling S-curve weaving!
+    // ----------------------------------------------------
+    if (randPattern < 0.54) {
+      const count = difficultyFactor > 0.3 ? 5 : 4;
+      const lanes = [
+        0,                                   // Flush Left Wall
+        Math.floor(canvasW * 0.25),
+        Math.floor(canvasW * 0.50),
+        Math.floor(canvasW * 0.75),
+        Math.floor(canvasW - 46)             // Flush Right Wall
+      ];
+
+      for (let i = 0; i < count; i++) {
+        const laneIdx = (i * 2 + (Math.random() > 0.5 ? 0 : 1)) % lanes.length;
+        const s = Math.floor(Math.random() * 16) + 38; // 38-54px
+        const posX = Math.max(0, Math.min(canvasW - s, lanes[laneIdx]));
+
+        this.obstacles.push({
+          x: posX,
+          y: -70 - (i * 44),
+          width: s,
+          height: s,
+          type,
+          isBarrier: false,
+          zoneIndex: currentZoneIdx,
+          rotation: Math.random() * Math.PI,
+          animPulse: Math.random() * 5
+        });
+      }
+      return;
+    }
+
+    // ----------------------------------------------------
+    // FORMATION 3: DUAL WALL CLAMP + CENTER SWARM GAUNTLET
+    // Blocks Left & Right walls, plus 2 staggered obstacles down the middle corridor!
+    // ----------------------------------------------------
+    if (randPattern < 0.76) {
+      const pincerW = Math.max(70, Math.min(canvasW * 0.28, 95));
+
+      // Left Wall Block
       this.obstacles.push({
         x: 0,
         y: -70,
@@ -989,7 +1058,7 @@ class NeonSurgeGame {
         animPulse: 0
       });
 
-      // Right Wall Barrier
+      // Right Wall Block
       this.obstacles.push({
         x: canvasW - pincerW,
         y: -70,
@@ -1002,13 +1071,14 @@ class NeonSurgeGame {
         animPulse: 0
       });
 
-      // Center Staggered Mini-Hazard (Creates Left-Center & Right-Center Weave!)
-      const miniSize = 34;
+      // Staggered Center Hazards (Creates high-intensity threading)
+      const cSize1 = 36;
+      const cSize2 = 40;
       this.obstacles.push({
-        x: canvasW / 2 - miniSize / 2,
-        y: -135,
-        width: miniSize,
-        height: miniSize,
+        x: canvasW * 0.42 - cSize1 / 2,
+        y: -130,
+        width: cSize1,
+        height: cSize1,
         type,
         isBarrier: false,
         zoneIndex: currentZoneIdx,
@@ -1016,123 +1086,33 @@ class NeonSurgeGame {
         animPulse: 0
       });
 
-      this.orbs.push({ x: canvasW * 0.38, y: -70, radius: 12, pulse: 0 });
-      return;
-    }
-
-    // ----------------------------------------------------
-    // FORMATION 2: LEFT WALL FORTRESS + RIGHT STAGGER
-    // ----------------------------------------------------
-    if (randPattern < 0.46) {
-      const leftW = Math.max(80, Math.min(canvasW * 0.34, 110));
-
       this.obstacles.push({
-        x: 0,
-        y: -70,
-        width: leftW,
-        height: 26,
-        type,
-        isBarrier: true,
-        zoneIndex: currentZoneIdx,
-        rotation: 0,
-        animPulse: 0
-      });
-
-      // Medium Right Hazard (offset vertically)
-      const rSize = Math.floor(Math.random() * 16) + 40; // 40-56px
-      this.obstacles.push({
-        x: canvasW * 0.72 - rSize / 2,
-        y: -125,
-        width: rSize,
-        height: rSize,
+        x: canvasW * 0.58 - cSize2 / 2,
+        y: -185,
+        width: cSize2,
+        height: cSize2,
         type,
         isBarrier: false,
         zoneIndex: currentZoneIdx,
-        rotation: 0.8,
+        rotation: -0.6,
         animPulse: 0
       });
+
+      this.orbs.push({ x: canvasW / 2, y: -70, radius: 12, pulse: 0 });
       return;
     }
 
     // ----------------------------------------------------
-    // FORMATION 3: RIGHT WALL FORTRESS + LEFT STAGGER
+    // FORMATION 4: WALL FORTRESS + MULTI-HAZARD ESCORT CLUSTER
+    // Wall barrier on one side + 3 staggered hazards across the open track!
     // ----------------------------------------------------
-    if (randPattern < 0.68) {
-      const rightW = Math.max(80, Math.min(canvasW * 0.34, 110));
-
-      this.obstacles.push({
-        x: canvasW - rightW,
-        y: -70,
-        width: rightW,
-        height: 26,
-        type,
-        isBarrier: true,
-        zoneIndex: currentZoneIdx,
-        rotation: 0,
-        animPulse: 0
-      });
-
-      // Medium Left Hazard (offset vertically)
-      const lSize = Math.floor(Math.random() * 16) + 40;
-      this.obstacles.push({
-        x: canvasW * 0.28 - lSize / 2,
-        y: -125,
-        width: lSize,
-        height: lSize,
-        type,
-        isBarrier: false,
-        zoneIndex: currentZoneIdx,
-        rotation: -0.8,
-        animPulse: 0
-      });
-      return;
-    }
-
-    // ----------------------------------------------------
-    // FORMATION 4: MULTI-SIZE TRIPLE GAUNTLET (Small, Medium, Large hazards)
-    // ----------------------------------------------------
-    if (randPattern < 0.85) {
-      const laneChoices = [
-        0,                                   // Left wall flush
-        Math.floor(canvasW * 0.32),
-        Math.floor(canvasW * 0.64),
-        Math.floor(canvasW - 48)             // Right wall flush
-      ];
-
-      // Pick 2 or 3 distinct lanes
-      const count = difficultyFactor > 0.3 ? 3 : 2;
-      const shuffledLanes = laneChoices.sort(() => Math.random() - 0.5).slice(0, count);
-
-      shuffledLanes.forEach((posX, idx) => {
-        // Vary sizes: 32px (small agile), 46px (medium), 64px (large chunky)
-        const sizes = [32, 48, 64];
-        const s = sizes[idx % sizes.length];
-
-        this.obstacles.push({
-          x: Math.max(0, Math.min(canvasW - s, posX)),
-          y: -70 - (idx * 50),
-          width: s,
-          height: s,
-          type,
-          isBarrier: false,
-          zoneIndex: currentZoneIdx,
-          rotation: Math.random() * Math.PI,
-          animPulse: Math.random() * 5
-        });
-      });
-      return;
-    }
-
-    // ----------------------------------------------------
-    // FORMATION 5: CHUNKY CENTER PILLAR + ORBITING HAZARDS
-    // ----------------------------------------------------
-    const centerW = Math.min(canvasW * 0.34, 130);
-    const centerX = (canvasW - centerW) / 2;
+    const isLeftWall = Math.random() > 0.5;
+    const fortressW = Math.max(75, Math.min(canvasW * 0.32, 105));
 
     this.obstacles.push({
-      x: centerX,
+      x: isLeftWall ? 0 : canvasW - fortressW,
       y: -70,
-      width: centerW,
+      width: fortressW,
       height: 26,
       type,
       isBarrier: true,
@@ -1141,21 +1121,28 @@ class NeonSurgeGame {
       animPulse: 0
     });
 
-    // Staggered outer scout on left or right wall
-    const scoutSideX = Math.random() > 0.5 ? 0 : canvasW - 36;
-    this.obstacles.push({
-      x: scoutSideX,
-      y: -130,
-      width: 36,
-      height: 36,
-      type,
-      isBarrier: false,
-      zoneIndex: currentZoneIdx,
-      rotation: 0.5,
-      animPulse: 0
-    });
+    // 3 Staggered hazards in the remaining open area
+    const openAreaStart = isLeftWall ? fortressW + 15 : 10;
+    const openAreaW = canvasW - fortressW - 25;
 
-    this.orbs.push({ x: scoutSideX === 0 ? canvasW - 25 : 25, y: -70, radius: 12, pulse: 0 });
+    for (let h = 0; h < 3; h++) {
+      const s = Math.floor(Math.random() * 16) + 34; // 34-50px
+      const posX = openAreaStart + ((h / 2) * (openAreaW - s));
+
+      this.obstacles.push({
+        x: Math.max(0, Math.min(canvasW - s, posX)),
+        y: -120 - (h * 50),
+        width: s,
+        height: s,
+        type,
+        isBarrier: false,
+        zoneIndex: currentZoneIdx,
+        rotation: Math.random() * Math.PI,
+        animPulse: Math.random() * 5
+      });
+    }
+
+    this.orbs.push({ x: isLeftWall ? canvasW - 25 : 25, y: -70, radius: 12, pulse: 0 });
   }
 
   // ==========================================
