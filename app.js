@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v2.5
- * Among Us & Benjamin Ships, 50k Milestone Map Zones, Instant Boost Pickups & Balanced Physics.
+ * NEON SURGE | Cyber Velocity Arcade Engine v3.0
+ * Zone-Thematic Custom Obstacles (Meteorites, Cyber Claws, Void Vortexes & Rainbow Crystals).
  */
 
 // ==========================================
@@ -137,7 +137,7 @@ const SHIP_SKINS = [
 ];
 
 // ==========================================
-// 3. Dynamic Map Zones (Transitions Every 50,000 Points)
+// 3. Dynamic Map Zones & Thematic Obstacle Types
 // ==========================================
 const ZONES = [
   {
@@ -148,7 +148,9 @@ const ZONES = [
     secondaryColor: '#ff0077',
     gridColor: 'rgba(0, 240, 255, 0.14)',
     bgGradient: ['#151a30', '#060810'],
-    desc: 'Classic neon synthwave sector'
+    obstacleType: 'CYBER_LASER',
+    obstacleName: 'Laser Barrier',
+    desc: 'Neon grid & rotating cyber prisms'
   },
   {
     id: 2,
@@ -158,7 +160,9 @@ const ZONES = [
     secondaryColor: '#ff3300',
     gridColor: 'rgba(255, 120, 0, 0.22)',
     bgGradient: ['#30150a', '#0d0402'],
-    desc: 'Solar flare waves & magma grid'
+    obstacleType: 'METEORITE',
+    obstacleName: 'Burning Meteorite',
+    desc: 'Flaming lava asteroids & solar flares'
   },
   {
     id: 3,
@@ -168,7 +172,9 @@ const ZONES = [
     secondaryColor: '#aaff00',
     gridColor: 'rgba(0, 255, 102, 0.2)',
     bgGradient: ['#082414', '#020d06'],
-    desc: 'High-frequency digital emerald laser zone'
+    obstacleType: 'CYBER_CLAW',
+    obstacleName: 'Razor Cyber Claws',
+    desc: 'Acid claws & radioactive bio-nodes'
   },
   {
     id: 4,
@@ -178,7 +184,9 @@ const ZONES = [
     secondaryColor: '#00f0ff',
     gridColor: 'rgba(157, 0, 255, 0.22)',
     bgGradient: ['#1e0a30', '#08020d'],
-    desc: 'Nebula distortion & void hyperspace'
+    obstacleType: 'VOID_VORTEX',
+    obstacleName: 'Dark Matter Vortex',
+    desc: 'Singularity rifts & spinning void blades'
   },
   {
     id: 5,
@@ -188,7 +196,9 @@ const ZONES = [
     secondaryColor: '#00f0ff',
     gridColor: 'rgba(255, 255, 255, 0.25)',
     bgGradient: ['#202538', '#05070d'],
-    desc: 'Maximum velocity chromatic prism corridor'
+    obstacleType: 'RAINBOW_CRYSTAL',
+    obstacleName: 'Prismatic Crystal',
+    desc: 'Chromatic shards & warp rifts'
   }
 ];
 
@@ -221,8 +231,8 @@ class NeonSurgeGame {
     // Biome Zone State
     this.currentZoneIndex = 0;
 
-    // Power-up state (Active when picked up on the track)
-    this.activePowerup = null; // 'SHIELD', 'BOOST'
+    // Power-up state
+    this.activePowerup = null;
     this.powerupDuration = 0;
     this.powerupMaxDuration = 0;
 
@@ -577,7 +587,7 @@ class NeonSurgeGame {
     title.textContent = zone.name;
     title.style.color = zone.primaryColor;
     title.style.textShadow = `0 0 20px ${zone.primaryColor}`;
-    sub.textContent = zone.desc.toUpperCase();
+    sub.textContent = `NEW THREAT: ${zone.obstacleName.toUpperCase()} &bull; ${zone.desc.toUpperCase()}`;
 
     banner.style.display = 'flex';
     banner.style.borderColor = zone.primaryColor;
@@ -642,7 +652,7 @@ class NeonSurgeGame {
     this.score += Math.round(this.speed * this.combo * 0.5);
     this.baseSpeed = 6.5 + Math.min(10, this.distance / 3500);
 
-    // Check Map/Zone Transitions (50k intervals)
+    // Check Map/Zone Transitions (50,000 pt milestone checks)
     this.checkZoneTransitions();
 
     // Combo Timer Decay
@@ -671,7 +681,7 @@ class NeonSurgeGame {
       }
     }
 
-    // Left/Right Button Movement (Strict Wall Clamping so edges are physical bounds)
+    // Left/Right Button Movement (Strict Wall Clamping)
     if (this.keys.left) this.player.targetX -= 10;
     if (this.keys.right) this.player.targetX += 10;
 
@@ -687,32 +697,24 @@ class NeonSurgeGame {
     this.player.trail.forEach(t => t.alpha -= 0.06);
 
     // ==========================================
-    // Spawning Obstacles (Guaranteed Fair & Avoidable)
+    // Spawning Thematic Zone Obstacles
     // ==========================================
-    const minGap = 85; // Guaranteed minimum passage gap
+    const minGap = 85;
     const spawnRate = 0.028 + (this.baseSpeed * 0.0015);
+    const currentZone = ZONES[this.currentZoneIndex];
 
     if (Math.random() < spawnRate) {
       const rand = Math.random();
-      let type = 'spike';
-      let width = 36;
+      let type = currentZone.obstacleType; // 'CYBER_LASER', 'METEORITE', 'CYBER_CLAW', 'VOID_VORTEX', 'RAINBOW_CRYSTAL'
+      let isBarrier = rand < 0.55;
+      let width = isBarrier ? Math.min(this.canvas.width - minGap - 20, Math.random() * (this.canvas.width * 0.45) + 60) : 40;
       let xPos = 0;
 
-      if (rand < 0.45) {
-        // Fair Barrier: Spawns on left or right, but leaves at least minGap space to pass
-        type = 'barrier';
-        const maxWidth = this.canvas.width - minGap - 20;
-        width = Math.min(maxWidth, Math.random() * (this.canvas.width * 0.45) + 60);
+      if (isBarrier) {
+        // Spawns on left or right with guaranteed gap
         xPos = Math.random() > 0.5 ? 0 : this.canvas.width - width;
-      } else if (rand < 0.7) {
-        // Center Pillar with two side paths
-        type = 'barrier';
-        width = Math.min(this.canvas.width - (minGap * 2), Math.random() * 60 + 50);
-        xPos = (this.canvas.width - width) / 2;
       } else {
-        // Single Spinning Hazard
-        type = 'spike';
-        width = 36;
+        // Spawns in lane
         xPos = Math.random() * (this.canvas.width - width - 40) + 20;
       }
 
@@ -720,9 +722,12 @@ class NeonSurgeGame {
         x: xPos,
         y: -60,
         width,
-        height: type === 'barrier' ? 18 : 36,
+        height: isBarrier ? 22 : 40,
         type,
-        rotation: 0
+        isBarrier,
+        zoneIndex: this.currentZoneIndex,
+        rotation: 0,
+        animPulse: 0
       });
     }
 
@@ -736,7 +741,7 @@ class NeonSurgeGame {
       });
     }
 
-    // Spawning Power-up Pickups (Instant Hyper Boost & Shield drops)
+    // Spawning Power-up Pickups
     if (Math.random() < 0.008 && !this.activePowerup) {
       const pType = Math.random() > 0.5 ? 'BOOST' : 'SHIELD';
       this.powerups.push({
@@ -752,6 +757,7 @@ class NeonSurgeGame {
       const obs = this.obstacles[i];
       obs.y += this.speed;
       obs.rotation += 0.04;
+      obs.animPulse += 0.08;
 
       const pBox = { x: this.player.x - 14, y: this.player.y - 18, w: 28, h: 36 };
       if (
@@ -761,10 +767,14 @@ class NeonSurgeGame {
         pBox.y + pBox.h > obs.y
       ) {
         if (this.activePowerup === 'SHIELD' || this.activePowerup === 'BOOST') {
-          this.createExplosion(obs.x + obs.width / 2, obs.y + obs.height / 2, 18, '#00f0ff');
+          const zoneColor = ZONES[obs.zoneIndex]?.secondaryColor || '#00f0ff';
+          this.createExplosion(obs.x + obs.width / 2, obs.y + obs.height / 2, 20, zoneColor);
           this.obstacles.splice(i, 1);
           this.score += 250 * this.combo;
-          this.createFloatingText('+250 SMASH!', obs.x, obs.y, '#00f0ff');
+
+          const smashTitles = ['+250 LASER SMASH!', '+250 METEOR CRUSH!', '+250 CLAW SHRED!', '+250 VORTEX SHATTER!', '+250 PRISM BURST!'];
+          const title = smashTitles[obs.zoneIndex] || '+250 SMASH!';
+          this.createFloatingText(title, obs.x, obs.y, zoneColor);
           continue;
         } else {
           this.gameOver();
@@ -919,28 +929,9 @@ class NeonSurgeGame {
       this.ctx.restore();
     });
 
-    // Obstacles
+    // Obstacles Rendering (Zone-Specific Custom Graphics)
     this.obstacles.forEach(obs => {
-      this.ctx.save();
-      this.ctx.shadowColor = zone.secondaryColor;
-      this.ctx.shadowBlur = 14;
-
-      if (obs.type === 'barrier') {
-        this.ctx.fillStyle = 'rgba(255, 0, 85, 0.45)';
-        this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-        this.ctx.strokeStyle = zone.secondaryColor;
-        this.ctx.lineWidth = 3;
-        this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
-      } else {
-        this.ctx.translate(obs.x + obs.width / 2, obs.y + obs.height / 2);
-        this.ctx.rotate(obs.rotation);
-        this.ctx.fillStyle = zone.secondaryColor;
-        this.ctx.fillRect(-obs.width / 2, -obs.height / 2, obs.width, obs.height);
-        this.ctx.strokeStyle = '#ffffff';
-        this.ctx.lineWidth = 2;
-        this.ctx.strokeRect(-obs.width / 2, -obs.height / 2, obs.width, obs.height);
-      }
-      this.ctx.restore();
+      this.drawThematicObstacle(obs, zone);
     });
 
     // Player Trail
@@ -983,6 +974,252 @@ class NeonSurgeGame {
       this.ctx.fillText(ft.text, ft.x, ft.y);
       this.ctx.restore();
     });
+
+    this.ctx.restore();
+  }
+
+  // ==========================================
+  // Custom Zone Thematic Obstacle Graphics
+  // ==========================================
+  drawThematicObstacle(obs, zone) {
+    const cx = obs.x + obs.width / 2;
+    const cy = obs.y + obs.height / 2;
+
+    this.ctx.save();
+
+    // ----------------------------------------------------
+    // Zone 1: CYBER_LASER (Neon Laser Barrier & Cyber Prisms)
+    // ----------------------------------------------------
+    if (obs.type === 'CYBER_LASER') {
+      this.ctx.shadowColor = '#ff0077';
+      this.ctx.shadowBlur = 14;
+
+      if (obs.isBarrier) {
+        this.ctx.fillStyle = 'rgba(255, 0, 119, 0.4)';
+        this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        this.ctx.strokeStyle = '#ff0077';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+
+        // Core laser beam line
+        this.ctx.strokeStyle = '#ffffff';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(obs.x, cy);
+        this.ctx.lineTo(obs.x + obs.width, cy);
+        this.ctx.stroke();
+      } else {
+        this.ctx.translate(cx, cy);
+        this.ctx.rotate(obs.rotation);
+        this.ctx.fillStyle = '#ff0077';
+        this.ctx.fillRect(-obs.width / 2, -obs.height / 2, obs.width, obs.height);
+        this.ctx.strokeStyle = '#00f0ff';
+        this.ctx.lineWidth = 2.5;
+        this.ctx.strokeRect(-obs.width / 2, -obs.height / 2, obs.width, obs.height);
+      }
+      this.ctx.restore();
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Zone 2: METEORITE (Molten Lava Asteroids & Solar Flames)
+    // ----------------------------------------------------
+    if (obs.type === 'METEORITE') {
+      this.ctx.shadowColor = '#ff3300';
+      this.ctx.shadowBlur = 18;
+
+      if (obs.isBarrier) {
+        // Magma Wall with lava veins
+        this.ctx.fillStyle = 'rgba(255, 51, 0, 0.5)';
+        this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        this.ctx.strokeStyle = '#ffe600';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+
+        // Lava glow points
+        this.ctx.fillStyle = '#ffe600';
+        for (let lx = obs.x + 10; lx < obs.x + obs.width; lx += 20) {
+          this.ctx.beginPath();
+          this.ctx.arc(lx, cy + Math.sin(obs.animPulse + lx) * 3, 3, 0, Math.PI * 2);
+          this.ctx.fill();
+        }
+      } else {
+        // Jagged Burning Asteroid
+        this.ctx.translate(cx, cy);
+        this.ctx.rotate(obs.rotation);
+
+        // Burning Core
+        this.ctx.fillStyle = '#ff3300';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        // Molten Surface Veins
+        this.ctx.strokeStyle = '#ffe600';
+        this.ctx.lineWidth = 2.5;
+        this.ctx.stroke();
+
+        // Fire tail sparks
+        this.ctx.fillStyle = '#ff9900';
+        this.ctx.beginPath();
+        this.ctx.arc(0, -18, 5 + Math.sin(obs.animPulse) * 2, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.restore();
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Zone 3: CYBER_CLAW (Razor Toxic Claws & Bio-Matrix Pods)
+    // ----------------------------------------------------
+    if (obs.type === 'CYBER_CLAW') {
+      this.ctx.shadowColor = '#00ff66';
+      this.ctx.shadowBlur = 16;
+
+      if (obs.isBarrier) {
+        // Toxic Acid Gate
+        this.ctx.fillStyle = 'rgba(0, 255, 102, 0.4)';
+        this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        this.ctx.strokeStyle = '#aaff00';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+
+        // Bio-hazard spikes along the gate
+        this.ctx.fillStyle = '#aaff00';
+        for (let bx = obs.x + 8; bx < obs.x + obs.width; bx += 18) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(bx - 5, obs.y);
+          this.ctx.lineTo(bx, obs.y - 8);
+          this.ctx.lineTo(bx + 5, obs.y);
+          this.ctx.closePath();
+          this.ctx.fill();
+        }
+      } else {
+        // Sharp Cyber Predator Claw
+        this.ctx.translate(cx, cy);
+        this.ctx.rotate(obs.rotation * 0.5);
+
+        this.ctx.fillStyle = '#082414';
+        this.ctx.strokeStyle = '#00ff66';
+        this.ctx.lineWidth = 3;
+
+        // Claw Palm
+        this.ctx.beginPath();
+        this.ctx.ellipse(0, 4, 12, 10, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // 3 Razor Sharp Talons
+        this.ctx.fillStyle = '#00ff66';
+        [-8, 0, 8].forEach(offset => {
+          this.ctx.beginPath();
+          this.ctx.moveTo(offset - 3, 0);
+          this.ctx.lineTo(offset, -18);
+          this.ctx.lineTo(offset + 3, 0);
+          this.ctx.closePath();
+          this.ctx.fill();
+        });
+      }
+      this.ctx.restore();
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Zone 4: VOID_VORTEX (Dark Matter Singularity & Void Blades)
+    // ----------------------------------------------------
+    if (obs.type === 'VOID_VORTEX') {
+      this.ctx.shadowColor = '#9d00ff';
+      this.ctx.shadowBlur = 20;
+
+      if (obs.isBarrier) {
+        // Void Space Distortion Rift
+        this.ctx.fillStyle = 'rgba(157, 0, 255, 0.45)';
+        this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        this.ctx.strokeStyle = '#00f0ff';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+
+        // Pulsing Event Horizon
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.beginPath();
+        this.ctx.arc(cx, cy, 6 + Math.sin(obs.animPulse) * 2, 0, Math.PI * 2);
+        this.ctx.fill();
+      } else {
+        // Swirling Dark Matter Vortex
+        this.ctx.translate(cx, cy);
+        this.ctx.rotate(obs.rotation * 1.5);
+
+        this.ctx.fillStyle = '#08020d';
+        this.ctx.strokeStyle = '#9d00ff';
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Swirling Spiral Blades
+        this.ctx.strokeStyle = '#00f0ff';
+        this.ctx.lineWidth = 2.5;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 12, 0, Math.PI * 1.2);
+        this.ctx.stroke();
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 6, Math.PI, Math.PI * 2.2);
+        this.ctx.stroke();
+      }
+      this.ctx.restore();
+      return;
+    }
+
+    // ----------------------------------------------------
+    // Zone 5: RAINBOW_CRYSTAL (Prismatic Diamond Shards & Quantum Rifts)
+    // ----------------------------------------------------
+    if (obs.type === 'RAINBOW_CRYSTAL') {
+      this.ctx.shadowColor = '#ffffff';
+      this.ctx.shadowBlur = 22;
+
+      if (obs.isBarrier) {
+        // Quantum Prism Barrier
+        const grad = this.ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y);
+        grad.addColorStop(0, '#ff0055');
+        grad.addColorStop(0.33, '#ffe600');
+        grad.addColorStop(0.66, '#00ff66');
+        grad.addColorStop(1, '#00f0ff');
+        this.ctx.fillStyle = grad;
+        this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        this.ctx.strokeStyle = '#ffffff';
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+      } else {
+        // Multi-Faceted Rainbow Diamond Crystal
+        this.ctx.translate(cx, cy);
+        this.ctx.rotate(obs.rotation);
+
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        this.ctx.strokeStyle = '#00f0ff';
+        this.ctx.lineWidth = 2.5;
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, -18);
+        this.ctx.lineTo(14, 0);
+        this.ctx.lineTo(0, 18);
+        this.ctx.lineTo(-14, 0);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        // Crystal Facet Line
+        this.ctx.strokeStyle = '#ff0077';
+        this.ctx.beginPath();
+        this.ctx.moveTo(-14, 0);
+        this.ctx.lineTo(14, 0);
+        this.ctx.moveTo(0, -18);
+        this.ctx.lineTo(0, 18);
+        this.ctx.stroke();
+      }
+      this.ctx.restore();
+      return;
+    }
 
     this.ctx.restore();
   }

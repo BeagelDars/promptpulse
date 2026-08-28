@@ -1,6 +1,6 @@
-# NEON SURGE | Cyber Velocity Arcade v2.5
+# NEON SURGE | Cyber Velocity Arcade v3.0
 
-A fast-paced, high-octane 60 FPS neon synthwave arcade runner with shifting map biomes, custom pilot ships, and mobile touch controls.
+A fast-paced, high-octane 60 FPS neon synthwave arcade runner with shifting thematic obstacle evolutions, custom character pilot ships, and mobile touch controls.
 
 ---
 
@@ -9,36 +9,39 @@ A fast-paced, high-octane 60 FPS neon synthwave arcade runner with shifting map 
 
 ---
 
-## 🚀 What's New in v2.5:
+## 🌌 Zone & Obstacle Evolutions (Every 50,000 Points):
 
-1. **🌟 New Character Ships & Pilot Skins**:
-   * **`SUSSY CREWMATE` (Among Us)**: Red crewmate astronaut with glowing reflective cyan visor and oxygen backpack.
-   * **`BENJAMIN` (Talking Ben / Professor)**: Sophisticated hound with golden spectacles, tweed ears, and chemistry plasma thruster.
-   * **`OTRITZANIE 68`**: Legendary pilot ship featuring real in-game holographic photo cockpit, plasma wings, and rainbow thruster trails.
-   * **`BOBIK THE DOG`**: Cyber-canine companion featuring floppy cyber ears, cute glowing eyes, a wagging plasma tail, and laser paw particle trails.
-   * **`APEX DART`**, **`VOID PHANTOM`**, **`SOLAR FLARE`**, **`MATRIX GHOST`**.
+1. **Zone 1: `CYBER HORIZON` (0 – 50,000 pts)**:
+   * **Obstacles:** *Neon Laser Grids* with core white beams & *Rotating Cyan/Pink Cyber Prisms*.
+   * **Theme:** Classic synthwave city skyline & purple grid.
 
-2. **🌌 50,000 Milestone Shifting Map Zones**:
-   * **Zone 1: Cyber Horizon** (0 – 50,000 pts) — Classic neon cyan & hot pink synthwave grid.
-   * **Zone 2: Solar Inferno** (50,000 – 100,000 pts) — Blazing gold & crimson magma grid with solar flares.
-   * **Zone 3: Toxic Matrix** (100,000 – 150,000 pts) — Emerald green & cyber lime digital laser corridors.
-   * **Zone 4: Void Abyss** (150,000 – 200,000 pts) — Electric violet nebula distortion & deep space barriers.
-   * **Zone 5: Quantum Overdrive** (200,000+ pts) — Rainbow hyper-speed prism corridors!
+2. **Zone 2: `SOLAR INFERNO` (50,000 – 100,000 pts)**:
+   * **Obstacles:** *Molten Burning Meteorites* with fiery tail particles & *Magma Eruption Walls* with pulsating lava veins.
+   * **Theme:** Blazing gold & crimson solar flare grid.
 
-3. **⚡ Instant Power-Up Pickups**:
-   * Removed manual boost spamming completely.
-   * **`⚡` Hyper Boost Pickup**: Spawns on track — picking it up instantly triggers 3.5 seconds of invulnerable hyper-speed!
-   * **`🛡️` Energy Shield Pickup**: Grants 6 seconds of force field protection.
+3. **Zone 3: `TOXIC MATRIX` (100,000 – 150,000 pts)**:
+   * **Obstacles:** *Razor Cyber Claws* with sharp predatory talons & *Toxic Acid Bio-Gates* with hazard spikes.
+   * **Theme:** Acid emerald green & cyber lime digital hive.
 
-4. **🛡️ Balanced, Fair & Fun Obstacles**:
-   * Hard wall-clamping prevents getting stuck outside the screen.
-   * Guaranteed safe passages (minimum 85px openings) ensure every obstacle row is fair and dodgeable.
+4. **Zone 4: `VOID ABYSS` (150,000 – 200,000 pts)**:
+   * **Obstacles:** *Dark Matter Gravitational Vortexes* with swirling spiral blades & *Void Distortion Rifts*.
+   * **Theme:** Electric violet & deep space singularity clouds.
+
+5. **Zone 5: `QUANTUM OVERDRIVE` (200,000+ pts)**:
+   * **Obstacles:** *Faceted Rainbow Prismatic Crystals* & *Multi-Color Chromatic Warp Barriers*.
+   * **Theme:** Pure diamond white & multi-colored hyperspace.
 
 ---
 
-## 🕹️ Controls
-* **Desktop:**
-  * `A` / `D` or `←` / `→` — Steer Ship Left & Right
-* **Mobile / Touch:**
-  * `◄` / `►` on-screen thumb buttons
-  * Direct touch & drag anywhere on the screen
+## 🌟 Ships & Pilot Customization:
+* **`SUSSY CREWMATE` (Among Us)**: Red astronaut crewmate featuring glowing cyan visor and oxygen backpack.
+* **`BENJAMIN` (Talking Ben / Professor)**: Sophisticated hound with golden spectacles, tweed floppy ears, and chemistry plasma thrusters.
+* **`OTRITZANIE 68`**: Legendary pilot ship with real photo holographic cockpit pod and yellow plasma rings.
+* **`BOBIK THE DOG`**: Cyber-canine companion with floppy ears, glowing eyes, and wagging plasma tail.
+* **`APEX DART`**, **`VOID PHANTOM`**, **`SOLAR FLARE`**, **`MATRIX GHOST`**.
+
+---
+
+## 🕹️ Controls:
+* **Desktop:** `A` / `D` or `←` / `→` — Steer Ship Left & Right
+* **Mobile / Touch:** `◄` / `►` on-screen thumb buttons or direct screen drag
