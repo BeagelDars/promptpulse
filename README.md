@@ -27,9 +27,11 @@ A fast-paced, high-octane 60 FPS neon synthwave arcade runner with shifting them
    * **Obstacles:** *Dark Matter Gravitational Vortexes* with swirling spiral blades & *Void Distortion Rifts*.
    * **Theme:** Electric violet & deep space singularity clouds.
 
-5. **Zone 5: 🩸 `SLAUGHTERHOUSE` (200,000+ pts — ULTIMATE DEVIL MODE)**:
-   * **Obstacles:** *High-Speed Spinning Blood Sawblades* with jagged steel teeth & *Demonic Skull Laser Gates*.
-   * **Theme:** Geometry Dash *Slaughterhouse* inspired pitch-black abyss with intense blood-red strobe pulses, hellfire embers, and flashing crimson lightning!
+## ⚡ Stackable Power-Up Pickups:
+* **`🧲 COIN MAGNET` (Gold Ring)**: Magnetically pulls all nearby energy orbs within 320px directly into your ship for effortless combo multiplier chaining!
+* **`⚡ HYPER BOOST` (Cyan Plasma)**: Surges ship to 200% hyper-speed and gives temporary invulnerability to obliterate obstacles on impact!
+* **`🛡️ ENERGY SHIELD` (Emerald Matrix)**: Provides a 6.5s defensive shield aura that shatters incoming obstacles safely!
+* *Note: All powerups stack simultaneously and run on independent timers!*
 
 ---
 

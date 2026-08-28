@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v7.0
- * Pure Multi-Route Architecture: No Single-Exit Long Walls, Guaranteed 2 to 3 Open Lanes on Every Wave.
+ * NEON SURGE | Cyber Velocity Arcade Engine v8.0
+ * Stacking Coin Magnet, Ultra High-Speed Scaling, Intense Devil Slaughterhouse Flashes & Multi-Route Balance.
  */
 
 // ==========================================
@@ -36,6 +36,23 @@ class SoundEngine {
       gain.connect(this.ctx.destination);
       osc.start();
       osc.stop(this.ctx.currentTime + 0.12);
+    } catch (e) {}
+  }
+
+  playMagnet() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.22, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.25);
     } catch (e) {}
   }
 
@@ -171,9 +188,9 @@ const ZONES = [
     threshold: 200000,
     rPrimary: 255, gPrimary: 0, bPrimary: 34,
     rSecondary: 255, gSecondary: 30, bSecondary: 30,
-    rBgTop: 40, gBgTop: 0, bBgTop: 6,
+    rBgTop: 42, gBgTop: 0, bBgTop: 6,
     rBgBottom: 0, gBgBottom: 0, bBgBottom: 0,
-    rGrid: 255, gGrid: 0, bGrid: 34, gridAlpha: 0.32,
+    rGrid: 255, gGrid: 0, bGrid: 34, gridAlpha: 0.35,
     obstacleType: 'DEVIL_SLAUGHTER',
     isDevilMode: true
   }
@@ -206,9 +223,9 @@ class NeonSurgeGame {
     this.maxCombo = 1;
     this.distance = 0;
 
-    // Fast-paced velocity
-    this.speed = 7.6;
-    this.baseSpeed = 7.6;
+    // Fast-paced baseline velocity
+    this.speed = 7.8;
+    this.baseSpeed = 7.8;
     this.screenShake = 0;
 
     // Continuous Smooth Color State
@@ -226,10 +243,12 @@ class NeonSurgeGame {
     this.spawnTimer = 0;
     this.spawnInterval = 0.88;
 
-    // Power-up state
-    this.activePowerup = null;
-    this.powerupDuration = 0;
-    this.powerupMaxDuration = 0;
+    // Stackable Power-up States
+    this.powerupsState = {
+      BOOST: { active: false, timer: 0, max: 3.5, label: '⚡ BOOST', class: 'boost' },
+      SHIELD: { active: false, timer: 0, max: 6.5, label: '🛡️ SHIELD', class: 'shield' },
+      MAGNET: { active: false, timer: 0, max: 7.5, label: '🧲 MAGNET', class: 'magnet' }
+    };
 
     // Player position
     this.player = {
@@ -247,6 +266,7 @@ class NeonSurgeGame {
     this.powerups = [];
     this.particles = [];
     this.floatingTexts = [];
+    this.devilLightnings = [];
 
     // Preload Custom Photo (otritzanie68)
     this.pilotPhoto = new Image();
@@ -280,7 +300,7 @@ class NeonSurgeGame {
 
   initStars() {
     this.stars = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 55; i++) {
       this.stars.push({
         x: Math.random() * this.canvas.width,
         y: Math.random() * this.canvas.height,
@@ -371,9 +391,14 @@ class NeonSurgeGame {
     this.distance = 0;
     this.speed = this.baseSpeed;
     this.screenShake = 0;
-    this.activePowerup = null;
     this.spawnTimer = 0;
     this.devilModeFactor = 0;
+
+    // Reset power-up states
+    Object.keys(this.powerupsState).forEach(k => {
+      this.powerupsState[k].active = false;
+      this.powerupsState[k].timer = 0;
+    });
 
     this.player.x = this.canvas.width / 2;
     this.player.targetX = this.canvas.width / 2;
@@ -384,11 +409,12 @@ class NeonSurgeGame {
     this.powerups = [];
     this.particles = [];
     this.floatingTexts = [];
+    this.devilLightnings = [];
 
     document.getElementById('startScreen').classList.remove('active');
     document.getElementById('gameOverScreen').classList.remove('active');
     document.getElementById('shopScreen').classList.remove('active');
-    document.getElementById('activePowerupBar').style.display = 'none';
+    document.getElementById('activePowerupsContainer').innerHTML = '';
 
     this.updateHUD();
   }
@@ -539,27 +565,53 @@ class NeonSurgeGame {
     const zoneBadge = document.getElementById('hudZoneBadge');
     zoneBadge.textContent = this.currentZoneName;
     zoneBadge.style.color = this.activeColors.primary;
+
+    // Stackable Active Powerups HUD Badges
+    const container = document.getElementById('activePowerupsContainer');
+    let badgesHtml = '';
+    Object.keys(this.powerupsState).forEach(type => {
+      const p = this.powerupsState[type];
+      if (p.active && p.timer > 0) {
+        const pct = Math.max(0, Math.min(100, (p.timer / p.max) * 100));
+        badgesHtml += `
+          <div class="powerup-badge ${p.class}">
+            <span>${p.label}</span>
+            <div class="timer-track">
+              <div class="timer-fill" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }
+    });
+    container.innerHTML = badgesHtml;
   }
 
+  // ==========================================
+  // Stackable Powerup Triggers (All stack simultaneously!)
+  // ==========================================
   triggerHyperBoost() {
-    this.activePowerup = 'BOOST';
-    this.powerupDuration = 3.5;
-    this.powerupMaxDuration = 3.5;
-    this.speed = this.baseSpeed * 2.0;
+    this.powerupsState.BOOST.active = true;
+    this.powerupsState.BOOST.timer = this.powerupsState.BOOST.max;
     this.sound.playBoost();
     this.createFloatingText('⚡ HYPER BOOST!', this.player.x, this.player.y - 40, '#00f0ff');
   }
 
   triggerShield() {
-    this.activePowerup = 'SHIELD';
-    this.powerupDuration = 6.0;
-    this.powerupMaxDuration = 6.0;
+    this.powerupsState.SHIELD.active = true;
+    this.powerupsState.SHIELD.timer = this.powerupsState.SHIELD.max;
     this.sound.playPowerup();
     this.createFloatingText('🛡️ SHIELD ONLINE!', this.player.x, this.player.y - 40, '#00ff66');
   }
 
+  triggerMagnet() {
+    this.powerupsState.MAGNET.active = true;
+    this.powerupsState.MAGNET.timer = this.powerupsState.MAGNET.max;
+    this.sound.playMagnet();
+    this.createFloatingText('🧲 COIN MAGNET!', this.player.x, this.player.y - 40, '#ffaa00');
+  }
+
   // ==========================================
-  // Continuous Real-Time Color Morphing & Slaughterhouse Strobe
+  // Continuous Color Morphing & Intense Slaughterhouse Flashes
   // ==========================================
   updateZoneSmoothColors() {
     const exactZonePos = Math.max(0, Math.min(ZONES.length - 1, this.score / 50000));
@@ -572,14 +624,15 @@ class NeonSurgeGame {
 
     this.devilModeFactor = Math.max(0, Math.min(1, (this.score - 170000) / 30000));
 
+    // High-speed energetic strobe for Slaughterhouse Mode
     let strobe = 1;
     if (this.devilModeFactor > 0) {
-      strobe = 0.75 + Math.sin(Date.now() * 0.016) * 0.25;
+      strobe = 0.45 + Math.sin(Date.now() * 0.038) * 0.55;
     }
 
     const rP = Math.round(lerp(z1.rPrimary, z2.rPrimary, t) * strobe);
-    const gP = Math.round(lerp(z1.gPrimary, z2.gPrimary, t) * (1 - this.devilModeFactor * 0.8));
-    const bP = Math.round(lerp(z1.bPrimary, z2.bPrimary, t) * (1 - this.devilModeFactor * 0.8));
+    const gP = Math.round(lerp(z1.gPrimary, z2.gPrimary, t) * (1 - this.devilModeFactor * 0.85));
+    const bP = Math.round(lerp(z1.bPrimary, z2.bPrimary, t) * (1 - this.devilModeFactor * 0.85));
     this.activeColors.primary = `rgb(${rP}, ${gP}, ${bP})`;
 
     const rS = Math.round(lerp(z1.rSecondary, z2.rSecondary, t));
@@ -587,7 +640,7 @@ class NeonSurgeGame {
     const bS = Math.round(lerp(z1.bSecondary, z2.bSecondary, t));
     this.activeColors.secondary = `rgb(${rS}, ${gS}, ${bS})`;
 
-    const rBT = Math.round(lerp(z1.rBgTop, z2.rBgTop, t) * (1 + (this.devilModeFactor * (strobe - 0.75))));
+    const rBT = Math.round(lerp(z1.rBgTop, z2.rBgTop, t) * (1 + (this.devilModeFactor * (strobe - 0.5) * 1.5)));
     const gBT = Math.round(lerp(z1.gBgTop, z2.gBgTop, t));
     const bBT = Math.round(lerp(z1.bBgTop, z2.bBgTop, t));
     this.activeColors.bgTop = `rgb(${rBT}, ${gBT}, ${bBT})`;
@@ -660,8 +713,15 @@ class NeonSurgeGame {
     this.distance += this.speed * dt * 10;
     this.score += Math.round(this.speed * this.combo * 0.5);
     
-    // Smooth progressive speed scaling from 7.6 up to 16.5
-    this.baseSpeed = 7.6 + Math.min(9.0, Math.pow(this.distance / 4500, 0.75));
+    // Aggressive speed scaling for high-adrenaline runs (scales smoothly from 7.8 up to 21.0+)
+    this.baseSpeed = 7.8 + Math.min(14.0, Math.pow(this.distance / 2700, 0.85));
+
+    // Handle Boost Speed Multiplier
+    if (this.powerupsState.BOOST.active && this.powerupsState.BOOST.timer > 0) {
+      this.speed = this.baseSpeed * 2.0;
+    } else {
+      this.speed = this.baseSpeed;
+    }
 
     // Update continuous seamless zone colors & Slaughterhouse strobe
     this.updateZoneSmoothColors();
@@ -671,28 +731,22 @@ class NeonSurgeGame {
       this.comboTimer -= dt;
       if (this.comboTimer <= 0) {
         this.combo = 1;
-        this.updateHUD();
       }
     }
 
-    // Power-up Timer
-    if (this.activePowerup) {
-      this.powerupDuration -= dt;
-      const bar = document.getElementById('activePowerupBar');
-      const fill = document.getElementById('powerupTimerFill');
-      const name = document.getElementById('powerupName');
-      bar.style.display = 'flex';
-      name.textContent = `${this.activePowerup} ACTIVE`;
-      fill.style.width = `${(this.powerupDuration / this.powerupMaxDuration) * 100}%`;
-
-      if (this.powerupDuration <= 0) {
-        this.activePowerup = null;
-        this.speed = this.baseSpeed;
-        bar.style.display = 'none';
+    // Update Stackable Powerup Timers
+    Object.keys(this.powerupsState).forEach(k => {
+      const p = this.powerupsState[k];
+      if (p.active) {
+        p.timer -= dt;
+        if (p.timer <= 0) {
+          p.active = false;
+          p.timer = 0;
+        }
       }
-    }
+    });
 
-    // Left/Right Movement (Fast handling)
+    // Left/Right Movement
     if (this.keys.left) this.player.targetX -= 12;
     if (this.keys.right) this.player.targetX += 12;
 
@@ -718,7 +772,7 @@ class NeonSurgeGame {
     }
 
     // Spawning Orbs
-    if (Math.random() < 0.055) {
+    if (Math.random() < 0.060) {
       this.orbs.push({
         x: Math.random() * (this.canvas.width - 60) + 30,
         y: -30,
@@ -727,9 +781,13 @@ class NeonSurgeGame {
       });
     }
 
-    // Spawning Power-up Pickups
-    if (Math.random() < 0.010 && !this.activePowerup) {
-      const pType = Math.random() > 0.5 ? 'BOOST' : 'SHIELD';
+    // Spawning Power-up Pickups (BOOST, SHIELD, or MAGNET)
+    if (Math.random() < 0.012) {
+      const randP = Math.random();
+      let pType = 'MAGNET';
+      if (randP < 0.36) pType = 'BOOST';
+      else if (randP < 0.72) pType = 'SHIELD';
+
       this.powerups.push({
         x: Math.random() * (this.canvas.width - 60) + 30,
         y: -30,
@@ -738,7 +796,30 @@ class NeonSurgeGame {
       });
     }
 
+    // Devil Zone High-Frequency Lightning Arcs
+    if (this.devilModeFactor > 0 && Math.random() < 0.24 * this.devilModeFactor) {
+      const lx = Math.random() * this.canvas.width;
+      this.devilLightnings.push({
+        x1: lx,
+        y1: 0,
+        x2: lx + (Math.random() * 80 - 40),
+        y2: this.canvas.height,
+        alpha: 1.0,
+        decay: 0.15
+      });
+    }
+
+    // Update Devil Lightnings
+    for (let i = this.devilLightnings.length - 1; i >= 0; i--) {
+      const l = this.devilLightnings[i];
+      l.alpha -= l.decay;
+      if (l.alpha <= 0) this.devilLightnings.splice(i, 1);
+    }
+
     // Obstacles Collision & Movement
+    const isInvulnerable = (this.powerupsState.SHIELD.active && this.powerupsState.SHIELD.timer > 0) ||
+                           (this.powerupsState.BOOST.active && this.powerupsState.BOOST.timer > 0);
+
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obs = this.obstacles[i];
       obs.y += this.speed;
@@ -755,7 +836,7 @@ class NeonSurgeGame {
         pBox.y < oBox.y + oBox.h &&
         pBox.y + pBox.h > oBox.y
       ) {
-        if (this.activePowerup === 'SHIELD' || this.activePowerup === 'BOOST') {
+        if (isInvulnerable) {
           const zoneColor = this.activeColors.secondary;
           this.createExplosion(obs.x + obs.width / 2, obs.y + obs.height / 2, 24, zoneColor);
           this.obstacles.splice(i, 1);
@@ -776,11 +857,41 @@ class NeonSurgeGame {
       }
     }
 
-    // Orbs Collision
+    // Orbs Movement & Magnetic Attraction
+    const isMagnetActive = this.powerupsState.MAGNET.active && this.powerupsState.MAGNET.timer > 0;
+    const magnetRadius = 320;
+
     for (let i = this.orbs.length - 1; i >= 0; i--) {
       const orb = this.orbs[i];
       orb.y += this.speed;
       orb.pulse += 0.08;
+
+      // 🧲 COIN MAGNET GRAVITATIONAL PULL
+      if (isMagnetActive) {
+        const mdx = this.player.x - orb.x;
+        const mdy = this.player.y - orb.y;
+        const mdist = Math.hypot(mdx, mdy);
+
+        if (mdist < magnetRadius) {
+          const pullForce = (1 - mdist / magnetRadius) * 20 + 8;
+          orb.x += (mdx / mdist) * pullForce;
+          orb.y += (mdy / mdist) * pullForce;
+
+          // Magnet particle trail
+          if (Math.random() < 0.3) {
+            this.particles.push({
+              x: orb.x,
+              y: orb.y,
+              vx: (Math.random() - 0.5) * 2,
+              vy: (Math.random() - 0.5) * 2,
+              radius: 2,
+              color: '#ffaa00',
+              alpha: 0.8,
+              decay: 0.08
+            });
+          }
+        }
+      }
 
       const dist = Math.hypot(this.player.x - orb.x, this.player.y - orb.y);
       if (dist < orb.radius + 22) {
@@ -797,7 +908,6 @@ class NeonSurgeGame {
         this.createFloatingText(`+${points} (${this.combo}x)`, orb.x, orb.y, '#ffe600');
 
         this.orbs.splice(i, 1);
-        this.updateHUD();
         continue;
       }
 
@@ -815,7 +925,10 @@ class NeonSurgeGame {
       if (dist < p.radius + 22) {
         if (p.type === 'SHIELD') this.triggerShield();
         if (p.type === 'BOOST') this.triggerHyperBoost();
-        this.createExplosion(p.x, p.y, 20, p.type === 'SHIELD' ? '#00ff66' : '#00f0ff');
+        if (p.type === 'MAGNET') this.triggerMagnet();
+
+        const pColor = p.type === 'SHIELD' ? '#00ff66' : p.type === 'BOOST' ? '#00f0ff' : '#ffaa00';
+        this.createExplosion(p.x, p.y, 20, pColor);
         this.powerups.splice(i, 1);
         continue;
       }
@@ -856,10 +969,7 @@ class NeonSurgeGame {
 
     const randPattern = Math.random();
 
-    // ----------------------------------------------------
-    // PATTERN 1: CENTER ISLAND PILLAR (Dual Open Routes: Left & Right)
-    // Only blocks a small center chunk (25-30%), leaving BOTH sides wide open!
-    // ----------------------------------------------------
+    // 1. CENTER ISLAND PILLAR (Dual Open Routes: Left & Right)
     if (randPattern < 0.35) {
       const pillarW = Math.min(canvasW * 0.30, 130);
       const pillarX = (canvasW - pillarW) / 2;
@@ -876,22 +986,17 @@ class NeonSurgeGame {
         animPulse: 0
       });
 
-      // Bonus Orbs on left or right path
       const sideX = Math.random() > 0.5 ? 20 : canvasW - 20;
       this.orbs.push({ x: sideX, y: -70, radius: 12, pulse: 0 });
       return;
     }
 
-    // ----------------------------------------------------
-    // PATTERN 2: TWIN SPLIT PILLARS (Triple Open Routes: Left, Center & Right)
-    // Leaves 3 wide passages across the screen!
-    // ----------------------------------------------------
+    // 2. TWIN SPLIT PILLARS (Triple Open Routes: Left, Center & Right)
     if (randPattern < 0.65) {
       const pWidth = Math.min(canvasW * 0.18, 70);
       const p1X = canvasW * 0.25 - pWidth / 2;
       const p2X = canvasW * 0.75 - pWidth / 2;
 
-      // Left Pillar
       this.obstacles.push({
         x: p1X,
         y: -70,
@@ -904,7 +1009,6 @@ class NeonSurgeGame {
         animPulse: 0
       });
 
-      // Right Pillar
       this.obstacles.push({
         x: p2X,
         y: -70,
@@ -919,13 +1023,8 @@ class NeonSurgeGame {
       return;
     }
 
-    // ----------------------------------------------------
-    // PATTERN 3: MULTI-LANE STAGGERED HAZARD FORMATION
-    // 2 to 3 hazards with plenty of open room between them (Left, Center, Right paths)
-    // ----------------------------------------------------
+    // 3. MULTI-LANE STAGGERED HAZARD FORMATION
     const clusterCount = difficultyFactor > 0.4 ? (Math.random() > 0.5 ? 3 : 2) : 2;
-
-    // Pick 2 or 3 distinct lanes from [Left, Center-Left, Center-Right, Right]
     const lanePositions = [
       canvasW * 0.15,
       canvasW * 0.45,
@@ -933,13 +1032,13 @@ class NeonSurgeGame {
     ];
 
     for (let c = 0; c < clusterCount; c++) {
-      const size = Math.floor(Math.random() * 20) + 38; // 38px to 58px
+      const size = Math.floor(Math.random() * 20) + 38;
       const targetLaneX = lanePositions[c % lanePositions.length] + (Math.random() * 20 - 10);
       const posX = Math.max(10, Math.min(canvasW - size - 10, targetLaneX - size / 2));
 
       this.obstacles.push({
         x: posX,
-        y: -70 - (c * 60), // Staggered vertically for comfortable dodging
+        y: -70 - (c * 60),
         width: size,
         height: size,
         type,
@@ -952,7 +1051,7 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // 6. Render Scene
+  // 6. Render Scene (Slaughterhouse Strobe Pulse & Magnet FX)
   // ==========================================
   draw() {
     this.ctx.save();
@@ -976,13 +1075,33 @@ class NeonSurgeGame {
     // Seamless Grid Floor
     this.drawGrid();
 
-    // Slaughterhouse Devil Atmosphere Embers & Strobes
+    // Slaughterhouse Devil Atmosphere & High-Frequency Strobe Flashes
     if (this.devilModeFactor > 0) {
       this.ctx.save();
-      if (Math.random() < 0.12 * this.devilModeFactor) {
-        this.ctx.fillStyle = `rgba(255, 0, 30, ${0.15 * this.devilModeFactor})`;
+      // Intense blood red & white strobe flashes
+      if (Math.random() < 0.28 * this.devilModeFactor) {
+        const isWhiteFlash = Math.random() < 0.3;
+        this.ctx.fillStyle = isWhiteFlash
+          ? `rgba(255, 255, 255, ${0.28 * this.devilModeFactor})`
+          : `rgba(255, 0, 34, ${0.35 * this.devilModeFactor})`;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
       }
+
+      // Devil Blood Lightnings
+      this.devilLightnings.forEach(l => {
+        this.ctx.strokeStyle = `rgba(255, 0, 40, ${l.alpha})`;
+        this.ctx.shadowColor = '#ff0033';
+        this.ctx.shadowBlur = 16;
+        this.ctx.lineWidth = 2.5;
+        this.ctx.beginPath();
+        this.ctx.moveTo(l.x1, l.y1);
+        const midX = (l.x1 + l.x2) / 2 + (Math.random() * 40 - 20);
+        const midY = this.canvas.height * 0.5;
+        this.ctx.lineTo(midX, midY);
+        this.ctx.lineTo(l.x2, l.y2);
+        this.ctx.stroke();
+      });
+
       this.ctx.restore();
     }
 
@@ -1014,7 +1133,9 @@ class NeonSurgeGame {
 
     // Power-up Pickups
     this.powerups.forEach(p => {
-      const color = p.type === 'SHIELD' ? '#00ff66' : '#00f0ff';
+      const color = p.type === 'SHIELD' ? '#00ff66' : p.type === 'BOOST' ? '#00f0ff' : '#ffaa00';
+      const icon = p.type === 'SHIELD' ? '🛡️' : p.type === 'BOOST' ? '⚡' : '🧲';
+
       this.ctx.save();
       this.ctx.shadowColor = color;
       this.ctx.shadowBlur = 16;
@@ -1028,7 +1149,7 @@ class NeonSurgeGame {
       this.ctx.font = 'bold 12px Orbitron';
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
-      this.ctx.fillText(p.type === 'SHIELD' ? '🛡️' : '⚡', p.x, p.y);
+      this.ctx.fillText(icon, p.x, p.y);
       this.ctx.restore();
     });
 
@@ -1372,8 +1493,8 @@ class NeonSurgeGame {
     this.ctx.translate(px, py);
     this.ctx.rotate(this.player.tilt);
 
-    // Active Shield
-    if (this.activePowerup === 'SHIELD') {
+    // Active Shield Visual Aura
+    if (this.powerupsState.SHIELD.active && this.powerupsState.SHIELD.timer > 0) {
       this.ctx.save();
       this.ctx.strokeStyle = '#00ff66';
       this.ctx.shadowColor = '#00ff66';
@@ -1386,12 +1507,26 @@ class NeonSurgeGame {
     }
 
     // Active Boost Flame Aura
-    if (this.activePowerup === 'BOOST') {
+    if (this.powerupsState.BOOST.active && this.powerupsState.BOOST.timer > 0) {
       this.ctx.save();
       this.ctx.fillStyle = 'rgba(0, 240, 255, 0.35)';
       this.ctx.beginPath();
       this.ctx.arc(0, 0, 36, 0, Math.PI * 2);
       this.ctx.fill();
+      this.ctx.restore();
+    }
+
+    // Active Magnet Magnetic Pulse Rings
+    if (this.powerupsState.MAGNET.active && this.powerupsState.MAGNET.timer > 0) {
+      this.ctx.save();
+      const mPulse = (Date.now() * 0.005) % 1;
+      this.ctx.strokeStyle = `rgba(255, 170, 0, ${1 - mPulse})`;
+      this.ctx.shadowColor = '#ffaa00';
+      this.ctx.shadowBlur = 14;
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, 24 + mPulse * 28, 0, Math.PI * 2);
+      this.ctx.stroke();
       this.ctx.restore();
     }
 
@@ -1574,7 +1709,6 @@ class NeonSurgeGame {
       this.ctx.fillStyle = '#000000';
       this.ctx.beginPath();
       this.ctx.arc(-7, -4, 3, 0, Math.PI * 2);
-      this.ctx.arc(7, -4, 3, 0, Math.PI * 2);
       this.ctx.fill();
 
       this.ctx.fillStyle = '#ffffff';
