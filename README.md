@@ -27,6 +27,12 @@ A fast-paced, high-octane 60 FPS neon synthwave arcade runner with shifting them
    * **Obstacles:** *Dark Matter Gravitational Vortexes* with swirling spiral blades & *Void Distortion Rifts*.
    * **Theme:** Electric violet & deep space singularity clouds.
 
+## 🏆 Global Cloud Leaderboards (Live 24/7):
+* **👑 High Score Leaderboard**: Tracks the #1 single highest run score worldwide.
+* **🪙 Total Coins / Orbs Leaderboard**: Cumulative lifetime coins sum collected across all missions.
+* **⏳ Longest Run Leaderboard**: Maximum survival distance reached in a single run (in meters).
+* **Custom Pilot Callsign**: Enter your personal pilot name in the main menu to immortalize your score on the global leaderboard!
+
 ## ⚡ Stackable Power-Up Pickups:
 * **`🧲 COIN MAGNET` (Gold Ring)**: Magnetically pulls all nearby energy orbs within 320px directly into your ship for effortless combo multiplier chaining!
 * **`⚡ HYPER BOOST` (Cyan Plasma)**: Surges ship to 200% hyper-speed and gives temporary invulnerability to obliterate obstacles on impact!

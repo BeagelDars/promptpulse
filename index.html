@@ -73,9 +73,15 @@
             </div>
           </div>
 
+          <div class="pilot-profile-box">
+            <span class="pilot-label">PILOT CALLSIGN:</span>
+            <input type="text" id="pilotNameInput" class="pilot-name-input" maxlength="14" placeholder="PILOT_ONE" spellcheck="false">
+          </div>
+
           <div class="menu-actions">
             <button class="btn-play" id="startBtn">START MISSION</button>
-            <button class="btn-shop" id="openShopBtn">⚡ SHIP HANGAR</button>
+            <button class="btn-shop" id="openShopBtn">⚡ HANGAR</button>
+            <button class="btn-leaderboard" id="openLeaderboardBtn">🏆 LEADERBOARD</button>
           </div>
 
           <div class="best-score-display">
@@ -111,7 +117,40 @@
 
           <div class="menu-actions mt-6">
             <button class="btn-play" id="restartBtn">LAUNCH AGAIN</button>
-            <button class="btn-secondary" id="gameOverShopBtn">SHIP HANGAR</button>
+            <button class="btn-secondary" id="gameOverShopBtn">HANGAR</button>
+            <button class="btn-leaderboard" id="gameOverLeaderboardBtn">🏆 LEADERBOARD</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Global Cloud Leaderboards Modal -->
+      <div class="overlay-screen" id="leaderboardScreen">
+        <div class="menu-card leaderboard-card">
+          <div class="leaderboard-header">
+            <div>
+              <h2 class="leaderboard-title">GLOBAL CLOUD LEADERBOARD</h2>
+              <span class="cloud-status"><span class="status-dot"></span> LIVE CLOUD NETWORK</span>
+            </div>
+            <button class="btn-icon-close" id="closeLeaderboardBtn" aria-label="Close">✕</button>
+          </div>
+
+          <!-- Leaderboard 3 Category Tabs -->
+          <div class="leaderboard-tabs">
+            <button class="lb-tab active" data-tab="highscores">👑 HIGH SCORE</button>
+            <button class="lb-tab" data-tab="totalOrbs">🪙 TOTAL COINS</button>
+            <button class="lb-tab" data-tab="longestRuns">⏳ LONGEST RUN</button>
+          </div>
+
+          <!-- Leaderboard List Container -->
+          <div class="leaderboard-list-wrap">
+            <div class="leaderboard-list" id="leaderboardList">
+              <div class="lb-loading">Syncing global scores from cloud...</div>
+            </div>
+          </div>
+
+          <div class="leaderboard-footer">
+            <button class="btn-refresh" id="refreshLeaderboardBtn">🔄 REFRESH</button>
+            <button class="btn-secondary" id="closeLeaderboardBtn2">CLOSE</button>
           </div>
         </div>
       </div>

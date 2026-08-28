@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v9.0
- * High-Density Obstacle Formations, Multi-Sized Barriers, Devil Speed Surge & Thrilling Arcade Flow.
+ * NEON SURGE | Cyber Velocity Arcade Engine v10.0
+ * Global Cloud Leaderboards (3 Categories), Nimble Obstacle Sizing, Pilot Callsigns & Stacking Powerups.
  */
 
 // ==========================================
@@ -201,21 +201,135 @@ function lerp(a, b, t) {
 }
 
 // ==========================================
-// 4. Main Game Engine
+// 4. Cloud Leaderboard Service
+// ==========================================
+const CLOUD_LEADERBOARD_ENDPOINT = 'https://api.restful-api.dev/objects/ff8081819ff5b11001a048fa7cb8553b';
+
+class CloudLeaderboardService {
+  constructor() {
+    this.cachedData = {
+      highscores: [
+        { name: 'ANDREY', score: 215000 },
+        { name: 'BOBIK_FAN', score: 168000 },
+        { name: 'CYBER_PRO', score: 152000 }
+      ],
+      totalOrbs: [
+        { name: 'ANDREY', orbs: 850 },
+        { name: 'BOBIK_FAN', orbs: 620 },
+        { name: 'CYBER_PRO', orbs: 420 }
+      ],
+      longestRuns: [
+        { name: 'ANDREY', distance: 24500 },
+        { name: 'BOBIK_FAN', distance: 19800 },
+        { name: 'CYBER_PRO', distance: 18400 }
+      ]
+    };
+  }
+
+  async fetchLeaderboard() {
+    try {
+      const res = await fetch(CLOUD_LEADERBOARD_ENDPOINT);
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.data) {
+          this.cachedData = json.data;
+        }
+      }
+    } catch (e) {
+      console.warn('Cloud fetch fallback to local cache:', e);
+    }
+    return this.cachedData;
+  }
+
+  async submitRun(pilotName, score, totalCoins, distance) {
+    if (!pilotName) pilotName = 'PILOT';
+    pilotName = pilotName.toUpperCase().slice(0, 14);
+
+    try {
+      const current = await this.fetchLeaderboard();
+      const highscores = current.highscores || [];
+      const totalOrbs = current.totalOrbs || [];
+      const longestRuns = current.longestRuns || [];
+
+      // 1. High Score Update
+      const existingScoreIdx = highscores.findIndex(e => e.name === pilotName);
+      if (existingScoreIdx >= 0) {
+        if (score > highscores[existingScoreIdx].score) {
+          highscores[existingScoreIdx].score = score;
+        }
+      } else {
+        highscores.push({ name: pilotName, score });
+      }
+      highscores.sort((a, b) => b.score - a.score);
+      const topHighscores = highscores.slice(0, 10);
+
+      // 2. Total Orbs Update
+      const existingOrbIdx = totalOrbs.findIndex(e => e.name === pilotName);
+      if (existingOrbIdx >= 0) {
+        if (totalCoins > totalOrbs[existingOrbIdx].orbs) {
+          totalOrbs[existingOrbIdx].orbs = totalCoins;
+        }
+      } else {
+        totalOrbs.push({ name: pilotName, orbs: totalCoins });
+      }
+      totalOrbs.sort((a, b) => b.orbs - a.orbs);
+      const topTotalOrbs = totalOrbs.slice(0, 10);
+
+      // 3. Longest Run Distance Update
+      const existingDistIdx = longestRuns.findIndex(e => e.name === pilotName);
+      if (existingDistIdx >= 0) {
+        if (distance > longestRuns[existingDistIdx].distance) {
+          longestRuns[existingDistIdx].distance = distance;
+        }
+      } else {
+        longestRuns.push({ name: pilotName, distance });
+      }
+      longestRuns.sort((a, b) => b.distance - a.distance);
+      const topLongestRuns = longestRuns.slice(0, 10);
+
+      const payload = {
+        name: 'NeonSurge_Leaderboards_v1',
+        data: {
+          highscores: topHighscores,
+          totalOrbs: topTotalOrbs,
+          longestRuns: topLongestRuns
+        }
+      };
+
+      this.cachedData = payload.data;
+
+      await fetch(CLOUD_LEADERBOARD_ENDPOINT, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      console.warn('Cloud submission failed:', e);
+    }
+  }
+}
+
+// ==========================================
+// 5. Main Game Engine
 // ==========================================
 class NeonSurgeGame {
   constructor() {
     this.canvas = document.getElementById('gameCanvas');
     this.ctx = this.canvas.getContext('2d');
     this.sound = new SoundEngine();
+    this.cloudLB = new CloudLeaderboardService();
 
     // Game state
     this.state = 'MENU';
     this.score = 0;
     this.highScore = parseInt(localStorage.getItem('neonsurge_highscore') || '0', 10);
     this.totalOrbs = parseInt(localStorage.getItem('neonsurge_orbs') || '0', 10);
+    this.longestDistance = parseInt(localStorage.getItem('neonsurge_max_distance') || '0', 10);
     this.unlockedShips = JSON.parse(localStorage.getItem('neonsurge_unlocked_ships') || '["apex_dart"]');
     this.currentShipId = localStorage.getItem('neonsurge_active_ship') || 'apex_dart';
+
+    // Pilot name
+    this.pilotName = localStorage.getItem('neonsurge_pilot_name') || `PILOT_${Math.floor(100 + Math.random() * 900)}`;
 
     this.runOrbs = 0;
     this.combo = 1;
@@ -239,9 +353,12 @@ class NeonSurgeGame {
     this.currentZoneName = ZONES[0].name;
     this.devilModeFactor = 0;
 
-    // Tight, high-density wave cadence
+    // Active Leaderboard Tab
+    this.activeLeaderboardTab = 'highscores';
+
+    // Tight wave cadence
     this.spawnTimer = 0;
-    this.spawnInterval = 0.58;
+    this.spawnInterval = 0.54;
 
     // Stackable Power-up States
     this.powerupsState = {
@@ -282,11 +399,102 @@ class NeonSurgeGame {
     this.initEventListeners();
     this.initMobileButtons();
     this.initStars();
+    this.initPilotProfile();
+    this.initLeaderboardTabs();
     this.updateHUD();
     this.renderHangar();
 
+    // Initial background cloud fetch
+    this.cloudLB.fetchLeaderboard();
+
     this.lastTime = performance.now();
     requestAnimationFrame((t) => this.gameLoop(t));
+  }
+
+  initPilotProfile() {
+    const input = document.getElementById('pilotNameInput');
+    if (input) {
+      input.value = this.pilotName;
+      input.addEventListener('input', (e) => {
+        const val = e.target.value.trim().toUpperCase().slice(0, 14);
+        if (val) {
+          this.pilotName = val;
+          localStorage.setItem('neonsurge_pilot_name', this.pilotName);
+        }
+      });
+    }
+  }
+
+  initLeaderboardTabs() {
+    const tabs = document.querySelectorAll('.lb-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        this.activeLeaderboardTab = tab.dataset.tab;
+        this.renderLeaderboardList();
+      });
+    });
+
+    document.getElementById('openLeaderboardBtn').addEventListener('click', () => this.openLeaderboard());
+    document.getElementById('gameOverLeaderboardBtn').addEventListener('click', () => this.openLeaderboard());
+    document.getElementById('closeLeaderboardBtn').addEventListener('click', () => this.closeLeaderboard());
+    document.getElementById('closeLeaderboardBtn2').addEventListener('click', () => this.closeLeaderboard());
+    document.getElementById('refreshLeaderboardBtn').addEventListener('click', async () => {
+      document.getElementById('leaderboardList').innerHTML = '<div class="lb-loading">Refreshing cloud scores...</div>';
+      await this.cloudLB.fetchLeaderboard();
+      this.renderLeaderboardList();
+    });
+  }
+
+  async openLeaderboard() {
+    document.getElementById('leaderboardScreen').classList.add('active');
+    document.getElementById('leaderboardList').innerHTML = '<div class="lb-loading">Syncing global scores from cloud...</div>';
+    await this.cloudLB.fetchLeaderboard();
+    this.renderLeaderboardList();
+  }
+
+  closeLeaderboard() {
+    document.getElementById('leaderboardScreen').classList.remove('active');
+  }
+
+  renderLeaderboardList() {
+    const listEl = document.getElementById('leaderboardList');
+    const data = this.cloudLB.cachedData || {};
+    const items = data[this.activeLeaderboardTab] || [];
+
+    if (!items || items.length === 0) {
+      listEl.innerHTML = '<div class="lb-loading">No scores recorded yet. Be the first!</div>';
+      return;
+    }
+
+    let html = '';
+    items.forEach((item, index) => {
+      const rank = index + 1;
+      const rankBadge = rank === 1 ? '🥇 #1' : rank === 2 ? '🥈 #2' : rank === 3 ? '🥉 #3' : `#${rank}`;
+      const isYou = item.name === this.pilotName;
+      
+      let valFormatted = '0';
+      if (this.activeLeaderboardTab === 'highscores') {
+        valFormatted = `${(item.score || 0).toLocaleString()} PTS`;
+      } else if (this.activeLeaderboardTab === 'totalOrbs') {
+        valFormatted = `${(item.orbs || 0).toLocaleString()} 🪙`;
+      } else if (this.activeLeaderboardTab === 'longestRuns') {
+        valFormatted = `${(item.distance || 0).toLocaleString()} M`;
+      }
+
+      html += `
+        <div class="lb-row top-${Math.min(3, rank)} ${isYou ? 'is-you' : ''}">
+          <div class="lb-left">
+            <span class="lb-rank">${rankBadge}</span>
+            <span class="lb-name">${item.name} ${isYou ? '(YOU)' : ''}</span>
+          </div>
+          <span class="lb-value">${valFormatted}</span>
+        </div>
+      `;
+    });
+
+    listEl.innerHTML = html;
   }
 
   initCanvasSize() {
@@ -414,6 +622,7 @@ class NeonSurgeGame {
     document.getElementById('startScreen').classList.remove('active');
     document.getElementById('gameOverScreen').classList.remove('active');
     document.getElementById('shopScreen').classList.remove('active');
+    document.getElementById('leaderboardScreen').classList.remove('active');
     document.getElementById('activePowerupsContainer').innerHTML = '';
 
     this.updateHUD();
@@ -433,7 +642,15 @@ class NeonSurgeGame {
       this.highScore = this.score;
       localStorage.setItem('neonsurge_highscore', this.highScore.toString());
     }
+    const currentDist = Math.round(this.distance);
+    if (currentDist > this.longestDistance) {
+      this.longestDistance = currentDist;
+      localStorage.setItem('neonsurge_max_distance', this.longestDistance.toString());
+    }
     localStorage.setItem('neonsurge_orbs', this.totalOrbs.toString());
+
+    // Submit to Global Cloud Leaderboard
+    this.cloudLB.submitRun(this.pilotName, this.score, this.totalOrbs, currentDist);
 
     document.getElementById('finalScore').textContent = this.score.toLocaleString();
     document.getElementById('finalOrbs').textContent = `+${this.runOrbs}`;
@@ -624,7 +841,6 @@ class NeonSurgeGame {
 
     this.devilModeFactor = Math.max(0, Math.min(1, (this.score - 170000) / 30000));
 
-    // High-speed energetic strobe for Slaughterhouse Mode
     let strobe = 1;
     if (this.devilModeFactor > 0) {
       strobe = 0.45 + Math.sin(Date.now() * 0.038) * 0.55;
@@ -691,7 +907,7 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // 5. Update Game Loop
+  // 6. Update Game Loop
   // ==========================================
   update(dt) {
     if (this.screenShake > 0) {
@@ -714,7 +930,7 @@ class NeonSurgeGame {
     this.score += Math.round(this.speed * this.combo * 0.5);
     
     // Dynamic progressive velocity scaling + Devil mode speed surge!
-    const devilSpeedBoost = 1 + (this.devilModeFactor * 0.45); // Up to +45% hyper speed in Slaughterhouse!
+    const devilSpeedBoost = 1 + (this.devilModeFactor * 0.45);
     this.baseSpeed = (8.0 + Math.min(13.0, Math.pow(this.distance / 2400, 0.82))) * devilSpeedBoost;
 
     // Handle Boost Speed Multiplier
@@ -747,7 +963,7 @@ class NeonSurgeGame {
       }
     });
 
-    // Left/Right Movement (Highly responsive agile steering)
+    // Left/Right Movement (Agile responsive steering)
     if (this.keys.left) this.player.targetX -= 13;
     if (this.keys.right) this.player.targetX += 13;
 
@@ -762,9 +978,9 @@ class NeonSurgeGame {
     if (this.player.trail.length > 12) this.player.trail.shift();
     this.player.trail.forEach(t => t.alpha -= 0.06);
 
-    // Tight, High-Action Wave Spawner Cadence (0.58s down to 0.38s in late game!)
+    // Wave Spawner Cadence
     const difficultyFactor = Math.min(1, this.score / 90000);
-    this.spawnInterval = 0.58 - (difficultyFactor * 0.20);
+    this.spawnInterval = 0.54 - (difficultyFactor * 0.20);
 
     this.spawnTimer += dt;
     if (this.spawnTimer >= this.spawnInterval) {
@@ -827,8 +1043,8 @@ class NeonSurgeGame {
       obs.rotation += 0.06;
       obs.animPulse += 0.1;
 
-      const hitMargin = obs.isBarrier ? 4 : 8;
-      const pBox = { x: this.player.x - 12, y: this.player.y - 16, w: 24, h: 32 };
+      const hitMargin = obs.isBarrier ? 3 : 6;
+      const pBox = { x: this.player.x - 11, y: this.player.y - 15, w: 22, h: 30 };
       const oBox = { x: obs.x + hitMargin, y: obs.y + hitMargin, w: obs.width - (hitMargin * 2), h: obs.height - (hitMargin * 2) };
 
       if (
@@ -959,8 +1175,7 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // HIGH-OCTANE MULTI-HAZARD CLUSTER ARCHITECTURE
-  // Dense 3-to-5 hazard swarms, dynamic multi-size clusters, and tight slalom gauntlets.
+  // NIMBLE MULTI-HAZARD CLUSTER ARCHITECTURE (Slightly Smaller Footprints 28px-46px)
   // ==========================================
   spawnBalancedWave(difficultyFactor) {
     const canvasW = this.canvas.width;
@@ -970,20 +1185,19 @@ class NeonSurgeGame {
     const randPattern = Math.random();
 
     // ----------------------------------------------------
-    // FORMATION 1: ARROWHEAD SWARM CLUSTER (4 to 5 Hazards)
-    // Dense pack forming an arrowhead wedge with guaranteed 90px side corridors!
+    // FORMATION 1: ARROWHEAD SWARM CLUSTER (4 to 5 Hazards, Agile 28px-42px)
     // ----------------------------------------------------
     if (randPattern < 0.28) {
       const clusterCount = difficultyFactor > 0.35 ? 5 : 4;
       const safeOnLeft = Math.random() > 0.5;
-      const startX = safeOnLeft ? canvasW * 0.35 : 0;
-      const clusterWidth = canvasW * 0.65;
+      const startX = safeOnLeft ? canvasW * 0.32 : 0;
+      const clusterWidth = canvasW * 0.68;
 
       for (let c = 0; c < clusterCount; c++) {
-        const s = Math.floor(Math.random() * 18) + 36; // 36px to 54px
+        const s = Math.floor(Math.random() * 14) + 28; // 28px to 42px
         const offsetX = (c / (clusterCount - 1)) * (clusterWidth - s);
         const posX = Math.max(0, Math.min(canvasW - s, startX + offsetX));
-        const posY = -70 - (Math.abs(c - (clusterCount - 1) / 2) * 45); // Arrowhead V-shape
+        const posY = -70 - (Math.abs(c - (clusterCount - 1) / 2) * 42);
 
         this.obstacles.push({
           x: posX,
@@ -998,34 +1212,32 @@ class NeonSurgeGame {
         });
       }
 
-      // Safe lane orb reward
-      const orbX = safeOnLeft ? 25 : canvasW - 25;
+      const orbX = safeOnLeft ? 22 : canvasW - 22;
       this.orbs.push({ x: orbX, y: -70, radius: 12, pulse: 0 });
       return;
     }
 
     // ----------------------------------------------------
     // FORMATION 2: DENSE SLALOM WEAVE CLUSTER (4 to 5 Staggered Hazards)
-    // Staggered across lanes for rapid, thrilling S-curve weaving!
     // ----------------------------------------------------
     if (randPattern < 0.54) {
       const count = difficultyFactor > 0.3 ? 5 : 4;
       const lanes = [
-        0,                                   // Flush Left Wall
+        0,
         Math.floor(canvasW * 0.25),
         Math.floor(canvasW * 0.50),
         Math.floor(canvasW * 0.75),
-        Math.floor(canvasW - 46)             // Flush Right Wall
+        Math.floor(canvasW - 38)
       ];
 
       for (let i = 0; i < count; i++) {
         const laneIdx = (i * 2 + (Math.random() > 0.5 ? 0 : 1)) % lanes.length;
-        const s = Math.floor(Math.random() * 16) + 38; // 38-54px
+        const s = Math.floor(Math.random() * 12) + 30; // 30-42px
         const posX = Math.max(0, Math.min(canvasW - s, lanes[laneIdx]));
 
         this.obstacles.push({
           x: posX,
-          y: -70 - (i * 44),
+          y: -70 - (i * 42),
           width: s,
           height: s,
           type,
@@ -1040,17 +1252,16 @@ class NeonSurgeGame {
 
     // ----------------------------------------------------
     // FORMATION 3: DUAL WALL CLAMP + CENTER SWARM GAUNTLET
-    // Blocks Left & Right walls, plus 2 staggered obstacles down the middle corridor!
     // ----------------------------------------------------
     if (randPattern < 0.76) {
-      const pincerW = Math.max(70, Math.min(canvasW * 0.28, 95));
+      const pincerW = Math.max(65, Math.min(canvasW * 0.26, 88));
 
       // Left Wall Block
       this.obstacles.push({
         x: 0,
         y: -70,
         width: pincerW,
-        height: 24,
+        height: 22,
         type,
         isBarrier: true,
         zoneIndex: currentZoneIdx,
@@ -1063,7 +1274,7 @@ class NeonSurgeGame {
         x: canvasW - pincerW,
         y: -70,
         width: pincerW,
-        height: 24,
+        height: 22,
         type,
         isBarrier: true,
         zoneIndex: currentZoneIdx,
@@ -1071,12 +1282,12 @@ class NeonSurgeGame {
         animPulse: 0
       });
 
-      // Staggered Center Hazards (Creates high-intensity threading)
-      const cSize1 = 36;
-      const cSize2 = 40;
+      // Staggered Center Hazards
+      const cSize1 = 30;
+      const cSize2 = 34;
       this.obstacles.push({
         x: canvasW * 0.42 - cSize1 / 2,
-        y: -130,
+        y: -125,
         width: cSize1,
         height: cSize1,
         type,
@@ -1088,7 +1299,7 @@ class NeonSurgeGame {
 
       this.obstacles.push({
         x: canvasW * 0.58 - cSize2 / 2,
-        y: -185,
+        y: -175,
         width: cSize2,
         height: cSize2,
         type,
@@ -1104,16 +1315,15 @@ class NeonSurgeGame {
 
     // ----------------------------------------------------
     // FORMATION 4: WALL FORTRESS + MULTI-HAZARD ESCORT CLUSTER
-    // Wall barrier on one side + 3 staggered hazards across the open track!
     // ----------------------------------------------------
     const isLeftWall = Math.random() > 0.5;
-    const fortressW = Math.max(75, Math.min(canvasW * 0.32, 105));
+    const fortressW = Math.max(70, Math.min(canvasW * 0.30, 95));
 
     this.obstacles.push({
       x: isLeftWall ? 0 : canvasW - fortressW,
       y: -70,
       width: fortressW,
-      height: 26,
+      height: 24,
       type,
       isBarrier: true,
       zoneIndex: currentZoneIdx,
@@ -1121,17 +1331,16 @@ class NeonSurgeGame {
       animPulse: 0
     });
 
-    // 3 Staggered hazards in the remaining open area
     const openAreaStart = isLeftWall ? fortressW + 15 : 10;
     const openAreaW = canvasW - fortressW - 25;
 
     for (let h = 0; h < 3; h++) {
-      const s = Math.floor(Math.random() * 16) + 34; // 34-50px
+      const s = Math.floor(Math.random() * 12) + 28; // 28-40px
       const posX = openAreaStart + ((h / 2) * (openAreaW - s));
 
       this.obstacles.push({
         x: Math.max(0, Math.min(canvasW - s, posX)),
-        y: -120 - (h * 50),
+        y: -115 - (h * 46),
         width: s,
         height: s,
         type,
@@ -1142,11 +1351,11 @@ class NeonSurgeGame {
       });
     }
 
-    this.orbs.push({ x: isLeftWall ? canvasW - 25 : 25, y: -70, radius: 12, pulse: 0 });
+    this.orbs.push({ x: isLeftWall ? canvasW - 22 : 22, y: -70, radius: 12, pulse: 0 });
   }
 
   // ==========================================
-  // 6. Render Scene
+  // 7. Render Scene
   // ==========================================
   draw() {
     this.ctx.save();
@@ -1314,11 +1523,11 @@ class NeonSurgeGame {
         this.ctx.fillStyle = 'rgba(255, 0, 119, 0.45)';
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         this.ctx.strokeStyle = '#ff0077';
-        this.ctx.lineWidth = 3.5;
+        this.ctx.lineWidth = 3;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
 
         this.ctx.strokeStyle = '#ffffff';
-        this.ctx.lineWidth = 2.5;
+        this.ctx.lineWidth = 2;
         this.ctx.beginPath();
         this.ctx.moveTo(obs.x, cy);
         this.ctx.lineTo(obs.x + obs.width, cy);
@@ -1329,12 +1538,12 @@ class NeonSurgeGame {
         this.ctx.fillStyle = '#ff0077';
         this.ctx.fillRect(-obs.width / 2, -obs.height / 2, obs.width, obs.height);
         this.ctx.strokeStyle = '#00f0ff';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 2.5;
         this.ctx.strokeRect(-obs.width / 2, -obs.height / 2, obs.width, obs.height);
 
         this.ctx.fillStyle = '#ffffff';
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, 5, 0, Math.PI * 2);
+        this.ctx.arc(0, 0, 4, 0, Math.PI * 2);
         this.ctx.fill();
       }
       this.ctx.restore();
@@ -1344,19 +1553,19 @@ class NeonSurgeGame {
     // 2. METEORITE
     if (obs.type === 'METEORITE') {
       this.ctx.shadowColor = '#ff3300';
-      this.ctx.shadowBlur = 20;
+      this.ctx.shadowBlur = 18;
 
       if (obs.isBarrier) {
         this.ctx.fillStyle = 'rgba(255, 51, 0, 0.55)';
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         this.ctx.strokeStyle = '#ffe600';
-        this.ctx.lineWidth = 3.5;
+        this.ctx.lineWidth = 3;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
 
         this.ctx.fillStyle = '#ffe600';
-        for (let lx = obs.x + 10; lx < obs.x + obs.width; lx += 20) {
+        for (let lx = obs.x + 8; lx < obs.x + obs.width; lx += 18) {
           this.ctx.beginPath();
-          this.ctx.arc(lx, cy + Math.sin(obs.animPulse + lx) * 4, 3.5, 0, Math.PI * 2);
+          this.ctx.arc(lx, cy + Math.sin(obs.animPulse + lx) * 3, 3, 0, Math.PI * 2);
           this.ctx.fill();
         }
       } else {
@@ -1376,7 +1585,7 @@ class NeonSurgeGame {
         this.ctx.fill();
 
         this.ctx.strokeStyle = '#ffe600';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 2.5;
         this.ctx.stroke();
 
         this.ctx.fillStyle = '#660000';
@@ -1392,21 +1601,21 @@ class NeonSurgeGame {
     // 3. CYBER_CLAW
     if (obs.type === 'CYBER_CLAW') {
       this.ctx.shadowColor = '#00ff66';
-      this.ctx.shadowBlur = 18;
+      this.ctx.shadowBlur = 16;
 
       if (obs.isBarrier) {
         this.ctx.fillStyle = 'rgba(0, 255, 102, 0.45)';
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         this.ctx.strokeStyle = '#aaff00';
-        this.ctx.lineWidth = 3.5;
+        this.ctx.lineWidth = 3;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
 
         this.ctx.fillStyle = '#aaff00';
-        for (let bx = obs.x + 8; bx < obs.x + obs.width; bx += 18) {
+        for (let bx = obs.x + 8; bx < obs.x + obs.width; bx += 16) {
           this.ctx.beginPath();
-          this.ctx.moveTo(bx - 6, obs.y);
-          this.ctx.lineTo(bx, obs.y - 10);
-          this.ctx.lineTo(bx + 6, obs.y);
+          this.ctx.moveTo(bx - 5, obs.y);
+          this.ctx.lineTo(bx, obs.y - 8);
+          this.ctx.lineTo(bx + 5, obs.y);
           this.ctx.closePath();
           this.ctx.fill();
         }
@@ -1418,19 +1627,19 @@ class NeonSurgeGame {
 
         this.ctx.fillStyle = '#051f0f';
         this.ctx.strokeStyle = '#00ff66';
-        this.ctx.lineWidth = 3.5;
+        this.ctx.lineWidth = 3;
 
         this.ctx.beginPath();
-        this.ctx.ellipse(0, 6, rad * 0.8, rad * 0.6, 0, 0, Math.PI * 2);
+        this.ctx.ellipse(0, 5, rad * 0.8, rad * 0.6, 0, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.stroke();
 
         this.ctx.fillStyle = '#aaff00';
         [-rad * 0.5, 0, rad * 0.5].forEach(offset => {
           this.ctx.beginPath();
-          this.ctx.moveTo(offset - 5, 0);
-          this.ctx.lineTo(offset, -rad * 1.1);
-          this.ctx.lineTo(offset + 5, 0);
+          this.ctx.moveTo(offset - 4, 0);
+          this.ctx.lineTo(offset, -rad * 1.05);
+          this.ctx.lineTo(offset + 4, 0);
           this.ctx.closePath();
           this.ctx.fill();
         });
@@ -1442,18 +1651,18 @@ class NeonSurgeGame {
     // 4. VOID_VORTEX
     if (obs.type === 'VOID_VORTEX') {
       this.ctx.shadowColor = '#9d00ff';
-      this.ctx.shadowBlur = 22;
+      this.ctx.shadowBlur = 20;
 
       if (obs.isBarrier) {
         this.ctx.fillStyle = 'rgba(157, 0, 255, 0.5)';
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         this.ctx.strokeStyle = '#00f0ff';
-        this.ctx.lineWidth = 3.5;
+        this.ctx.lineWidth = 3;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
 
         this.ctx.fillStyle = '#ffffff';
         this.ctx.beginPath();
-        this.ctx.arc(cx, cy, 8 + Math.sin(obs.animPulse) * 2, 0, Math.PI * 2);
+        this.ctx.arc(cx, cy, 7 + Math.sin(obs.animPulse) * 2, 0, Math.PI * 2);
         this.ctx.fill();
       } else {
         this.ctx.translate(cx, cy);
@@ -1463,14 +1672,14 @@ class NeonSurgeGame {
 
         this.ctx.fillStyle = '#06010a';
         this.ctx.strokeStyle = '#9d00ff';
-        this.ctx.lineWidth = 4;
+        this.ctx.lineWidth = 3.5;
         this.ctx.beginPath();
         this.ctx.arc(0, 0, rad, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.stroke();
 
         this.ctx.strokeStyle = '#00f0ff';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 2.5;
         this.ctx.beginPath();
         this.ctx.arc(0, 0, rad * 0.7, 0, Math.PI * 1.3);
         this.ctx.stroke();
@@ -1480,7 +1689,7 @@ class NeonSurgeGame {
 
         this.ctx.fillStyle = '#ffffff';
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, 5, 0, Math.PI * 2);
+        this.ctx.arc(0, 0, 4, 0, Math.PI * 2);
         this.ctx.fill();
       }
       this.ctx.restore();
@@ -1490,21 +1699,21 @@ class NeonSurgeGame {
     // 5. DEVIL_SLAUGHTER
     if (obs.type === 'DEVIL_SLAUGHTER') {
       this.ctx.shadowColor = '#ff0022';
-      this.ctx.shadowBlur = 24;
+      this.ctx.shadowBlur = 22;
 
       if (obs.isBarrier) {
         this.ctx.fillStyle = 'rgba(255, 0, 34, 0.65)';
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         this.ctx.strokeStyle = '#ff3344';
-        this.ctx.lineWidth = 3.5;
+        this.ctx.lineWidth = 3;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
 
         this.ctx.fillStyle = '#ffffff';
-        for (let sx = obs.x + 8; sx < obs.x + obs.width; sx += 16) {
+        for (let sx = obs.x + 8; sx < obs.x + obs.width; sx += 14) {
           this.ctx.beginPath();
-          this.ctx.moveTo(sx - 5, obs.y);
-          this.ctx.lineTo(sx, obs.y - 8);
-          this.ctx.lineTo(sx + 5, obs.y);
+          this.ctx.moveTo(sx - 4, obs.y);
+          this.ctx.lineTo(sx, obs.y - 7);
+          this.ctx.lineTo(sx + 4, obs.y);
           this.ctx.closePath();
           this.ctx.fill();
         }
@@ -1516,7 +1725,7 @@ class NeonSurgeGame {
 
         this.ctx.fillStyle = '#ff0022';
         this.ctx.strokeStyle = '#ffffff';
-        this.ctx.lineWidth = 2.5;
+        this.ctx.lineWidth = 2;
 
         const teeth = 8;
         this.ctx.beginPath();
@@ -1537,12 +1746,12 @@ class NeonSurgeGame {
         this.ctx.arc(0, 0, rad * 0.45, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.strokeStyle = '#ff0022';
-        this.ctx.lineWidth = 3;
+        this.ctx.lineWidth = 2.5;
         this.ctx.stroke();
 
         this.ctx.fillStyle = '#ffffff';
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        this.ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
         this.ctx.fill();
       }
       this.ctx.restore();
