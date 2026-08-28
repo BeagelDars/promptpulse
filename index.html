@@ -16,7 +16,8 @@
     <header class="hud-top">
       <div class="hud-left">
         <div class="hud-brand">
-          <span class="neon-glow">NEON SURGE</span>
+          <span class="neon-glow" id="hudBrandTitle">NEON SURGE</span>
+          <span class="zone-badge" id="hudZoneBadge">ZONE 1 &bull; CYBER HORIZON</span>
         </div>
       </div>
       <div class="hud-center">
@@ -24,7 +25,7 @@
           <span class="hud-label">SCORE</span>
           <span class="hud-value" id="currentScore">0</span>
         </div>
-        <div class="multiplier-badge" id="multiplierBadge">1x</div>
+        <div class="multiplier-badge" id="multiplierBadge">1x COMBO</div>
       </div>
       <div class="hud-right">
         <div class="credits-box">
@@ -47,13 +48,26 @@
         </div>
       </div>
 
+      <!-- Zone Transition Hologram Banner -->
+      <div class="zone-banner" id="zoneBanner" style="display: none;">
+        <span class="zone-alert-text">ZONE WARP IMMINENT</span>
+        <h2 class="zone-banner-title" id="zoneBannerTitle">SOLAR INFERNO</h2>
+        <span class="zone-banner-sub" id="zoneBannerSub">SPEED & HAZARD MULTIPLIER INCREASED</span>
+      </div>
+
       <!-- On-Screen Mobile Action Controls -->
       <div class="mobile-controls-overlay" id="mobileControls">
         <div class="mobile-steer-group">
           <button class="mobile-btn steer-btn" id="btnTouchLeft" aria-label="Steer Left">◄</button>
           <button class="mobile-btn steer-btn" id="btnTouchRight" aria-label="Steer Right">►</button>
         </div>
-        <button class="mobile-btn boost-btn" id="btnTouchBoost" aria-label="Hyper Boost">🚀 BOOST</button>
+        
+        <div class="boost-control-wrap">
+          <div class="boost-charge-bar-container">
+            <div class="boost-charge-fill" id="boostChargeFill" style="width: 100%;"></div>
+          </div>
+          <button class="mobile-btn boost-btn" id="btnTouchBoost" aria-label="Hyper Boost">🚀 BOOST (READY)</button>
+        </div>
       </div>
 
       <!-- Start / Menu Overlay Screen -->
@@ -61,17 +75,21 @@
         <div class="menu-card">
           <div class="logo-title">
             <h1 class="glitch-text">NEON SURGE</h1>
-            <p class="tagline">Survive the infinite neon corridor. Dodge obstacles, collect orbs, and blast through hyper-space.</p>
+            <p class="tagline">Survive dynamic shifting cyber zones. Dodge electrified barriers, chain combos, and unlock legendary pilots.</p>
           </div>
 
           <div class="controls-guide">
             <div class="control-item">
               <span class="key-badge">📱 Mobile</span>
-              <span>Tap screen sides or use buttons below</span>
+              <span>Tap screen sides or use bottom buttons</span>
             </div>
             <div class="control-item">
               <span class="key-badge">💻 Desktop</span>
-              <span>A / D or ← / → &bull; Space for Boost</span>
+              <span>A / D or ← / → &bull; Space for Hyper Boost</span>
+            </div>
+            <div class="control-item">
+              <span class="key-badge">⚡ Energy</span>
+              <span>Collect Orbs to recharge Hyper Boost!</span>
             </div>
           </div>
 
@@ -90,7 +108,7 @@
       <div class="overlay-screen" id="gameOverScreen">
         <div class="menu-card game-over-card">
           <h2 class="game-over-title">HULL COLLAPSE</h2>
-          <p class="game-over-subtitle">Ship destroyed in the grid.</p>
+          <p class="game-over-subtitle">Ship destroyed in the neon grid.</p>
 
           <div class="results-grid">
             <div class="result-box">
@@ -102,11 +120,11 @@
               <span class="res-val orbs" id="finalOrbs">+0</span>
             </div>
             <div class="result-box">
-              <span class="res-label">COMBO</span>
+              <span class="res-label">MAX COMBO</span>
               <span class="res-val accent" id="finalCombo">1x</span>
             </div>
             <div class="result-box">
-              <span class="res-label">BEST</span>
+              <span class="res-label">ALL-TIME BEST</span>
               <span class="res-val gold" id="finalBestScore">0</span>
             </div>
           </div>
@@ -123,15 +141,15 @@
         <div class="menu-card hangar-card">
           <div class="hangar-header">
             <h2>SHIP HANGAR & SKINS</h2>
-            <div class="hangar-orbs">Orbs: <strong id="shopOrbsCount">0</strong> 🟡</div>
+            <div class="hangar-orbs">Orbs Balance: <strong id="shopOrbsCount">0</strong> 🟡</div>
           </div>
 
           <div class="ships-grid" id="shipsGrid">
-            <!-- Dynamically populated -->
+            <!-- Dynamically populated including Bobik & Otritzanie68 -->
           </div>
 
           <div class="hangar-footer">
-            <button class="btn-secondary" id="closeShopBtn">BACK TO MENU</button>
+            <button class="btn-secondary" id="closeShopBtn">BACK TO MISSION</button>
           </div>
         </div>
       </div>
