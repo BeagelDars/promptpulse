@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v6.5
- * Multi-Gap Barrier Architecture, Strict Vertical Anti-Overlap Safety & Guaranteed Fair Slaloms.
+ * NEON SURGE | Cyber Velocity Arcade Engine v7.0
+ * Pure Multi-Route Architecture: No Single-Exit Long Walls, Guaranteed 2 to 3 Open Lanes on Every Wave.
  */
 
 // ==========================================
@@ -222,10 +222,9 @@ class NeonSurgeGame {
     this.currentZoneName = ZONES[0].name;
     this.devilModeFactor = 0;
 
-    // Wave cadence & Anti-Overlap safety timer
+    // Wave cadence
     this.spawnTimer = 0;
     this.spawnInterval = 0.88;
-    this.lastBarrierSpawnDist = -9999; // Ensures minimum distance between big barriers
 
     // Power-up state
     this.activePowerup = null;
@@ -374,7 +373,6 @@ class NeonSurgeGame {
     this.screenShake = 0;
     this.activePowerup = null;
     this.spawnTimer = 0;
-    this.lastBarrierSpawnDist = -9999;
     this.devilModeFactor = 0;
 
     this.player.x = this.canvas.width / 2;
@@ -848,93 +846,29 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // Guaranteed Fair Wave Generator (Multi-Gaps & Anti-Overlap Safety)
+  // PURE MULTI-WAY ARCHITECTURE (NO SINGLE-EXIT LONG WALLS!)
+  // Every wave guarantees 2 to 3 open passages across the screen.
   // ==========================================
   spawnBalancedWave(difficultyFactor) {
     const canvasW = this.canvas.width;
     const type = this.activeObstacleType || 'CYBER_LASER';
     const currentZoneIdx = this.currentZoneIdx || 0;
 
-    const canSpawnBigBarrier = (this.distance - this.lastBarrierSpawnDist) > 280;
     const randPattern = Math.random();
 
     // ----------------------------------------------------
-    // PATTERN 1: MULTI-GAP TWIN-GATE BARRIER (Never Traps You Across Full Screen!)
-    // Spans across the track with TWO wide openings (e.g. left opening & right opening)
+    // PATTERN 1: CENTER ISLAND PILLAR (Dual Open Routes: Left & Right)
+    // Only blocks a small center chunk (25-30%), leaving BOTH sides wide open!
     // ----------------------------------------------------
-    if (canSpawnBigBarrier && randPattern < 0.32) {
-      this.lastBarrierSpawnDist = this.distance;
-
-      // 3 Pillars leaving 2 generous 95px openings
-      const gapWidth = 95;
-      const leftGapX = Math.floor(canvasW * 0.22);
-      const rightGapX = Math.floor(canvasW * 0.65);
-
-      // Pillar 1: Leftmost
-      if (leftGapX > 20) {
-        this.obstacles.push({
-          x: 0,
-          y: -70,
-          width: leftGapX,
-          height: 24,
-          type,
-          isBarrier: true,
-          zoneIndex: currentZoneIdx,
-          rotation: 0,
-          animPulse: 0
-        });
-      }
-
-      // Pillar 2: Center (Between the two gates)
-      const centerPillarX = leftGapX + gapWidth;
-      const centerPillarW = rightGapX - centerPillarX;
-      if (centerPillarW > 20) {
-        this.obstacles.push({
-          x: centerPillarX,
-          y: -70,
-          width: centerPillarW,
-          height: 24,
-          type,
-          isBarrier: true,
-          zoneIndex: currentZoneIdx,
-          rotation: 0,
-          animPulse: 0
-        });
-      }
-
-      // Pillar 3: Rightmost
-      const rightPillarX = rightGapX + gapWidth;
-      const rightPillarW = canvasW - rightPillarX;
-      if (rightPillarW > 20) {
-        this.obstacles.push({
-          x: rightPillarX,
-          y: -70,
-          width: rightPillarW,
-          height: 24,
-          type,
-          isBarrier: true,
-          zoneIndex: currentZoneIdx,
-          rotation: 0,
-          animPulse: 0
-        });
-      }
-      return;
-    }
-
-    // ----------------------------------------------------
-    // PATTERN 2: CENTER PILLAR / ISLAND (Leaves both left & right wall paths wide open!)
-    // ----------------------------------------------------
-    if (canSpawnBigBarrier && randPattern < 0.58) {
-      this.lastBarrierSpawnDist = this.distance;
-
-      const pillarWidth = Math.min(canvasW * 0.38, 150);
-      const pillarX = (canvasW - pillarWidth) / 2;
+    if (randPattern < 0.35) {
+      const pillarW = Math.min(canvasW * 0.30, 130);
+      const pillarX = (canvasW - pillarW) / 2;
 
       this.obstacles.push({
         x: pillarX,
         y: -70,
-        width: pillarWidth,
-        height: 26,
+        width: pillarW,
+        height: 24,
         type,
         isBarrier: true,
         zoneIndex: currentZoneIdx,
@@ -942,35 +876,70 @@ class NeonSurgeGame {
         animPulse: 0
       });
 
+      // Bonus Orbs on left or right path
       const sideX = Math.random() > 0.5 ? 20 : canvasW - 20;
       this.orbs.push({ x: sideX, y: -70, radius: 12, pulse: 0 });
       return;
     }
 
     // ----------------------------------------------------
-    // PATTERN 3: DIVERSE HAZARD CLUSTER WITH GUARANTEED OPEN CORRIDOR
+    // PATTERN 2: TWIN SPLIT PILLARS (Triple Open Routes: Left, Center & Right)
+    // Leaves 3 wide passages across the screen!
     // ----------------------------------------------------
-    const safeWidth = 110;
-    const safeX = Math.random() * (canvasW - safeWidth - 30) + 15;
-    const safeEnd = safeX + safeWidth;
+    if (randPattern < 0.65) {
+      const pWidth = Math.min(canvasW * 0.18, 70);
+      const p1X = canvasW * 0.25 - pWidth / 2;
+      const p2X = canvasW * 0.75 - pWidth / 2;
 
-    const clusterCount = difficultyFactor > 0.4 ? (Math.random() > 0.5 ? 3 : 4) : (Math.random() > 0.4 ? 2 : 3);
+      // Left Pillar
+      this.obstacles.push({
+        x: p1X,
+        y: -70,
+        width: pWidth,
+        height: 24,
+        type,
+        isBarrier: true,
+        zoneIndex: currentZoneIdx,
+        rotation: 0,
+        animPulse: 0
+      });
+
+      // Right Pillar
+      this.obstacles.push({
+        x: p2X,
+        y: -70,
+        width: pWidth,
+        height: 24,
+        type,
+        isBarrier: true,
+        zoneIndex: currentZoneIdx,
+        rotation: 0,
+        animPulse: 0
+      });
+      return;
+    }
+
+    // ----------------------------------------------------
+    // PATTERN 3: MULTI-LANE STAGGERED HAZARD FORMATION
+    // 2 to 3 hazards with plenty of open room between them (Left, Center, Right paths)
+    // ----------------------------------------------------
+    const clusterCount = difficultyFactor > 0.4 ? (Math.random() > 0.5 ? 3 : 2) : 2;
+
+    // Pick 2 or 3 distinct lanes from [Left, Center-Left, Center-Right, Right]
+    const lanePositions = [
+      canvasW * 0.15,
+      canvasW * 0.45,
+      canvasW * 0.80
+    ];
 
     for (let c = 0; c < clusterCount; c++) {
-      const size = Math.floor(Math.random() * 22) + 38;
-      let posX;
-
-      if (Math.random() > 0.5 && safeX > size + 10) {
-        posX = Math.random() * (safeX - size);
-      } else if (canvasW - safeEnd > size + 10) {
-        posX = safeEnd + Math.random() * (canvasW - safeEnd - size);
-      } else {
-        posX = Math.random() > 0.5 ? 4 : canvasW - size - 4;
-      }
+      const size = Math.floor(Math.random() * 20) + 38; // 38px to 58px
+      const targetLaneX = lanePositions[c % lanePositions.length] + (Math.random() * 20 - 10);
+      const posX = Math.max(10, Math.min(canvasW - size - 10, targetLaneX - size / 2));
 
       this.obstacles.push({
-        x: Math.max(0, Math.min(canvasW - size, posX)),
-        y: -70 - (c * 55),
+        x: posX,
+        y: -70 - (c * 60), // Staggered vertically for comfortable dodging
         width: size,
         height: size,
         type,
