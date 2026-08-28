@@ -50,24 +50,15 @@
 
       <!-- Zone Transition Hologram Banner -->
       <div class="zone-banner" id="zoneBanner" style="display: none;">
-        <span class="zone-alert-text">ZONE WARP IMMINENT</span>
+        <span class="zone-alert-text">ZONE 50K MILESTONE REACHED</span>
         <h2 class="zone-banner-title" id="zoneBannerTitle">SOLAR INFERNO</h2>
-        <span class="zone-banner-sub" id="zoneBannerSub">SPEED & HAZARD MULTIPLIER INCREASED</span>
+        <span class="zone-banner-sub" id="zoneBannerSub">NEW NEON SECTOR ONLINE</span>
       </div>
 
-      <!-- On-Screen Mobile Action Controls -->
+      <!-- On-Screen Mobile Action Controls (Clean Left / Right) -->
       <div class="mobile-controls-overlay" id="mobileControls">
-        <div class="mobile-steer-group">
-          <button class="mobile-btn steer-btn" id="btnTouchLeft" aria-label="Steer Left">◄</button>
-          <button class="mobile-btn steer-btn" id="btnTouchRight" aria-label="Steer Right">►</button>
-        </div>
-        
-        <div class="boost-control-wrap">
-          <div class="boost-charge-bar-container">
-            <div class="boost-charge-fill" id="boostChargeFill" style="width: 100%;"></div>
-          </div>
-          <button class="mobile-btn boost-btn" id="btnTouchBoost" aria-label="Hyper Boost">🚀 BOOST (READY)</button>
-        </div>
+        <button class="mobile-btn steer-btn" id="btnTouchLeft" aria-label="Steer Left">◄</button>
+        <button class="mobile-btn steer-btn" id="btnTouchRight" aria-label="Steer Right">►</button>
       </div>
 
       <!-- Start / Menu Overlay Screen -->
@@ -75,21 +66,21 @@
         <div class="menu-card">
           <div class="logo-title">
             <h1 class="glitch-text">NEON SURGE</h1>
-            <p class="tagline">Survive dynamic shifting cyber zones. Dodge electrified barriers, chain combos, and unlock legendary pilots.</p>
+            <p class="tagline">Survive the shifting cyber grid. Dodge red barriers, collect energy orbs, and grab instant Hyper Boosts!</p>
           </div>
 
           <div class="controls-guide">
             <div class="control-item">
               <span class="key-badge">📱 Mobile</span>
-              <span>Tap screen sides or use bottom buttons</span>
+              <span>Tap ◄ / ► buttons or drag finger anywhere</span>
             </div>
             <div class="control-item">
               <span class="key-badge">💻 Desktop</span>
-              <span>A / D or ← / → &bull; Space for Hyper Boost</span>
+              <span>A / D or ← / → to glide</span>
             </div>
             <div class="control-item">
-              <span class="key-badge">⚡ Energy</span>
-              <span>Collect Orbs to recharge Hyper Boost!</span>
+              <span class="key-badge">⚡ Power-ups</span>
+              <span>Collect ⚡ for Instant Boost &bull; 🛡️ for Energy Shield</span>
             </div>
           </div>
 
@@ -107,8 +98,8 @@
       <!-- Game Over Screen -->
       <div class="overlay-screen" id="gameOverScreen">
         <div class="menu-card game-over-card">
-          <h2 class="game-over-title">HULL COLLAPSE</h2>
-          <p class="game-over-subtitle">Ship destroyed in the neon grid.</p>
+          <h2 class="game-over-title">MISSION OVER</h2>
+          <p class="game-over-subtitle">Ship collided with grid barrier.</p>
 
           <div class="results-grid">
             <div class="result-box">
@@ -145,7 +136,7 @@
           </div>
 
           <div class="ships-grid" id="shipsGrid">
-            <!-- Dynamically populated including Bobik & Otritzanie68 -->
+            <!-- Dynamically populated with Among Us, Benjamin, Bobik, Otritzanie68, etc. -->
           </div>
 
           <div class="hangar-footer">

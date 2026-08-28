@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v2.0
- * Dynamic Map Zones, Bobik & Otritzanie68 Pilot Ships, Boost Charge Meter & Anti-Exploits.
+ * NEON SURGE | Cyber Velocity Arcade Engine v2.5
+ * Among Us & Benjamin Ships, 50k Milestone Map Zones, Instant Boost Pickups & Balanced Physics.
  */
 
 // ==========================================
@@ -120,23 +120,6 @@ class SoundEngine {
       });
     } catch (e) {}
   }
-
-  playBoostReady() {
-    if (!this.enabled || !this.ctx) return;
-    try {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, this.ctx.currentTime);
-      osc.frequency.setValueAtTime(1320, this.ctx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.16);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.16);
-    } catch (e) {}
-  }
 }
 
 // ==========================================
@@ -144,6 +127,8 @@ class SoundEngine {
 // ==========================================
 const SHIP_SKINS = [
   { id: 'apex_dart', name: 'APEX DART', color: '#00f0ff', accent: '#ff0077', cost: 0, desc: 'Balanced interceptor with dual plasma thrusters.' },
+  { id: 'amongus', name: 'SUSSY CREWMATE', color: '#ff2255', accent: '#00f0ff', cost: 15, desc: 'Red impostor astronaut with cyan reflective visor.' },
+  { id: 'benjamin', name: 'BENJAMIN', color: '#c48b4b', accent: '#ffd700', cost: 25, desc: 'Sophisticated cyber hound with golden monocle & chemistry thrusters.' },
   { id: 'bobik_dog', name: 'BOBIK THE DOG', color: '#ffe600', accent: '#ff8800', cost: 20, desc: 'Cyber-canine companion with floppy ears & paw laser trails.' },
   { id: 'otritzanie68', name: 'OTRITZANIE 68', color: '#00f0ff', accent: '#ffe600', cost: 35, desc: 'Legendary pilot cockpit powered by hyper-drive photo aura.', isCustomPhoto: true },
   { id: 'void_phantom', name: 'VOID PHANTOM', color: '#9d00ff', accent: '#ff00aa', cost: 50, desc: 'Stealth-crafted chassis with hyper-flux shielding.' },
@@ -152,7 +137,7 @@ const SHIP_SKINS = [
 ];
 
 // ==========================================
-// 3. Dynamic Map Zones / Biomes
+// 3. Dynamic Map Zones (Transitions Every 50,000 Points)
 // ==========================================
 const ZONES = [
   {
@@ -163,47 +148,47 @@ const ZONES = [
     secondaryColor: '#ff0077',
     gridColor: 'rgba(0, 240, 255, 0.14)',
     bgGradient: ['#151a30', '#060810'],
-    desc: 'Standard synthwave grid corridor'
+    desc: 'Classic neon synthwave sector'
   },
   {
     id: 2,
     name: 'SOLAR INFERNO',
-    threshold: 8000,
+    threshold: 50000,
     primaryColor: '#ffe600',
     secondaryColor: '#ff3300',
     gridColor: 'rgba(255, 120, 0, 0.22)',
     bgGradient: ['#30150a', '#0d0402'],
-    desc: 'Pulsing solar flare waves & high heat'
+    desc: 'Solar flare waves & magma grid'
   },
   {
     id: 3,
     name: 'TOXIC MATRIX',
-    threshold: 18000,
+    threshold: 100000,
     primaryColor: '#00ff66',
     secondaryColor: '#aaff00',
     gridColor: 'rgba(0, 255, 102, 0.2)',
     bgGradient: ['#082414', '#020d06'],
-    desc: 'High-frequency digital laser corridors'
+    desc: 'High-frequency digital emerald laser zone'
   },
   {
     id: 4,
     name: 'VOID ABYSS',
-    threshold: 32000,
+    threshold: 150000,
     primaryColor: '#9d00ff',
     secondaryColor: '#00f0ff',
     gridColor: 'rgba(157, 0, 255, 0.22)',
     bgGradient: ['#1e0a30', '#08020d'],
-    desc: 'Nebula distortion & sweeping laser walls'
+    desc: 'Nebula distortion & void hyperspace'
   },
   {
     id: 5,
     name: 'QUANTUM OVERDRIVE',
-    threshold: 50000,
+    threshold: 200000,
     primaryColor: '#ffffff',
     secondaryColor: '#00f0ff',
     gridColor: 'rgba(255, 255, 255, 0.25)',
     bgGradient: ['#202538', '#05070d'],
-    desc: 'Maximum velocity chromatic hyper-speed'
+    desc: 'Maximum velocity chromatic prism corridor'
   }
 ];
 
@@ -229,24 +214,15 @@ class NeonSurgeGame {
     this.comboTimer = 0;
     this.maxCombo = 1;
     this.distance = 0;
-    this.speed = 7;
-    this.baseSpeed = 7;
+    this.speed = 6.5;
+    this.baseSpeed = 6.5;
     this.screenShake = 0;
 
     // Biome Zone State
     this.currentZoneIndex = 0;
-    this.zoneTransitionTimer = 0;
 
-    // Boost Energy Meter (Anti-Spam System)
-    this.boostEnergy = 100; // 0 to 100
-    this.wasBoostReady = true;
-
-    // Wall Hugging Anti-Exploit State
-    this.wallHugTimer = 0;
-    this.wallHugSide = null; // 'left' or 'right'
-
-    // Power-up state
-    this.activePowerup = null;
+    // Power-up state (Active when picked up on the track)
+    this.activePowerup = null; // 'SHIELD', 'BOOST'
     this.powerupDuration = 0;
     this.powerupMaxDuration = 0;
 
@@ -299,7 +275,7 @@ class NeonSurgeGame {
 
   initStars() {
     this.stars = [];
-    for (let i = 0; i < 55; i++) {
+    for (let i = 0; i < 50; i++) {
       this.stars.push({
         x: Math.random() * this.canvas.width,
         y: Math.random() * this.canvas.height,
@@ -318,9 +294,6 @@ class NeonSurgeGame {
       this.sound.init();
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') this.keys.left = true;
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') this.keys.right = true;
-      if (e.code === 'Space' && this.state === 'PLAYING') {
-        this.triggerHyperBoost();
-      }
     });
 
     window.addEventListener('keyup', (e) => {
@@ -332,7 +305,7 @@ class NeonSurgeGame {
     const setTargetFromPointer = (clientX) => {
       const rect = this.canvas.getBoundingClientRect();
       const relativeX = clientX - rect.left;
-      this.player.targetX = Math.max(20, Math.min(this.canvas.width - 20, relativeX));
+      this.player.targetX = Math.max(28, Math.min(this.canvas.width - 28, relativeX));
     };
 
     this.canvas.addEventListener('pointerdown', (e) => {
@@ -368,28 +341,18 @@ class NeonSurgeGame {
   initMobileButtons() {
     const btnLeft = document.getElementById('btnTouchLeft');
     const btnRight = document.getElementById('btnTouchRight');
-    const btnBoost = document.getElementById('btnTouchBoost');
 
-    // Left Button
     const startLeft = (e) => { e.preventDefault(); this.sound.init(); this.keys.left = true; };
     const endLeft = (e) => { e.preventDefault(); this.keys.left = false; };
     btnLeft.addEventListener('pointerdown', startLeft);
     btnLeft.addEventListener('pointerup', endLeft);
     btnLeft.addEventListener('pointerleave', endLeft);
 
-    // Right Button
     const startRight = (e) => { e.preventDefault(); this.sound.init(); this.keys.right = true; };
     const endRight = (e) => { e.preventDefault(); this.keys.right = false; };
     btnRight.addEventListener('pointerdown', startRight);
     btnRight.addEventListener('pointerup', endRight);
     btnRight.addEventListener('pointerleave', endRight);
-
-    // Boost Button
-    btnBoost.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      this.sound.init();
-      if (this.state === 'PLAYING') this.triggerHyperBoost();
-    });
   }
 
   startGame() {
@@ -404,12 +367,7 @@ class NeonSurgeGame {
     this.speed = this.baseSpeed;
     this.screenShake = 0;
     this.activePowerup = null;
-
-    // Reset Energy & Zone
-    this.boostEnergy = 100;
     this.currentZoneIndex = 0;
-    this.wallHugTimer = 0;
-    this.wallHugSide = null;
 
     this.player.x = this.canvas.width / 2;
     this.player.targetX = this.canvas.width / 2;
@@ -433,7 +391,7 @@ class NeonSurgeGame {
   gameOver() {
     this.sound.playCrash();
     this.state = 'GAMEOVER';
-    this.screenShake = 20;
+    this.screenShake = 18;
 
     const currentSkin = SHIP_SKINS.find(s => s.id === this.currentShipId) || SHIP_SKINS[0];
     this.createExplosion(this.player.x, this.player.y, 40, currentSkin.accent);
@@ -478,6 +436,30 @@ class NeonSurgeGame {
       let previewHtml = '';
       if (skin.isCustomPhoto) {
         previewHtml = `<img src="assets/otritzanie68.jpg" class="ship-preview-img" alt="${skin.name}">`;
+      } else if (skin.id === 'amongus') {
+        previewHtml = `
+          <svg width="40" height="44" viewBox="0 0 40 44">
+            <rect x="2" y="14" width="8" height="18" rx="4" fill="#cc1144"/>
+            <rect x="8" y="4" width="24" height="34" rx="12" fill="#ff2255" stroke="#990022" stroke-width="2"/>
+            <rect x="18" y="10" width="16" height="10" rx="5" fill="#00f0ff" stroke="#ffffff" stroke-width="1.5"/>
+            <rect x="10" y="32" width="7" height="10" rx="3" fill="#ff2255"/>
+            <rect x="23" y="32" width="7" height="10" rx="3" fill="#ff2255"/>
+          </svg>
+        `;
+      } else if (skin.id === 'benjamin') {
+        previewHtml = `
+          <svg width="44" height="44" viewBox="0 0 44 44">
+            <ellipse cx="22" cy="22" rx="15" ry="16" fill="#c48b4b" stroke="#7a4f1a" stroke-width="2"/>
+            <ellipse cx="9" cy="14" rx="4" ry="10" fill="#7a4f1a" transform="rotate(-15 9 14)"/>
+            <ellipse cx="35" cy="14" rx="4" ry="10" fill="#7a4f1a" transform="rotate(15 35 14)"/>
+            <circle cx="16" cy="18" r="4.5" fill="none" stroke="#ffd700" stroke-width="2"/>
+            <circle cx="28" cy="18" r="4.5" fill="none" stroke="#ffd700" stroke-width="2"/>
+            <line x1="20.5" y1="18" x2="23.5" y2="18" stroke="#ffd700" stroke-width="2"/>
+            <circle cx="16" cy="18" r="2" fill="#000"/>
+            <circle cx="28" cy="18" r="2" fill="#000"/>
+            <polygon points="22,23 19,26 25,26" fill="#000"/>
+          </svg>
+        `;
       } else if (skin.id === 'bobik_dog') {
         previewHtml = `
           <svg width="44" height="44" viewBox="0 0 44 44">
@@ -487,7 +469,6 @@ class NeonSurgeGame {
             <circle cx="17" cy="18" r="2.5" fill="#000"/>
             <circle cx="27" cy="18" r="2.5" fill="#000"/>
             <polygon points="22,22 19,25 25,25" fill="#000"/>
-            <path d="M22,25 Q22,29 25,29" stroke="#000" stroke-width="1.5" fill="none"/>
           </svg>
         `;
       } else {
@@ -554,43 +535,15 @@ class NeonSurgeGame {
     const zoneBadge = document.getElementById('hudZoneBadge');
     zoneBadge.textContent = `ZONE ${zone.id} • ${zone.name}`;
     zoneBadge.style.color = zone.primaryColor;
-
-    // Boost Meter & Button
-    const boostFill = document.getElementById('boostChargeFill');
-    const boostBtn = document.getElementById('btnTouchBoost');
-    const pct = Math.min(100, Math.max(0, this.boostEnergy));
-    boostFill.style.width = `${pct}%`;
-
-    if (this.boostEnergy >= 100) {
-      boostBtn.classList.add('ready');
-      boostBtn.textContent = '🚀 BOOST (READY)';
-      boostBtn.disabled = false;
-      if (!this.wasBoostReady) {
-        this.sound.playBoostReady();
-        this.wasBoostReady = true;
-      }
-    } else {
-      boostBtn.classList.remove('ready');
-      boostBtn.textContent = `🚀 BOOST (${Math.round(pct)}%)`;
-      this.wasBoostReady = false;
-    }
   }
 
   triggerHyperBoost() {
-    if (this.activePowerup === 'BOOST') return;
-    if (this.boostEnergy < 100) {
-      this.createFloatingText('ENERGY DEPLETED! NEED 100%', this.player.x, this.player.y - 30, '#ff0077');
-      return;
-    }
-
-    this.boostEnergy = 0;
     this.activePowerup = 'BOOST';
     this.powerupDuration = 3.5;
     this.powerupMaxDuration = 3.5;
-    this.speed = this.baseSpeed * 2.2;
+    this.speed = this.baseSpeed * 2.0;
     this.sound.playBoost();
-    this.createFloatingText('HYPER BOOST!', this.player.x, this.player.y - 40, '#00f0ff');
-    this.updateHUD();
+    this.createFloatingText('⚡ INSTANT HYPER BOOST!', this.player.x, this.player.y - 40, '#00f0ff');
   }
 
   triggerShield() {
@@ -598,7 +551,7 @@ class NeonSurgeGame {
     this.powerupDuration = 6.0;
     this.powerupMaxDuration = 6.0;
     this.sound.playPowerup();
-    this.createFloatingText('ENERGY SHIELD!', this.player.x, this.player.y - 40, '#00ff66');
+    this.createFloatingText('🛡️ ENERGY SHIELD ONLINE!', this.player.x, this.player.y - 40, '#00ff66');
   }
 
   checkZoneTransitions() {
@@ -630,7 +583,6 @@ class NeonSurgeGame {
     banner.style.borderColor = zone.primaryColor;
     banner.style.boxShadow = `0 0 35px ${zone.primaryColor}`;
 
-    // Burst particles
     this.createExplosion(this.canvas.width / 2, this.canvas.height / 2, 30, zone.primaryColor);
 
     setTimeout(() => {
@@ -687,15 +639,10 @@ class NeonSurgeGame {
 
     // Progression
     this.distance += this.speed * dt * 10;
-    this.score += Math.round(this.speed * this.combo * 0.6);
-    this.baseSpeed = 7.5 + Math.min(14, this.distance / 2200);
+    this.score += Math.round(this.speed * this.combo * 0.5);
+    this.baseSpeed = 6.5 + Math.min(10, this.distance / 3500);
 
-    // Passive Boost Energy Recharging (3.5% / sec)
-    if (this.boostEnergy < 100 && this.activePowerup !== 'BOOST') {
-      this.boostEnergy = Math.min(100, this.boostEnergy + dt * 4.0);
-    }
-
-    // Check Map/Zone Transitions
+    // Check Map/Zone Transitions (50k intervals)
     this.checkZoneTransitions();
 
     // Combo Timer Decay
@@ -724,11 +671,12 @@ class NeonSurgeGame {
       }
     }
 
-    // Left/Right Button Movement
-    if (this.keys.left) this.player.targetX -= 11;
-    if (this.keys.right) this.player.targetX += 11;
+    // Left/Right Button Movement (Strict Wall Clamping so edges are physical bounds)
+    if (this.keys.left) this.player.targetX -= 10;
+    if (this.keys.right) this.player.targetX += 10;
 
-    this.player.targetX = Math.max(16, Math.min(this.canvas.width - 16, this.player.targetX));
+    const safeMargin = 28;
+    this.player.targetX = Math.max(safeMargin, Math.min(this.canvas.width - safeMargin, this.player.targetX));
     const dx = this.player.targetX - this.player.x;
     this.player.x += dx * 0.22;
     this.player.tilt = Math.max(-0.45, Math.min(0.45, dx * 0.03));
@@ -739,83 +687,60 @@ class NeonSurgeGame {
     this.player.trail.forEach(t => t.alpha -= 0.06);
 
     // ==========================================
-    // Anti-Wall Hugging Exploit Check
+    // Spawning Obstacles (Guaranteed Fair & Avoidable)
     // ==========================================
-    const isAtLeftWall = this.player.x <= 28;
-    const isAtRightWall = this.player.x >= this.canvas.width - 28;
+    const minGap = 85; // Guaranteed minimum passage gap
+    const spawnRate = 0.028 + (this.baseSpeed * 0.0015);
 
-    if (isAtLeftWall || isAtRightWall) {
-      this.wallHugTimer += dt;
-      if (this.wallHugTimer > 1.2) {
-        // Shock warning & spawn emergency side barrier!
-        this.screenShake = 5;
-        this.createFloatingText('⚡ DANGER: WALL OVERLOAD! MOVE CENTER!', this.player.x, this.player.y - 45, '#ff0055');
-        
-        if (this.wallHugTimer > 2.0) {
-          // Electrocute if continuously glued to wall
-          if (this.activePowerup !== 'SHIELD' && this.activePowerup !== 'BOOST') {
-            this.gameOver();
-            return;
-          }
-        }
-      }
-    } else {
-      this.wallHugTimer = Math.max(0, this.wallHugTimer - dt * 2);
-    }
-
-    // ==========================================
-    // Spawning Obstacles (Full-Width Coverage + Lane Sweepers)
-    // ==========================================
-    const spawnRate = 0.036 + (this.baseSpeed * 0.002);
     if (Math.random() < spawnRate) {
       const rand = Math.random();
       let type = 'spike';
-      let width = 38;
+      let width = 36;
       let xPos = 0;
 
-      if (rand < 0.35) {
-        // Full Edge-Touching Barriers (Prevents side cheesing!)
+      if (rand < 0.45) {
+        // Fair Barrier: Spawns on left or right, but leaves at least minGap space to pass
         type = 'barrier';
-        width = Math.random() * (this.canvas.width * 0.4) + (this.canvas.width * 0.25);
-        // Spawn either flush with left wall (x=0) or flush with right wall (x=canvas.width - width)
+        const maxWidth = this.canvas.width - minGap - 20;
+        width = Math.min(maxWidth, Math.random() * (this.canvas.width * 0.45) + 60);
         xPos = Math.random() > 0.5 ? 0 : this.canvas.width - width;
-      } else if (rand < 0.6) {
-        // Center lane blocker with side passages
+      } else if (rand < 0.7) {
+        // Center Pillar with two side paths
         type = 'barrier';
-        width = Math.random() * 80 + 70;
-        xPos = (this.canvas.width - width) / 2 + (Math.random() * 60 - 30);
+        width = Math.min(this.canvas.width - (minGap * 2), Math.random() * 60 + 50);
+        xPos = (this.canvas.width - width) / 2;
       } else {
-        // Spinning spike hazard anywhere from 0 to edge
+        // Single Spinning Hazard
         type = 'spike';
-        width = 38;
-        xPos = Math.random() * (this.canvas.width - width);
+        width = 36;
+        xPos = Math.random() * (this.canvas.width - width - 40) + 20;
       }
 
       this.obstacles.push({
         x: xPos,
         y: -60,
         width,
-        height: type === 'barrier' ? 18 : 38,
+        height: type === 'barrier' ? 18 : 36,
         type,
         rotation: 0
       });
     }
 
     // Spawning Orbs
-    if (Math.random() < 0.05) {
+    if (Math.random() < 0.045) {
       this.orbs.push({
-        x: Math.random() * (this.canvas.width - 40) + 20,
+        x: Math.random() * (this.canvas.width - 60) + 30,
         y: -30,
         radius: 11,
         pulse: 0
       });
     }
 
-    // Spawning Power-ups
-    if (Math.random() < 0.006 && !this.activePowerup) {
-      const pType = Math.random() > 0.5 ? 'SHIELD' : 'BOOST';
+    // Spawning Power-up Pickups (Instant Hyper Boost & Shield drops)
+    if (Math.random() < 0.008 && !this.activePowerup) {
+      const pType = Math.random() > 0.5 ? 'BOOST' : 'SHIELD';
       this.powerups.push({
-        x: Math.random() * (this.canvas.width - 40) + 20,
+        x: Math.random() * (this.canvas.width - 60) + 30,
         y: -30,
         type: pType,
         radius: 15
@@ -852,7 +777,7 @@ class NeonSurgeGame {
       }
     }
 
-    // Orbs Collision (+15% Boost Energy on Orb Collect!)
+    // Orbs Collision
     for (let i = this.orbs.length - 1; i >= 0; i--) {
       const orb = this.orbs[i];
       orb.y += this.speed;
@@ -862,7 +787,6 @@ class NeonSurgeGame {
       if (dist < orb.radius + 22) {
         this.sound.playOrb();
         this.runOrbs++;
-        this.boostEnergy = Math.min(100, this.boostEnergy + 15); // Recharge Boost!
         this.combo = Math.min(8, this.combo + 1);
         this.comboTimer = 3.2;
         if (this.combo > this.maxCombo) this.maxCombo = this.combo;
@@ -883,7 +807,7 @@ class NeonSurgeGame {
       }
     }
 
-    // Power-ups Collision
+    // Power-up Pickups (Instant Activation!)
     for (let i = this.powerups.length - 1; i >= 0; i--) {
       const p = this.powerups[i];
       p.y += this.speed;
@@ -891,10 +815,7 @@ class NeonSurgeGame {
       const dist = Math.hypot(this.player.x - p.x, this.player.y - p.y);
       if (dist < p.radius + 22) {
         if (p.type === 'SHIELD') this.triggerShield();
-        if (p.type === 'BOOST') {
-          this.boostEnergy = 100;
-          this.triggerHyperBoost();
-        }
+        if (p.type === 'BOOST') this.triggerHyperBoost();
         this.createExplosion(p.x, p.y, 20, p.type === 'SHIELD' ? '#00ff66' : '#00f0ff');
         this.powerups.splice(i, 1);
         continue;
@@ -939,7 +860,7 @@ class NeonSurgeGame {
       this.ctx.translate(shakeX, shakeY);
     }
 
-    // Dynamic Zone Background
+    // Dynamic Zone Background Gradient
     const bgGrad = this.ctx.createRadialGradient(
       this.canvas.width / 2, this.canvas.height * 0.3, 10,
       this.canvas.width / 2, this.canvas.height * 0.6, this.canvas.height
@@ -951,9 +872,6 @@ class NeonSurgeGame {
 
     // Grid Floor
     this.drawGrid(zone);
-
-    // Electrified Side Wall Hazard Rails
-    this.drawSideHazards(zone);
 
     // Stars
     this.ctx.fillStyle = zone.primaryColor;
@@ -981,7 +899,7 @@ class NeonSurgeGame {
       this.ctx.restore();
     });
 
-    // Power-ups
+    // Power-up Pickups
     this.powerups.forEach(p => {
       const color = p.type === 'SHIELD' ? '#00ff66' : '#00f0ff';
       this.ctx.save();
@@ -1096,27 +1014,6 @@ class NeonSurgeGame {
     this.ctx.restore();
   }
 
-  drawSideHazards(zone) {
-    // Left & Right boundary warning lines
-    this.ctx.save();
-    this.ctx.strokeStyle = this.wallHugTimer > 0.8 ? '#ff0055' : 'rgba(255, 0, 85, 0.25)';
-    this.ctx.lineWidth = this.wallHugTimer > 0.8 ? 4 : 2;
-
-    // Left line
-    this.ctx.beginPath();
-    this.ctx.moveTo(4, 0);
-    this.ctx.lineTo(4, this.canvas.height);
-    this.ctx.stroke();
-
-    // Right line
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.canvas.width - 4, 0);
-    this.ctx.lineTo(this.canvas.width - 4, this.canvas.height);
-    this.ctx.stroke();
-
-    this.ctx.restore();
-  }
-
   drawPlayerShip(currentSkin) {
     const px = this.player.x;
     const py = this.player.y;
@@ -1138,7 +1035,7 @@ class NeonSurgeGame {
       this.ctx.restore();
     }
 
-    // Active Boost Flame
+    // Active Boost Flame Aura
     if (this.activePowerup === 'BOOST') {
       this.ctx.save();
       this.ctx.fillStyle = 'rgba(0, 240, 255, 0.35)';
@@ -1148,9 +1045,133 @@ class NeonSurgeGame {
       this.ctx.restore();
     }
 
-    // CUSTOM SHIP: otritzanie68 (Photo Pilot Pod)
+    // ==========================================
+    // 1. AMONG US SHIP
+    // ==========================================
+    if (currentSkin.id === 'amongus') {
+      this.ctx.shadowColor = '#ff2255';
+      this.ctx.shadowBlur = 14;
+
+      // Backpack
+      this.ctx.fillStyle = '#cc1144';
+      this.ctx.beginPath();
+      this.ctx.roundRect(-22, -10, 8, 20, [4]);
+      this.ctx.fill();
+
+      // Main Crewmate Body
+      this.ctx.fillStyle = '#ff2255';
+      this.ctx.strokeStyle = '#990022';
+      this.ctx.lineWidth = 2.5;
+      this.ctx.beginPath();
+      this.ctx.roundRect(-14, -24, 28, 40, [14, 14, 8, 8]);
+      this.ctx.fill();
+      this.ctx.stroke();
+
+      // Cyan Visor
+      this.ctx.fillStyle = '#00f0ff';
+      this.ctx.strokeStyle = '#ffffff';
+      this.ctx.lineWidth = 1.5;
+      this.ctx.beginPath();
+      this.ctx.roundRect(-2, -18, 18, 12, [6]);
+      this.ctx.fill();
+      this.ctx.stroke();
+
+      // Visor Glare
+      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      this.ctx.beginPath();
+      this.ctx.ellipse(4, -15, 4, 2, 0, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Legs
+      this.ctx.fillStyle = '#ff2255';
+      this.ctx.fillRect(-12, 14, 9, 10);
+      this.ctx.fillRect(3, 14, 9, 10);
+
+      // Mini Jet Flame
+      this.ctx.fillStyle = '#00f0ff';
+      this.ctx.beginPath();
+      this.ctx.moveTo(-6, 22);
+      this.ctx.lineTo(0, 32 + Math.random() * 6);
+      this.ctx.lineTo(6, 22);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      this.ctx.restore();
+      return;
+    }
+
+    // ==========================================
+    // 2. BENJAMIN SHIP
+    // ==========================================
+    if (currentSkin.id === 'benjamin') {
+      this.ctx.shadowColor = '#ffd700';
+      this.ctx.shadowBlur = 15;
+
+      // Ears
+      this.ctx.fillStyle = '#7a4f1a';
+      this.ctx.beginPath();
+      this.ctx.ellipse(-14, -10, 5, 12, -0.3, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.beginPath();
+      this.ctx.ellipse(14, -10, 5, 12, 0.3, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Head
+      this.ctx.fillStyle = '#c48b4b';
+      this.ctx.strokeStyle = '#7a4f1a';
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.ellipse(0, 0, 18, 20, 0, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.stroke();
+
+      // Golden Glasses / Monocle
+      this.ctx.strokeStyle = '#ffd700';
+      this.ctx.lineWidth = 2.5;
+      this.ctx.beginPath();
+      this.ctx.arc(-7, -4, 5, 0, Math.PI * 2);
+      this.ctx.arc(7, -4, 5, 0, Math.PI * 2);
+      this.ctx.stroke();
+      this.ctx.beginPath();
+      this.ctx.moveTo(-2, -4);
+      this.ctx.lineTo(2, -4);
+      this.ctx.stroke();
+
+      // Eyes
+      this.ctx.fillStyle = '#000000';
+      this.ctx.beginPath();
+      this.ctx.arc(-7, -4, 2.5, 0, Math.PI * 2);
+      this.ctx.arc(7, -4, 2.5, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Snout & Mouth
+      this.ctx.fillStyle = '#eed6b3';
+      this.ctx.beginPath();
+      this.ctx.ellipse(0, 6, 8, 6, 0, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      this.ctx.fillStyle = '#000000';
+      this.ctx.beginPath();
+      this.ctx.arc(0, 3, 3, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Plasma Thruster
+      this.ctx.fillStyle = '#ffd700';
+      this.ctx.beginPath();
+      this.ctx.moveTo(-6, 18);
+      this.ctx.lineTo(0, 30 + Math.random() * 6);
+      this.ctx.lineTo(6, 18);
+      this.ctx.closePath();
+      this.ctx.fill();
+
+      this.ctx.restore();
+      return;
+    }
+
+    // ==========================================
+    // 3. OTRITZANIE 68 SHIP (Photo Cockpit)
+    // ==========================================
     if (currentSkin.id === 'otritzanie68') {
-      // Futuristic Plasma Wings
       this.ctx.fillStyle = currentSkin.color;
       this.ctx.shadowColor = currentSkin.color;
       this.ctx.shadowBlur = 15;
@@ -1200,12 +1221,14 @@ class NeonSurgeGame {
       return;
     }
 
-    // CUSTOM SHIP: bobik_dog (Cyber Dog Companion)
+    // ==========================================
+    // 4. BOBIK THE DOG SHIP
+    // ==========================================
     if (currentSkin.id === 'bobik_dog') {
       this.ctx.shadowColor = '#ffe600';
       this.ctx.shadowBlur = 15;
 
-      // Floppy Cyber Ears
+      // Ears
       this.ctx.fillStyle = '#ff8800';
       this.ctx.beginPath();
       this.ctx.ellipse(-14, -10, 6, 12, -0.4, 0, Math.PI * 2);
@@ -1214,7 +1237,7 @@ class NeonSurgeGame {
       this.ctx.ellipse(14, -10, 6, 12, 0.4, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Dog Head Body
+      // Head
       this.ctx.fillStyle = '#ffe600';
       this.ctx.strokeStyle = '#ff8800';
       this.ctx.lineWidth = 2.5;
@@ -1223,21 +1246,14 @@ class NeonSurgeGame {
       this.ctx.fill();
       this.ctx.stroke();
 
-      // Cute Eyes
+      // Eyes
       this.ctx.fillStyle = '#000000';
       this.ctx.beginPath();
       this.ctx.arc(-7, -4, 3, 0, Math.PI * 2);
       this.ctx.arc(7, -4, 3, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Eye Sparkles
-      this.ctx.fillStyle = '#ffffff';
-      this.ctx.beginPath();
-      this.ctx.arc(-6, -5, 1, 0, Math.PI * 2);
-      this.ctx.arc(8, -5, 1, 0, Math.PI * 2);
-      this.ctx.fill();
-
-      // Dog Snout & Nose
+      // Snout
       this.ctx.fillStyle = '#ffffff';
       this.ctx.beginPath();
       this.ctx.ellipse(0, 5, 8, 6, 0, 0, Math.PI * 2);
@@ -1248,7 +1264,7 @@ class NeonSurgeGame {
       this.ctx.arc(0, 2, 3, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Wagging Plasma Tail
+      // Wagging Tail
       this.ctx.fillStyle = '#ff5500';
       this.ctx.beginPath();
       this.ctx.moveTo(-6, 18);
@@ -1261,7 +1277,9 @@ class NeonSurgeGame {
       return;
     }
 
-    // STANDARD CYBER SHIPS
+    // ==========================================
+    // 5. STANDARD SHIPS (Apex Dart, Void, Solar, Matrix)
+    // ==========================================
     this.ctx.shadowColor = currentSkin.color;
     this.ctx.shadowBlur = 14;
     this.ctx.fillStyle = currentSkin.color;
