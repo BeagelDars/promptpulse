@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v5.0
- * Generous 120px Safe Gaps, Center Pillar Barriers (Rewarding Wall Play) & Balanced Flow.
+ * NEON SURGE | Cyber Velocity Arcade Engine v5.5
+ * High-Octane Arcade Challenge, Zig-Zag Slaloms, Dense Wave Cadence & Tight Rhythmic Dodging.
  */
 
 // ==========================================
@@ -204,8 +204,10 @@ class NeonSurgeGame {
     this.comboTimer = 0;
     this.maxCombo = 1;
     this.distance = 0;
-    this.speed = 6.6;
-    this.baseSpeed = 6.6;
+
+    // Fast-paced initial speed & dynamic scaling
+    this.speed = 7.6;
+    this.baseSpeed = 7.6;
     this.screenShake = 0;
 
     // Continuous Smooth Color State
@@ -218,9 +220,9 @@ class NeonSurgeGame {
     };
     this.currentZoneName = ZONES[0].name;
 
-    // Spawning Cadence & Safe Path System
+    // Tight, exciting wave cadence
     this.spawnTimer = 0;
-    this.spawnInterval = 1.25;
+    this.spawnInterval = 0.85;
 
     // Power-up state
     this.activePowerup = null;
@@ -302,7 +304,7 @@ class NeonSurgeGame {
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') this.keys.right = false;
     });
 
-    // Touch & Pointer Drag on Canvas (Permits touching right up to walls!)
+    // Touch & Pointer Drag on Canvas
     const setTargetFromPointer = (clientX) => {
       const rect = this.canvas.getBoundingClientRect();
       const relativeX = clientX - rect.left;
@@ -648,8 +650,8 @@ class NeonSurgeGame {
     this.distance += this.speed * dt * 10;
     this.score += Math.round(this.speed * this.combo * 0.5);
     
-    // Smooth progressive speed scaling
-    this.baseSpeed = 6.6 + Math.min(9.0, Math.pow(this.distance / 5000, 0.75));
+    // Smooth progressive speed scaling from 7.6 up to 16.5
+    this.baseSpeed = 7.6 + Math.min(9.0, Math.pow(this.distance / 4500, 0.75));
 
     // Update continuous seamless zone colors
     this.updateZoneSmoothColors();
@@ -680,14 +682,14 @@ class NeonSurgeGame {
       }
     }
 
-    // Left/Right Movement (Player can comfortably touch/glide right against the walls!)
-    if (this.keys.left) this.player.targetX -= 11;
-    if (this.keys.right) this.player.targetX += 11;
+    // Left/Right Movement (Fast, responsive handling)
+    if (this.keys.left) this.player.targetX -= 12;
+    if (this.keys.right) this.player.targetX += 12;
 
     const wallMargin = 16;
     this.player.targetX = Math.max(wallMargin, Math.min(this.canvas.width - wallMargin, this.player.targetX));
     const dx = this.player.targetX - this.player.x;
-    this.player.x += dx * 0.22;
+    this.player.x += dx * 0.24;
     this.player.tilt = Math.max(-0.45, Math.min(0.45, dx * 0.03));
 
     // Player Trail
@@ -695,9 +697,9 @@ class NeonSurgeGame {
     if (this.player.trail.length > 12) this.player.trail.shift();
     this.player.trail.forEach(t => t.alpha -= 0.06);
 
-    // Obstacle Generator
-    const difficultyFactor = Math.min(1, this.score / 120000);
-    this.spawnInterval = 1.30 - (difficultyFactor * 0.55);
+    // Dynamic wave cadence (faster, rhythmic intervals)
+    const difficultyFactor = Math.min(1, this.score / 100000);
+    this.spawnInterval = 0.88 - (difficultyFactor * 0.40); // 0.88s down to 0.48s!
 
     this.spawnTimer += dt;
     if (this.spawnTimer >= this.spawnInterval) {
@@ -706,7 +708,7 @@ class NeonSurgeGame {
     }
 
     // Spawning Orbs
-    if (Math.random() < 0.048) {
+    if (Math.random() < 0.055) {
       this.orbs.push({
         x: Math.random() * (this.canvas.width - 60) + 30,
         y: -30,
@@ -716,7 +718,7 @@ class NeonSurgeGame {
     }
 
     // Spawning Power-up Pickups
-    if (Math.random() < 0.009 && !this.activePowerup) {
+    if (Math.random() < 0.010 && !this.activePowerup) {
       const pType = Math.random() > 0.5 ? 'BOOST' : 'SHIELD';
       this.powerups.push({
         x: Math.random() * (this.canvas.width - 60) + 30,
@@ -834,7 +836,7 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // Guaranteed Fair Obstacle Wave Generator (Generous 120px+ Gaps & Center Wall-Pillars)
+  // High-Octane Balanced Wave Generator
   // ==========================================
   spawnBalancedWave(difficultyFactor) {
     const canvasW = this.canvas.width;
@@ -844,11 +846,10 @@ class NeonSurgeGame {
     const randPattern = Math.random();
 
     // ----------------------------------------------------
-    // PATTERN 1: CENTER PILLAR / ISLAND (Makes wall hugging strategically fun!)
-    // Blocks the middle ~40% of the screen, leaving BOTH the Left & Right walls wide open!
+    // PATTERN 1: CENTER PILLAR (Wall Hugging is the way through!)
     // ----------------------------------------------------
-    if (randPattern < 0.28) {
-      const pillarWidth = Math.min(canvasW * 0.40, 160);
+    if (randPattern < 0.26) {
+      const pillarWidth = Math.min(canvasW * 0.44, 170);
       const pillarX = (canvasW - pillarWidth) / 2;
 
       this.obstacles.push({
@@ -863,28 +864,24 @@ class NeonSurgeGame {
         animPulse: 0
       });
 
-      // Spawn bonus Orbs right along the left and right walls to reward wall hugs!
-      if (Math.random() < 0.7) {
-        const sideX = Math.random() > 0.5 ? 20 : canvasW - 20;
-        this.orbs.push({ x: sideX, y: -70, radius: 12, pulse: 0 });
-      }
+      // Bonus Orbs on the wall paths
+      const sideX = Math.random() > 0.5 ? 20 : canvasW - 20;
+      this.orbs.push({ x: sideX, y: -70, radius: 12, pulse: 0 });
       return;
     }
 
     // ----------------------------------------------------
-    // PATTERN 2: GENEROUS SIDE BARRIER (Leaves at least 115px to 135px wide opening!)
+    // PATTERN 2: ZIG-ZAG SLALOM (Left barrier, then Right barrier offset)
     // ----------------------------------------------------
-    if (randPattern < 0.58) {
-      const generousPassageWidth = Math.max(115, Math.min(135, canvasW * 0.38));
-      const spawnOnLeft = Math.random() > 0.5;
+    if (randPattern < 0.52) {
+      const openGap = Math.max(105, Math.min(125, canvasW * 0.35));
+      const firstOnLeft = Math.random() > 0.5;
 
-      const barrierWidth = canvasW - generousPassageWidth;
-      const barrierX = spawnOnLeft ? 0 : generousPassageWidth;
-
+      // First barrier
       this.obstacles.push({
-        x: barrierX,
+        x: firstOnLeft ? 0 : openGap,
         y: -70,
-        width: barrierWidth,
+        width: canvasW - openGap,
         height: 24,
         type,
         isBarrier: true,
@@ -892,35 +889,48 @@ class NeonSurgeGame {
         rotation: 0,
         animPulse: 0
       });
+
+      // Second staggered barrier (creates thrilling slalom S-turn!)
+      if (difficultyFactor > 0.2) {
+        this.obstacles.push({
+          x: firstOnLeft ? openGap : 0,
+          y: -155, // Offset down track
+          width: canvasW - openGap,
+          height: 24,
+          type,
+          isBarrier: true,
+          zoneIndex: currentZoneIdx,
+          rotation: 0,
+          animPulse: 0
+        });
+      }
       return;
     }
 
     // ----------------------------------------------------
-    // PATTERN 3: STAGGERED CLUSTERS WITH 120px GUARANTEED WEAVE CORRIDOR
+    // PATTERN 3: DENSE HAZARD CLUSTER (2 to 4 hazards with guaranteed corridor)
     // ----------------------------------------------------
-    const minSafeCorridor = 115;
-    const safeX = Math.random() * (canvasW - minSafeCorridor - 30) + 15;
-    const safeEnd = safeX + minSafeCorridor;
+    const safeWidth = 105;
+    const safeX = Math.random() * (canvasW - safeWidth - 30) + 15;
+    const safeEnd = safeX + safeWidth;
 
-    const clusterCount = Math.random() > 0.5 ? 3 : 2;
+    const clusterCount = difficultyFactor > 0.4 ? (Math.random() > 0.5 ? 3 : 4) : (Math.random() > 0.4 ? 2 : 3);
 
     for (let c = 0; c < clusterCount; c++) {
-      const size = Math.floor(Math.random() * 22) + 38; // 38px to 60px
+      const size = Math.floor(Math.random() * 24) + 40; // 40px to 64px
       let posX;
 
       if (Math.random() > 0.5 && safeX > size + 10) {
-        // Spawn to the left of the safe corridor
         posX = Math.random() * (safeX - size);
       } else if (canvasW - safeEnd > size + 10) {
-        // Spawn to the right of the safe corridor
         posX = safeEnd + Math.random() * (canvasW - safeEnd - size);
       } else {
-        posX = Math.random() > 0.5 ? 5 : canvasW - size - 5;
+        posX = Math.random() > 0.5 ? 4 : canvasW - size - 4;
       }
 
       this.obstacles.push({
         x: Math.max(0, Math.min(canvasW - size, posX)),
-        y: -70 - (c * 60), // Staggered vertically for easy weaving
+        y: -70 - (c * 50),
         width: size,
         height: size,
         type,
