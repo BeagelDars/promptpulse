@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v5.5
- * High-Octane Arcade Challenge, Zig-Zag Slaloms, Dense Wave Cadence & Tight Rhythmic Dodging.
+ * NEON SURGE | Cyber Velocity Arcade Engine v6.0
+ * 200k+ DEVIL SLAUGHTERHOUSE Mode (Geometry Dash Blood & Crimson Theme, Strobe Pulses & Spinning Sawblades).
  */
 
 // ==========================================
@@ -118,7 +118,7 @@ const SHIP_SKINS = [
 ];
 
 // ==========================================
-// 3. Dynamic Map Zones (50,000 Point Milestones)
+// 3. Dynamic Map Zones (Slaughterhouse at 200,000+ pts)
 // ==========================================
 const ZONES = [
   {
@@ -167,14 +167,15 @@ const ZONES = [
   },
   {
     id: 5,
-    name: 'QUANTUM OVERDRIVE',
+    name: 'SLAUGHTERHOUSE',
     threshold: 200000,
-    rPrimary: 255, gPrimary: 255, bPrimary: 255,
-    rSecondary: 0, gSecondary: 240, bSecondary: 255,
-    rBgTop: 32, gBgTop: 37, bBgTop: 56,
-    rBgBottom: 5, gBgBottom: 7, bBgBottom: 13,
-    rGrid: 255, gGrid: 255, bGrid: 255, gridAlpha: 0.22,
-    obstacleType: 'RAINBOW_CRYSTAL'
+    rPrimary: 255, gPrimary: 0, bPrimary: 34,       // Intense blood red
+    rSecondary: 255, gSecondary: 30, bSecondary: 30,
+    rBgTop: 40, gBgTop: 0, bBgTop: 6,              // Pure dark crimson hell
+    rBgBottom: 0, gBgBottom: 0, bBgBottom: 0,      // Pitch black abyss
+    rGrid: 255, gGrid: 0, bGrid: 34, gridAlpha: 0.32,
+    obstacleType: 'DEVIL_SLAUGHTER',
+    isDevilMode: true
   }
 ];
 
@@ -219,8 +220,9 @@ class NeonSurgeGame {
       grid: 'rgba(0, 240, 255, 0.14)'
     };
     this.currentZoneName = ZONES[0].name;
+    this.devilModeFactor = 0; // 0 to 1 intensity in Slaughterhouse mode
 
-    // Tight, exciting wave cadence
+    // Wave cadence
     this.spawnTimer = 0;
     this.spawnInterval = 0.85;
 
@@ -371,6 +373,7 @@ class NeonSurgeGame {
     this.screenShake = 0;
     this.activePowerup = null;
     this.spawnTimer = 0;
+    this.devilModeFactor = 0;
 
     this.player.x = this.canvas.width / 2;
     this.player.targetX = this.canvas.width / 2;
@@ -556,7 +559,7 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // Continuous Real-Time Color Morphing
+  // Continuous Real-Time Color Morphing & Slaughterhouse Strobe
   // ==========================================
   updateZoneSmoothColors() {
     const exactZonePos = Math.max(0, Math.min(ZONES.length - 1, this.score / 50000));
@@ -567,9 +570,18 @@ class NeonSurgeGame {
     const z1 = ZONES[baseIdx];
     const z2 = ZONES[nextIdx];
 
-    const rP = Math.round(lerp(z1.rPrimary, z2.rPrimary, t));
-    const gP = Math.round(lerp(z1.gPrimary, z2.gPrimary, t));
-    const bP = Math.round(lerp(z1.bPrimary, z2.bPrimary, t));
+    // Slaughterhouse devil intensity factor (kicks in at 180k, full power at 200k+)
+    this.devilModeFactor = Math.max(0, Math.min(1, (this.score - 170000) / 30000));
+
+    // Calculate rhythmic strobe pulse for Slaughterhouse Mode
+    let strobe = 1;
+    if (this.devilModeFactor > 0) {
+      strobe = 0.75 + Math.sin(Date.now() * 0.016) * 0.25; // High-BPM blood strobe
+    }
+
+    const rP = Math.round(lerp(z1.rPrimary, z2.rPrimary, t) * strobe);
+    const gP = Math.round(lerp(z1.gPrimary, z2.gPrimary, t) * (1 - this.devilModeFactor * 0.8));
+    const bP = Math.round(lerp(z1.bPrimary, z2.bPrimary, t) * (1 - this.devilModeFactor * 0.8));
     this.activeColors.primary = `rgb(${rP}, ${gP}, ${bP})`;
 
     const rS = Math.round(lerp(z1.rSecondary, z2.rSecondary, t));
@@ -577,7 +589,8 @@ class NeonSurgeGame {
     const bS = Math.round(lerp(z1.bSecondary, z2.bSecondary, t));
     this.activeColors.secondary = `rgb(${rS}, ${gS}, ${bS})`;
 
-    const rBT = Math.round(lerp(z1.rBgTop, z2.rBgTop, t));
+    // Background Blood Red Pulsing
+    const rBT = Math.round(lerp(z1.rBgTop, z2.rBgTop, t) * (1 + (this.devilModeFactor * (strobe - 0.75))));
     const gBT = Math.round(lerp(z1.gBgTop, z2.gBgTop, t));
     const bBT = Math.round(lerp(z1.bBgTop, z2.bBgTop, t));
     this.activeColors.bgTop = `rgb(${rBT}, ${gBT}, ${bBT})`;
@@ -587,10 +600,11 @@ class NeonSurgeGame {
     const bBB = Math.round(lerp(z1.bBgBottom, z2.bBgBottom, t));
     this.activeColors.bgBottom = `rgb(${rBB}, ${gBB}, ${bBB})`;
 
+    // Grid Floor Strobe
     const rG = Math.round(lerp(z1.rGrid, z2.rGrid, t));
     const gG = Math.round(lerp(z1.gGrid, z2.gGrid, t));
     const bG = Math.round(lerp(z1.bGrid, z2.bGrid, t));
-    const alphaG = lerp(z1.gridAlpha, z2.gridAlpha, t).toFixed(3);
+    const alphaG = (lerp(z1.gridAlpha, z2.gridAlpha, t) * strobe).toFixed(3);
     this.activeColors.grid = `rgba(${rG}, ${gG}, ${bG}, ${alphaG})`;
 
     const currentZoneObj = t >= 0.5 ? z2 : z1;
@@ -653,7 +667,7 @@ class NeonSurgeGame {
     // Smooth progressive speed scaling from 7.6 up to 16.5
     this.baseSpeed = 7.6 + Math.min(9.0, Math.pow(this.distance / 4500, 0.75));
 
-    // Update continuous seamless zone colors
+    // Update continuous seamless zone colors & Slaughterhouse strobe
     this.updateZoneSmoothColors();
 
     // Combo Timer Decay
@@ -682,7 +696,7 @@ class NeonSurgeGame {
       }
     }
 
-    // Left/Right Movement (Fast, responsive handling)
+    // Left/Right Movement (Fast handling)
     if (this.keys.left) this.player.targetX -= 12;
     if (this.keys.right) this.player.targetX += 12;
 
@@ -697,9 +711,9 @@ class NeonSurgeGame {
     if (this.player.trail.length > 12) this.player.trail.shift();
     this.player.trail.forEach(t => t.alpha -= 0.06);
 
-    // Dynamic wave cadence (faster, rhythmic intervals)
+    // Dynamic wave cadence
     const difficultyFactor = Math.min(1, this.score / 100000);
-    this.spawnInterval = 0.88 - (difficultyFactor * 0.40); // 0.88s down to 0.48s!
+    this.spawnInterval = 0.88 - (difficultyFactor * 0.40);
 
     this.spawnTimer += dt;
     if (this.spawnTimer >= this.spawnInterval) {
@@ -732,8 +746,8 @@ class NeonSurgeGame {
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obs = this.obstacles[i];
       obs.y += this.speed;
-      obs.rotation += 0.04;
-      obs.animPulse += 0.08;
+      obs.rotation += 0.06;
+      obs.animPulse += 0.1;
 
       const hitMargin = obs.isBarrier ? 4 : 8;
       const pBox = { x: this.player.x - 12, y: this.player.y - 16, w: 24, h: 32 };
@@ -747,11 +761,11 @@ class NeonSurgeGame {
       ) {
         if (this.activePowerup === 'SHIELD' || this.activePowerup === 'BOOST') {
           const zoneColor = this.activeColors.secondary;
-          this.createExplosion(obs.x + obs.width / 2, obs.y + obs.height / 2, 22, zoneColor);
+          this.createExplosion(obs.x + obs.width / 2, obs.y + obs.height / 2, 24, zoneColor);
           this.obstacles.splice(i, 1);
           this.score += 250 * this.combo;
 
-          const smashTitles = ['+250 LASER SMASH!', '+250 METEOR CRUSH!', '+250 CLAW SHRED!', '+250 VORTEX SHATTER!', '+250 PRISM BURST!'];
+          const smashTitles = ['+250 LASER SMASH!', '+250 METEOR CRUSH!', '+250 CLAW SHRED!', '+250 VORTEX SHATTER!', '+250 SLAUGHTER!'];
           const title = smashTitles[obs.zoneIndex] || '+250 SMASH!';
           this.createFloatingText(title, obs.x, obs.y, zoneColor);
           continue;
@@ -845,9 +859,7 @@ class NeonSurgeGame {
 
     const randPattern = Math.random();
 
-    // ----------------------------------------------------
-    // PATTERN 1: CENTER PILLAR (Wall Hugging is the way through!)
-    // ----------------------------------------------------
+    // 1. CENTER PILLAR
     if (randPattern < 0.26) {
       const pillarWidth = Math.min(canvasW * 0.44, 170);
       const pillarX = (canvasW - pillarWidth) / 2;
@@ -864,20 +876,16 @@ class NeonSurgeGame {
         animPulse: 0
       });
 
-      // Bonus Orbs on the wall paths
       const sideX = Math.random() > 0.5 ? 20 : canvasW - 20;
       this.orbs.push({ x: sideX, y: -70, radius: 12, pulse: 0 });
       return;
     }
 
-    // ----------------------------------------------------
-    // PATTERN 2: ZIG-ZAG SLALOM (Left barrier, then Right barrier offset)
-    // ----------------------------------------------------
+    // 2. ZIG-ZAG SLALOM
     if (randPattern < 0.52) {
       const openGap = Math.max(105, Math.min(125, canvasW * 0.35));
       const firstOnLeft = Math.random() > 0.5;
 
-      // First barrier
       this.obstacles.push({
         x: firstOnLeft ? 0 : openGap,
         y: -70,
@@ -890,11 +898,10 @@ class NeonSurgeGame {
         animPulse: 0
       });
 
-      // Second staggered barrier (creates thrilling slalom S-turn!)
       if (difficultyFactor > 0.2) {
         this.obstacles.push({
           x: firstOnLeft ? openGap : 0,
-          y: -155, // Offset down track
+          y: -155,
           width: canvasW - openGap,
           height: 24,
           type,
@@ -907,9 +914,7 @@ class NeonSurgeGame {
       return;
     }
 
-    // ----------------------------------------------------
-    // PATTERN 3: DENSE HAZARD CLUSTER (2 to 4 hazards with guaranteed corridor)
-    // ----------------------------------------------------
+    // 3. DENSE HAZARD CLUSTERS
     const safeWidth = 105;
     const safeX = Math.random() * (canvasW - safeWidth - 30) + 15;
     const safeEnd = safeX + safeWidth;
@@ -917,7 +922,7 @@ class NeonSurgeGame {
     const clusterCount = difficultyFactor > 0.4 ? (Math.random() > 0.5 ? 3 : 4) : (Math.random() > 0.4 ? 2 : 3);
 
     for (let c = 0; c < clusterCount; c++) {
-      const size = Math.floor(Math.random() * 24) + 40; // 40px to 64px
+      const size = Math.floor(Math.random() * 24) + 40;
       let posX;
 
       if (Math.random() > 0.5 && safeX > size + 10) {
@@ -943,7 +948,7 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // 6. Render Scene
+  // 6. Render Scene (Slaughterhouse Strobe Pulse)
   // ==========================================
   draw() {
     this.ctx.save();
@@ -967,11 +972,22 @@ class NeonSurgeGame {
     // Seamless Grid Floor
     this.drawGrid();
 
-    // Stars
+    // Slaughterhouse Devil Atmosphere Embers & Strobes
+    if (this.devilModeFactor > 0) {
+      this.ctx.save();
+      // Occasional high-speed hell strobe flash
+      if (Math.random() < 0.12 * this.devilModeFactor) {
+        this.ctx.fillStyle = `rgba(255, 0, 30, ${0.15 * this.devilModeFactor})`;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+      this.ctx.restore();
+    }
+
+    // Stars / Blood Embers
     this.ctx.fillStyle = this.activeColors.primary;
     this.stars.forEach(star => {
       this.ctx.beginPath();
-      this.ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+      this.ctx.arc(star.x, star.y, star.size * (1 + this.devilModeFactor * 0.6), 0, Math.PI * 2);
       this.ctx.fill();
     });
 
@@ -1253,49 +1269,71 @@ class NeonSurgeGame {
       return;
     }
 
-    // 5. RAINBOW_CRYSTAL
-    if (obs.type === 'RAINBOW_CRYSTAL') {
-      this.ctx.shadowColor = '#ffffff';
-      this.ctx.shadowBlur = 22;
+    // ----------------------------------------------------
+    // 5. DEVIL_SLAUGHTER (Geometry Dash Slaughterhouse Spinning Sawblades & Blood Gates)
+    // ----------------------------------------------------
+    if (obs.type === 'DEVIL_SLAUGHTER') {
+      this.ctx.shadowColor = '#ff0022';
+      this.ctx.shadowBlur = 24;
 
       if (obs.isBarrier) {
-        const grad = this.ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y);
-        grad.addColorStop(0, '#ff0055');
-        grad.addColorStop(0.33, '#ffe600');
-        grad.addColorStop(0.66, '#00ff66');
-        grad.addColorStop(1, '#00f0ff');
-        this.ctx.fillStyle = grad;
+        // Demonic Slaughter Wall with blood core
+        this.ctx.fillStyle = 'rgba(255, 0, 34, 0.65)';
         this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-        this.ctx.strokeStyle = '#ffffff';
+        this.ctx.strokeStyle = '#ff3344';
         this.ctx.lineWidth = 3.5;
         this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+
+        // Devil Skull teeth on barrier
+        this.ctx.fillStyle = '#ffffff';
+        for (let sx = obs.x + 8; sx < obs.x + obs.width; sx += 16) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(sx - 5, obs.y);
+          this.ctx.lineTo(sx, obs.y - 8);
+          this.ctx.lineTo(sx + 5, obs.y);
+          this.ctx.closePath();
+          this.ctx.fill();
+        }
       } else {
+        // High-Speed Slaughterhouse Spinning Sawblade
         this.ctx.translate(cx, cy);
-        this.ctx.rotate(obs.rotation);
+        this.ctx.rotate(obs.rotation * 2.2);
 
         const rad = obs.width / 2;
 
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        this.ctx.strokeStyle = '#00f0ff';
-        this.ctx.lineWidth = 3;
+        // Outer Teeth / Blades
+        this.ctx.fillStyle = '#ff0022';
+        this.ctx.strokeStyle = '#ffffff';
+        this.ctx.lineWidth = 2.5;
 
+        const teeth = 8;
         this.ctx.beginPath();
-        this.ctx.moveTo(0, -rad * 1.1);
-        this.ctx.lineTo(rad * 0.9, 0);
-        this.ctx.lineTo(0, rad * 1.1);
-        this.ctx.lineTo(-rad * 0.9, 0);
+        for (let i = 0; i < teeth * 2; i++) {
+          const angle = (i * Math.PI) / teeth;
+          const r = i % 2 === 0 ? rad * 1.15 : rad * 0.75;
+          const tx = Math.cos(angle) * r;
+          const ty = Math.sin(angle) * r;
+          if (i === 0) this.ctx.moveTo(tx, ty);
+          else this.ctx.lineTo(tx, ty);
+        }
         this.ctx.closePath();
         this.ctx.fill();
         this.ctx.stroke();
 
-        this.ctx.strokeStyle = '#ff0077';
-        this.ctx.lineWidth = 2;
+        // Inner Blood Core Disc
+        this.ctx.fillStyle = '#330005';
         this.ctx.beginPath();
-        this.ctx.moveTo(-rad * 0.9, 0);
-        this.ctx.lineTo(rad * 0.9, 0);
-        this.ctx.moveTo(0, -rad * 1.1);
-        this.ctx.lineTo(0, rad * 1.1);
+        this.ctx.arc(0, 0, rad * 0.45, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.strokeStyle = '#ff0022';
+        this.ctx.lineWidth = 3;
         this.ctx.stroke();
+
+        // Glowing Demon Eye
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        this.ctx.fill();
       }
       this.ctx.restore();
       return;
