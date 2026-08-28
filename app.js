@@ -1,6 +1,6 @@
 /**
- * NEON SURGE | Cyber Velocity Arcade Engine v4.0
- * Guaranteed Safe Passage Algorithm, Dynamic Obstacle Sizing & Progressive Difficulty Scaling.
+ * NEON SURGE | Cyber Velocity Arcade Engine v4.5
+ * Seamless Continuous Zone Morphing (Smooth Gradient & Grid Lerping, Zero Distractions).
  */
 
 // ==========================================
@@ -101,25 +101,6 @@ class SoundEngine {
       osc.stop(this.ctx.currentTime + 0.28);
     } catch (e) {}
   }
-
-  playZoneWarp() {
-    if (!this.enabled || !this.ctx) return;
-    try {
-      const notes = [300, 450, 600, 900, 1200];
-      notes.forEach((f, i) => {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(f, this.ctx.currentTime + i * 0.06);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime + i * 0.06);
-        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + (i + 1) * 0.1);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(this.ctx.currentTime + i * 0.06);
-        osc.stop(this.ctx.currentTime + (i + 1) * 0.1);
-      });
-    } catch (e) {}
-  }
 }
 
 // ==========================================
@@ -137,70 +118,70 @@ const SHIP_SKINS = [
 ];
 
 // ==========================================
-// 3. Dynamic Map Zones & Thematic Obstacle Types
+// 3. Dynamic Map Zones (50,000 Point Milestones)
 // ==========================================
 const ZONES = [
   {
     id: 1,
     name: 'CYBER HORIZON',
     threshold: 0,
-    primaryColor: '#00f0ff',
-    secondaryColor: '#ff0077',
-    gridColor: 'rgba(0, 240, 255, 0.14)',
-    bgGradient: ['#151a30', '#060810'],
-    obstacleType: 'CYBER_LASER',
-    obstacleName: 'Laser Barrier & Cyber Prisms',
-    desc: 'Neon grid & high-voltage hazard prisms'
+    rPrimary: 0, gPrimary: 240, bPrimary: 255,      // #00f0ff
+    rSecondary: 255, gSecondary: 0, bSecondary: 119, // #ff0077
+    rBgTop: 21, gBgTop: 26, bBgTop: 48,             // #151a30
+    rBgBottom: 6, gBgBottom: 8, bBgBottom: 16,      // #060810
+    rGrid: 0, gGrid: 240, bGrid: 255, gridAlpha: 0.14,
+    obstacleType: 'CYBER_LASER'
   },
   {
     id: 2,
     name: 'SOLAR INFERNO',
     threshold: 50000,
-    primaryColor: '#ffe600',
-    secondaryColor: '#ff3300',
-    gridColor: 'rgba(255, 120, 0, 0.22)',
-    bgGradient: ['#30150a', '#0d0402'],
-    obstacleType: 'METEORITE',
-    obstacleName: 'Molten Meteorite Shower',
-    desc: 'Heavy burning asteroids & solar flares'
+    rPrimary: 255, gPrimary: 230, bPrimary: 0,       // #ffe600
+    rSecondary: 255, gSecondary: 51, bSecondary: 0,  // #ff3300
+    rBgTop: 48, gBgTop: 21, bBgTop: 10,             // #30150a
+    rBgBottom: 13, gBgBottom: 4, bBgBottom: 2,      // #0d0402
+    rGrid: 255, gGrid: 120, bGrid: 0, gridAlpha: 0.20,
+    obstacleType: 'METEORITE'
   },
   {
     id: 3,
     name: 'TOXIC MATRIX',
     threshold: 100000,
-    primaryColor: '#00ff66',
-    secondaryColor: '#aaff00',
-    gridColor: 'rgba(0, 255, 102, 0.2)',
-    bgGradient: ['#082414', '#020d06'],
-    obstacleType: 'CYBER_CLAW',
-    obstacleName: 'Razor Cyber Claws & Pods',
-    desc: 'Bio-mechanical claws & acid hazard gates'
+    rPrimary: 0, gPrimary: 255, bPrimary: 102,      // #00ff66
+    rSecondary: 170, gSecondary: 255, bSecondary: 0, // #aaff00
+    rBgTop: 8, gBgTop: 36, bBgTop: 20,              // #082414
+    rBgBottom: 2, gBgBottom: 13, bBgBottom: 6,      // #020d06
+    rGrid: 0, gGrid: 255, bGrid: 102, gridAlpha: 0.18,
+    obstacleType: 'CYBER_CLAW'
   },
   {
     id: 4,
     name: 'VOID ABYSS',
     threshold: 150000,
-    primaryColor: '#9d00ff',
-    secondaryColor: '#00f0ff',
-    gridColor: 'rgba(157, 0, 255, 0.22)',
-    bgGradient: ['#1e0a30', '#08020d'],
-    obstacleType: 'VOID_VORTEX',
-    obstacleName: 'Dark Matter Singularity Field',
-    desc: 'Swirling void vortexes & event horizon rifts'
+    rPrimary: 157, gPrimary: 0, bPrimary: 255,      // #9d00ff
+    rSecondary: 0, gSecondary: 240, bSecondary: 255, // #00f0ff
+    rBgTop: 30, gBgTop: 10, bBgTop: 48,             // #1e0a30
+    rBgBottom: 8, gBgBottom: 2, bBgBottom: 13,      // #08020d
+    rGrid: 157, gGrid: 0, bGrid: 255, gridAlpha: 0.20,
+    obstacleType: 'VOID_VORTEX'
   },
   {
     id: 5,
     name: 'QUANTUM OVERDRIVE',
     threshold: 200000,
-    primaryColor: '#ffffff',
-    secondaryColor: '#00f0ff',
-    gridColor: 'rgba(255, 255, 255, 0.25)',
-    bgGradient: ['#202538', '#05070d'],
-    obstacleType: 'RAINBOW_CRYSTAL',
-    obstacleName: 'Prismatic Diamond Cluster',
-    desc: 'Giant diamond crystal shards & warp rifts'
+    rPrimary: 255, gPrimary: 255, bPrimary: 255,    // #ffffff
+    rSecondary: 0, gSecondary: 240, bSecondary: 255, // #00f0ff
+    rBgTop: 32, gBgTop: 37, bBgTop: 56,             // #202538
+    rBgBottom: 5, gBgBottom: 7, bBgBottom: 13,      // #05070d
+    rGrid: 255, gGrid: 255, bGrid: 255, gridAlpha: 0.22,
+    obstacleType: 'RAINBOW_CRYSTAL'
   }
 ];
+
+// Helper: Linear Interpolation
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
 
 // ==========================================
 // 4. Main Game Engine
@@ -228,12 +209,19 @@ class NeonSurgeGame {
     this.baseSpeed = 6.6;
     this.screenShake = 0;
 
-    // Biome Zone State
-    this.currentZoneIndex = 0;
+    // Continuous Smooth Color State
+    this.activeColors = {
+      primary: 'rgb(0, 240, 255)',
+      secondary: 'rgb(255, 0, 119)',
+      bgTop: 'rgb(21, 26, 48)',
+      bgBottom: 'rgb(6, 8, 16)',
+      grid: 'rgba(0, 240, 255, 0.14)'
+    };
+    this.currentZoneName = ZONES[0].name;
 
     // Spawning Cadence & Safe Path System
     this.spawnTimer = 0;
-    this.spawnInterval = 1.1; // Seconds between obstacle waves
+    this.spawnInterval = 1.2;
 
     // Power-up state
     this.activePowerup = null;
@@ -381,7 +369,6 @@ class NeonSurgeGame {
     this.speed = this.baseSpeed;
     this.screenShake = 0;
     this.activePowerup = null;
-    this.currentZoneIndex = 0;
     this.spawnTimer = 0;
 
     this.player.x = this.canvas.width / 2;
@@ -398,7 +385,6 @@ class NeonSurgeGame {
     document.getElementById('gameOverScreen').classList.remove('active');
     document.getElementById('shopScreen').classList.remove('active');
     document.getElementById('activePowerupBar').style.display = 'none';
-    document.getElementById('zoneBanner').style.display = 'none';
 
     this.updateHUD();
   }
@@ -546,10 +532,9 @@ class NeonSurgeGame {
     }
 
     // Zone Badge
-    const zone = ZONES[this.currentZoneIndex];
     const zoneBadge = document.getElementById('hudZoneBadge');
-    zoneBadge.textContent = `ZONE ${zone.id} • ${zone.name}`;
-    zoneBadge.style.color = zone.primaryColor;
+    zoneBadge.textContent = this.currentZoneName;
+    zoneBadge.style.color = this.activeColors.primary;
   }
 
   triggerHyperBoost() {
@@ -558,7 +543,7 @@ class NeonSurgeGame {
     this.powerupMaxDuration = 3.5;
     this.speed = this.baseSpeed * 2.0;
     this.sound.playBoost();
-    this.createFloatingText('⚡ INSTANT HYPER BOOST!', this.player.x, this.player.y - 40, '#00f0ff');
+    this.createFloatingText('⚡ HYPER BOOST!', this.player.x, this.player.y - 40, '#00f0ff');
   }
 
   triggerShield() {
@@ -566,43 +551,58 @@ class NeonSurgeGame {
     this.powerupDuration = 6.0;
     this.powerupMaxDuration = 6.0;
     this.sound.playPowerup();
-    this.createFloatingText('🛡️ ENERGY SHIELD ONLINE!', this.player.x, this.player.y - 40, '#00ff66');
+    this.createFloatingText('🛡️ SHIELD ONLINE!', this.player.x, this.player.y - 40, '#00ff66');
   }
 
-  checkZoneTransitions() {
-    for (let i = ZONES.length - 1; i >= 0; i--) {
-      if (this.score >= ZONES[i].threshold) {
-        if (this.currentZoneIndex !== i) {
-          this.currentZoneIndex = i;
-          this.triggerZoneBanner(ZONES[i]);
-        }
-        break;
-      }
-    }
-  }
+  // ==========================================
+  // Smooth Seamless Zone Interpolation (No Distractions)
+  // ==========================================
+  updateZoneSmoothColors() {
+    // Exact continuous floating progress across the 5 zones (each zone = 50,000 points)
+    const exactZonePos = Math.max(0, Math.min(ZONES.length - 1, this.score / 50000));
+    const baseIdx = Math.floor(exactZonePos);
+    const nextIdx = Math.min(ZONES.length - 1, baseIdx + 1);
+    const t = exactZonePos - baseIdx; // 0.0 to 1.0 transition factor
 
-  triggerZoneBanner(zone) {
-    this.sound.playZoneWarp();
-    this.screenShake = 12;
+    const z1 = ZONES[baseIdx];
+    const z2 = ZONES[nextIdx];
 
-    const banner = document.getElementById('zoneBanner');
-    const title = document.getElementById('zoneBannerTitle');
-    const sub = document.getElementById('zoneBannerSub');
+    // Smoothly blend primary neon highlight
+    const rP = Math.round(lerp(z1.rPrimary, z2.rPrimary, t));
+    const gP = Math.round(lerp(z1.gPrimary, z2.gPrimary, t));
+    const bP = Math.round(lerp(z1.bPrimary, z2.bPrimary, t));
+    this.activeColors.primary = `rgb(${rP}, ${gP}, ${bP})`;
 
-    title.textContent = zone.name;
-    title.style.color = zone.primaryColor;
-    title.style.textShadow = `0 0 20px ${zone.primaryColor}`;
-    sub.textContent = `THREAT LEVEL UP: ${zone.obstacleName.toUpperCase()}`;
+    // Smoothly blend secondary hazard color
+    const rS = Math.round(lerp(z1.rSecondary, z2.rSecondary, t));
+    const gS = Math.round(lerp(z1.gSecondary, z2.gSecondary, t));
+    const bS = Math.round(lerp(z1.bSecondary, z2.bSecondary, t));
+    this.activeColors.secondary = `rgb(${rS}, ${gS}, ${bS})`;
 
-    banner.style.display = 'flex';
-    banner.style.borderColor = zone.primaryColor;
-    banner.style.boxShadow = `0 0 35px ${zone.primaryColor}`;
+    // Smoothly blend top background radial color
+    const rBT = Math.round(lerp(z1.rBgTop, z2.rBgTop, t));
+    const gBT = Math.round(lerp(z1.gBgTop, z2.gBgTop, t));
+    const bBT = Math.round(lerp(z1.bBgTop, z2.bBgTop, t));
+    this.activeColors.bgTop = `rgb(${rBT}, ${gBT}, ${bBT})`;
 
-    this.createExplosion(this.canvas.width / 2, this.canvas.height / 2, 30, zone.primaryColor);
+    // Smoothly blend bottom background color
+    const rBB = Math.round(lerp(z1.rBgBottom, z2.rBgBottom, t));
+    const gBB = Math.round(lerp(z1.gBgBottom, z2.gBgBottom, t));
+    const bBB = Math.round(lerp(z1.bBgBottom, z2.bBgBottom, t));
+    this.activeColors.bgBottom = `rgb(${rBB}, ${gBB}, ${bBB})`;
 
-    setTimeout(() => {
-      banner.style.display = 'none';
-    }, 2400);
+    // Smoothly blend grid floor lines
+    const rG = Math.round(lerp(z1.rGrid, z2.rGrid, t));
+    const gG = Math.round(lerp(z1.gGrid, z2.gGrid, t));
+    const bG = Math.round(lerp(z1.bGrid, z2.bGrid, t));
+    const alphaG = lerp(z1.gridAlpha, z2.gridAlpha, t).toFixed(3);
+    this.activeColors.grid = `rgba(${rG}, ${gG}, ${bG}, ${alphaG})`;
+
+    // HUD badge name update without popups
+    const currentZoneObj = t >= 0.5 ? z2 : z1;
+    this.currentZoneName = `ZONE ${currentZoneObj.id} • ${currentZoneObj.name}`;
+    this.activeObstacleType = currentZoneObj.obstacleType;
+    this.currentZoneIdx = currentZoneObj.id - 1;
   }
 
   createExplosion(x, y, count, color) {
@@ -652,15 +652,15 @@ class NeonSurgeGame {
 
     if (this.state !== 'PLAYING') return;
 
-    // Progression: smooth scaling speed and distance
+    // Progression
     this.distance += this.speed * dt * 10;
     this.score += Math.round(this.speed * this.combo * 0.5);
     
-    // Smooth, progressive speed curve (Starts gentle at 6.6, scales smoothly up to 15.5)
+    // Smooth progressive speed scaling
     this.baseSpeed = 6.6 + Math.min(9.0, Math.pow(this.distance / 5000, 0.75));
 
-    // Check Map/Zone Transitions (50,000 pt milestone checks)
-    this.checkZoneTransitions();
+    // Update continuous seamless zone colors
+    this.updateZoneSmoothColors();
 
     // Combo Timer Decay
     if (this.combo > 1) {
@@ -688,7 +688,7 @@ class NeonSurgeGame {
       }
     }
 
-    // Left/Right Button Movement (Strict Wall Clamping)
+    // Left/Right Movement (Strict Wall Clamping)
     if (this.keys.left) this.player.targetX -= 10;
     if (this.keys.right) this.player.targetX += 10;
 
@@ -703,12 +703,9 @@ class NeonSurgeGame {
     if (this.player.trail.length > 12) this.player.trail.shift();
     this.player.trail.forEach(t => t.alpha -= 0.06);
 
-    // ==========================================
-    // GUARANTEED SAFE-PASSAGE OBSTACLE GENERATOR
-    // ==========================================
-    // Dynamic difficulty: Spawn intervals decrease gracefully as score increases
-    const difficultyFactor = Math.min(1, this.score / 120000); // 0.0 at start -> 1.0 at 120k+
-    this.spawnInterval = 1.25 - (difficultyFactor * 0.55); // from 1.25s down to 0.70s
+    // Obstacle Generator
+    const difficultyFactor = Math.min(1, this.score / 120000);
+    this.spawnInterval = 1.25 - (difficultyFactor * 0.55);
 
     this.spawnTimer += dt;
     if (this.spawnTimer >= this.spawnInterval) {
@@ -744,7 +741,6 @@ class NeonSurgeGame {
       obs.rotation += 0.04;
       obs.animPulse += 0.08;
 
-      // Accurate hitbox with generous forgiving margin
       const hitMargin = obs.isBarrier ? 4 : 8;
       const pBox = { x: this.player.x - 12, y: this.player.y - 16, w: 24, h: 32 };
       const oBox = { x: obs.x + hitMargin, y: obs.y + hitMargin, w: obs.width - (hitMargin * 2), h: obs.height - (hitMargin * 2) };
@@ -756,7 +752,7 @@ class NeonSurgeGame {
         pBox.y + pBox.h > oBox.y
       ) {
         if (this.activePowerup === 'SHIELD' || this.activePowerup === 'BOOST') {
-          const zoneColor = ZONES[obs.zoneIndex]?.secondaryColor || '#00f0ff';
+          const zoneColor = this.activeColors.secondary;
           this.createExplosion(obs.x + obs.width / 2, obs.y + obs.height / 2, 22, zoneColor);
           this.obstacles.splice(i, 1);
           this.score += 250 * this.combo;
@@ -849,63 +845,54 @@ class NeonSurgeGame {
   // Guaranteed Fair Obstacle Wave Generator
   // ==========================================
   spawnBalancedWave(difficultyFactor) {
-    const currentZone = ZONES[this.currentZoneIndex];
     const canvasW = this.canvas.width;
-
-    // Guaranteed wide passage opening: 85px to 105px width
     const minSafeWidth = 92;
     const safeX = Math.random() * (canvasW - minSafeWidth - 40) + 20;
     const safeEnd = safeX + minSafeWidth;
 
-    // Cluster chance scales with difficulty (from 20% at start up to 65% at late game!)
     const clusterChance = 0.20 + (difficultyFactor * 0.45);
     const isCluster = Math.random() < clusterChance;
 
-    // Varied random sizing (small nimble hazards vs large chunky obstacles)
     const getRandomHazardSize = () => {
       const r = Math.random();
-      if (r < 0.4) return Math.floor(Math.random() * 8) + 32; // Small & agile (32-40px)
-      if (r < 0.75) return Math.floor(Math.random() * 12) + 48; // Medium (48-60px)
-      return Math.floor(Math.random() * 14) + 66; // Giant imposing (66-80px)
+      if (r < 0.4) return Math.floor(Math.random() * 8) + 32;
+      if (r < 0.75) return Math.floor(Math.random() * 12) + 48;
+      return Math.floor(Math.random() * 14) + 66;
     };
 
+    const type = this.activeObstacleType || 'CYBER_LASER';
+    const currentZoneIdx = this.currentZoneIdx || 0;
+
     if (isCluster) {
-      // CLUSTER WAVE (Progressive: 2 items early, up to 4 items in late-game zones)
       const maxItems = difficultyFactor > 0.6 ? 4 : (difficultyFactor > 0.25 ? 3 : 2);
       const clusterCount = Math.floor(Math.random() * (maxItems - 1)) + 2;
 
       for (let c = 0; c < clusterCount; c++) {
         const size = getRandomHazardSize();
-        // Position hazard outside the guaranteed safe corridor
         let posX;
         if (Math.random() > 0.5 && safeX > size + 10) {
-          // Spawn to the left of safe corridor
           posX = Math.random() * (safeX - size);
         } else if (canvasW - safeEnd > size + 10) {
-          // Spawn to the right of safe corridor
           posX = safeEnd + Math.random() * (canvasW - safeEnd - size);
         } else {
           posX = Math.random() * (canvasW - size);
         }
 
-        // Staggered Y offsets so player can weave between them
         this.obstacles.push({
           x: Math.max(0, Math.min(canvasW - size, posX)),
           y: -70 - (c * 55),
           width: size,
           height: size,
-          type: currentZone.obstacleType,
+          type,
           isBarrier: false,
-          zoneIndex: this.currentZoneIndex,
+          zoneIndex: currentZoneIdx,
           rotation: Math.random() * Math.PI,
           animPulse: Math.random() * 5
         });
       }
     } else {
-      // SINGLE HAZARD OR CLEAN BARRIER
       const isBarrier = Math.random() < 0.45;
       if (isBarrier) {
-        // Barrier leaving the guaranteed safe passage open
         const spawnOnLeft = Math.random() > 0.5;
         let bWidth, bX;
         if (spawnOnLeft) {
@@ -921,14 +908,13 @@ class NeonSurgeGame {
           y: -70,
           width: bWidth,
           height: 24,
-          type: currentZone.obstacleType,
+          type,
           isBarrier: true,
-          zoneIndex: this.currentZoneIndex,
+          zoneIndex: currentZoneIdx,
           rotation: 0,
           animPulse: 0
         });
       } else {
-        // Single Random-Sized Hazard
         const size = getRandomHazardSize();
         const posX = Math.random() > 0.5 ? Math.random() * (safeX - size) : safeEnd + Math.random() * (canvasW - safeEnd - size);
 
@@ -937,9 +923,9 @@ class NeonSurgeGame {
           y: -70,
           width: size,
           height: size,
-          type: currentZone.obstacleType,
+          type,
           isBarrier: false,
-          zoneIndex: this.currentZoneIndex,
+          zoneIndex: currentZoneIdx,
           rotation: 0,
           animPulse: 0
         });
@@ -948,11 +934,9 @@ class NeonSurgeGame {
   }
 
   // ==========================================
-  // 6. Render Scene
+  // 6. Render Scene (Seamless Continuous Gradients)
   // ==========================================
   draw() {
-    const zone = ZONES[this.currentZoneIndex];
-
     this.ctx.save();
 
     if (this.screenShake > 0) {
@@ -961,21 +945,21 @@ class NeonSurgeGame {
       this.ctx.translate(shakeX, shakeY);
     }
 
-    // Dynamic Zone Background Gradient
+    // Dynamic Seamless Background Gradient
     const bgGrad = this.ctx.createRadialGradient(
       this.canvas.width / 2, this.canvas.height * 0.3, 10,
       this.canvas.width / 2, this.canvas.height * 0.6, this.canvas.height
     );
-    bgGrad.addColorStop(0, zone.bgGradient[0]);
-    bgGrad.addColorStop(1, zone.bgGradient[1]);
+    bgGrad.addColorStop(0, this.activeColors.bgTop);
+    bgGrad.addColorStop(1, this.activeColors.bgBottom);
     this.ctx.fillStyle = bgGrad;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Grid Floor
-    this.drawGrid(zone);
+    // Seamless Grid Floor
+    this.drawGrid();
 
     // Stars
-    this.ctx.fillStyle = zone.primaryColor;
+    this.ctx.fillStyle = this.activeColors.primary;
     this.stars.forEach(star => {
       this.ctx.beginPath();
       this.ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
@@ -1020,9 +1004,9 @@ class NeonSurgeGame {
       this.ctx.restore();
     });
 
-    // Obstacles Rendering (Zone-Specific Custom Graphics)
+    // Obstacles Rendering
     this.obstacles.forEach(obs => {
-      this.drawThematicObstacle(obs, zone);
+      this.drawThematicObstacle(obs);
     });
 
     // Player Trail
@@ -1072,17 +1056,15 @@ class NeonSurgeGame {
   // ==========================================
   // Custom Zone Thematic Obstacle Graphics
   // ==========================================
-  drawThematicObstacle(obs, zone) {
+  drawThematicObstacle(obs) {
     const cx = obs.x + obs.width / 2;
     const cy = obs.y + obs.height / 2;
 
     this.ctx.save();
 
-    // ----------------------------------------------------
-    // Zone 1: CYBER_LASER (Neon Laser Barrier & Cyber Prisms)
-    // ----------------------------------------------------
+    // 1. CYBER_LASER
     if (obs.type === 'CYBER_LASER') {
-      this.ctx.shadowColor = '#ff0077';
+      this.ctx.shadowColor = this.activeColors.secondary;
       this.ctx.shadowBlur = 16;
 
       if (obs.isBarrier) {
@@ -1116,9 +1098,7 @@ class NeonSurgeGame {
       return;
     }
 
-    // ----------------------------------------------------
-    // Zone 2: METEORITE (Molten Asteroids with Lava Trails)
-    // ----------------------------------------------------
+    // 2. METEORITE
     if (obs.type === 'METEORITE') {
       this.ctx.shadowColor = '#ff3300';
       this.ctx.shadowBlur = 20;
@@ -1166,9 +1146,7 @@ class NeonSurgeGame {
       return;
     }
 
-    // ----------------------------------------------------
-    // Zone 3: CYBER_CLAW (Predator Talons & Toxic Nodes)
-    // ----------------------------------------------------
+    // 3. CYBER_CLAW
     if (obs.type === 'CYBER_CLAW') {
       this.ctx.shadowColor = '#00ff66';
       this.ctx.shadowBlur = 18;
@@ -1218,9 +1196,7 @@ class NeonSurgeGame {
       return;
     }
 
-    // ----------------------------------------------------
-    // Zone 4: VOID_VORTEX (Swirling Singularity & Blade Fields)
-    // ----------------------------------------------------
+    // 4. VOID_VORTEX
     if (obs.type === 'VOID_VORTEX') {
       this.ctx.shadowColor = '#9d00ff';
       this.ctx.shadowBlur = 22;
@@ -1268,9 +1244,7 @@ class NeonSurgeGame {
       return;
     }
 
-    // ----------------------------------------------------
-    // Zone 5: RAINBOW_CRYSTAL (Prismatic Diamonds & Warp Rifts)
-    // ----------------------------------------------------
+    // 5. RAINBOW_CRYSTAL
     if (obs.type === 'RAINBOW_CRYSTAL') {
       this.ctx.shadowColor = '#ffffff';
       this.ctx.shadowBlur = 22;
@@ -1321,12 +1295,12 @@ class NeonSurgeGame {
     this.ctx.restore();
   }
 
-  drawGrid(zone) {
+  drawGrid() {
     const horizon = this.canvas.height * 0.45;
     const gridOffset = (this.distance * 0.8) % 36;
 
     this.ctx.save();
-    this.ctx.strokeStyle = zone.gridColor;
+    this.ctx.strokeStyle = this.activeColors.grid;
     this.ctx.lineWidth = 1.2;
 
     for (let y = horizon; y < this.canvas.height; y += 22) {
